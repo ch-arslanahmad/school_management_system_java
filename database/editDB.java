@@ -43,7 +43,7 @@ public class editDB {
             pstmt.executeUpdate();
 
             // Step 8: Confirmation message
-            System.out.println("✅ Student added successfully!");
+            System.out.println("Student added successfully!");
 
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
