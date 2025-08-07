@@ -17,21 +17,24 @@ class testing {
         LogManager.getLogManager().reset();
         String a = "testlog.txt";
         File file = new File(a);
-        // if file does not exist, create it
-        if(!(file.exists())) {
-            file.createNewFile();
-        }
+            // if file does not exist, create it
+            if(!(file.exists())) {
+                file.createNewFile();
+            }
         fh = new FileHandler(a, true);
         logger.addHandler(fh);
         fh.setFormatter(new SimpleFormatter());
         logger.setLevel(Level.FINE);
+
+        // checking if file exists
+        if(file.exists()) {
+            logger.info("Log File is created!");
+        }
     } catch (Exception e) {
         e.printStackTrace();
     }
-    finally {
-        logger.info("Log File is created!");
     }
-    }
+
 
     Connection conn;
     // method to setupConnection
@@ -50,6 +53,10 @@ class testing {
                 // insert class in SQL lite
                 insertClass(conn, input);
                 
+            }
+            // if connection not made
+            else {
+                logger.warning("Connection Problem");
             }
 
         } catch (Exception e) {
@@ -112,7 +119,7 @@ class testing {
     }
 
     // END logging
-    void endlog() {
+    void closeLog() {
         fh.close();
     }
 
@@ -121,11 +128,10 @@ class testing {
         Scanner input = new Scanner(System.in);
         testing test = new testing();
 
-        boolean isConnected = test.setupConnection(input);
+        test.setupConnection(input);
+        
+        test.closeLog();
 
-        if(isConnected) {
-            fh.close();
-        }
     }
 
 }
