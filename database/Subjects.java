@@ -3,7 +3,7 @@ import java.util.ArrayList;
 
 public class Subjects{
 
-    protected String classroom;
+    private String classroom;
     ArrayList <String> subjects = new ArrayList<>();
     int totalSubjects;
 
