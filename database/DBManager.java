@@ -75,6 +75,16 @@ public class DBManager {
     }
 
 
+    // choice
+
+    void choose(Scanner input) {
+        System.out.print("1. Deal with Students\n2.DeEnter your choice: ");
+        int choice =  input.nextInt();
+
+
+
+    }
+
     // METHOD to create whole database
     void createDB() {
 
