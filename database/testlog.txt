@@ -1,0 +1,18 @@
+Aug 07, 2025 5:30:31 PM testing <clinit>
+INFO: Log File is created!
+Aug 07, 2025 5:30:32 PM testing setupConnection
+INFO: Connection Established
+Aug 07, 2025 5:30:38 PM testing insertClass
+INFO: Values Successfully Inserted.
+Aug 07, 2025 5:36:54 PM testing <clinit>
+INFO: Log File is created!
+Aug 07, 2025 5:36:54 PM testing setupConnection
+INFO: Connection Established
+Aug 07, 2025 5:37:02 PM testing insertClass
+WARNING: Error adding data into databse
+Aug 07, 2025 6:44:45 PM testing <clinit>
+INFO: Log File is created!
+Aug 07, 2025 6:44:45 PM testing setupConnection
+INFO: Connection Established
+Aug 07, 2025 6:45:01 PM testing insertClass
+WARNING: Error adding data into databse
