@@ -10,10 +10,7 @@ public class Subjects{
     public void addClass(Scanner input) {
         System.out.print("ClassName: ");
         classroom = input.nextLine();
-        System.out.print("Total Number of subjects: ");
-        totalSubjects = input.nextInt();
-        input.nextLine();
-        addclassSubjects(input);
+        // addclassSubjects(input); 
     }
 
     public String getClassroom() {
