@@ -7,7 +7,7 @@ class testing {
         classroom.addClass(input);
 
         try {
-            String addClass = "INSERT INTO Class (SubjectName) VALUES (?)";
+            String addClass = "INSERT INTO Class (ClassName) VALUES (?)";
             PreparedStatement writesql = conn.prepareStatement(addClass);
 
             //
