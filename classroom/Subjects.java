@@ -9,14 +9,6 @@ public class Subjects implements ClassRoom{
     ArrayList <String> subjects = new ArrayList<>();
     int totalSubjects;
 
-    @Override
-    public void addClass(Scanner input) {
-        System.out.println("Class: " + classroom);
-        classroom++;
-        System.out.print("Total Number of subjects: ");
-        totalSubjects = input.nextInt();
-        addclassSubjects(input);
-    }
 
     @Override
     public int addSubject(Scanner input) {
