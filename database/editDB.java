@@ -4,6 +4,9 @@ javac -cp ".:sqlite-jdbc-3.50.3.0.jar" editDB.java
 java -cp ".:sqlite-jdbc-3.50.3.0.jar" editDB
 
 */
+
+// THIS IS THE DOMINANT TESTING DB CLASS
+
 import java.sql.*;
 import java.util.Scanner;
 
