@@ -78,7 +78,16 @@ public class DBManager {
     // choice
 
     void choose(Scanner input) {
-        System.out.print("1. Deal with Students\n2.DeEnter your choice: ");
+        System.out.print(
+            "\n========== School Management System ==========\n" +
+            "1. Add New Class\n" +
+            "2. Add New Subject (linked to a Class)\n" +
+            "3. Add New Teacher (linked to a Subject)\n" +
+            "4. Add New Student (linked to a Class)\n" +
+            "5. Exit\n" +
+            "===============================================\n" +
+            "Enter your choice: "
+        );
         int choice =  input.nextInt();
 
 
