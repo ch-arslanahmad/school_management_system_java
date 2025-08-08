@@ -1,14 +1,21 @@
 package school_management_system_java.classroom;
 
 import java.util.Scanner;
-public interface ClassRoom { 
+public class ClassRoom {
+
+    private String classroom;
+    private int n;
     
-    // method to add classes with subjects
-    void addClass(Scanner input);
+    // method to add classes
+    public void addClass(Scanner input) {
+        System.out.println("Class: " + n);
+        n++;
+        classroom = input.nextLine();
+    }
 
-    // method to collect subject of each class
-    void addclassSubjects(Scanner input);
+    public String getClassroom() {
+        return classroom;
+    }
 
-    //
-    int addSubject(Scanner input);
+
 }
