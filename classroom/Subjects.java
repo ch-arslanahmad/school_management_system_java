@@ -5,7 +5,6 @@ import java.util.ArrayList;
 
 public class Subjects implements ClassRoom{
 
-    protected int classroom = 1;
     ArrayList <String> subjects = new ArrayList<>();
     int totalSubjects;
 
