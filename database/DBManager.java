@@ -94,9 +94,6 @@ public class DBManager {
 
     }
 
-    // METHOD to create whole database
-    void createDB() {
 
-    }
 
 }
