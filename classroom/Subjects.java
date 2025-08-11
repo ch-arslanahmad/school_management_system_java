@@ -1,32 +1,36 @@
-package school_management_system_java.classroom;
+package classroom;
 
-import java.util.Scanner;
-import java.util.ArrayList;
+public class Subjects {
 
-public class Subjects implements ClassRoom{
+    int subjectID;
+    String subjectName;
+    int classID;
 
-    ArrayList <String> subjects = new ArrayList<>();
-    int totalSubjects;
-
-
-    @Override
-    public int addSubject(Scanner input) {
-        System.out.println("Enter class#");
-        int a = input.nextInt();
-        if(a == classroom) {
-            System.out.println("Enter Subject: ");
-            subjects.add(input.nextLine());
-            totalSubjects++;
-        }
-        return totalSubjects;
+    public Subjects(
+            int subjectID, String subjectName, int classID) {
+        this.subjectID = subjectID;
+        this.subjectName = subjectName;
+        this.classID = classID;
     }
 
-    @Override
-    public void addclassSubjects(Scanner input) {
-        for(int i = 0; i <totalSubjects; i++) {
-            System.out.println("Enter Subject name: ");
-            subjects.add(input.nextLine());
-        }
+    public Subjects() {
+
+    }
+
+    public int getSubjectID() {
+        return subjectID;
+    }
+
+    public String getSubjectName() {
+        return subjectName;
+    }
+
+    public int getClassID() {
+        return classID;
+    }
+
+    public String toString() {
+        return subjectName + " ID is " + subjectID + " and belongs to classID :" + classID;
     }
 
 }
