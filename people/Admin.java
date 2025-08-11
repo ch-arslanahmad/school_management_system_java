@@ -29,6 +29,7 @@ public class Admin {
 
     // input PIN
     boolean getPin(Scanner input) {
+        // loop 3 times
         for (int i = 0; i < 3; i++) {
             System.out.println("Enter PIN:");
             int a = input.nextInt();
