@@ -5,13 +5,12 @@ import database.*;
 
 //imports
 import java.io.File;
-import java.util.Scanner;
 import java.util.logging.*;
 import java.sql.*;
 
 public class SubjectDAO {
     // variables for LOGGing
-    private static final Logger logger = Logger.getLogger(ClassDAO.class.getName());
+    private static final Logger logger = Logger.getLogger(SubjectDAO.class.getName());
     private static FileHandler fh;
 
     // STATIC block for **LOGGING**
@@ -42,8 +41,6 @@ public class SubjectDAO {
         }
     }
 
-    private String subjectNameDAO;
-
     // declaring global object of ClassDAO
     ClassDAO check = new ClassDAO();
 
@@ -63,7 +60,7 @@ public class SubjectDAO {
             ResultSet rs = rm.executeQuery();
 
             if (rs.next()) {
-                // fetches and stores the ClassID in a variable from the matched row
+                // fetches and stores the SubjectID in a variable from the matched row
                 subjectID = rs.getInt("SubjectID");
                 logger.info(name + " ID is: " + subjectID);
             } else {
@@ -78,13 +75,43 @@ public class SubjectDAO {
 
     }
 
+    // method to get ClassID of Subject
+
+    public int getClassIdBySubject(String name) {
+        if (!subjectExists(name)) {
+            logger.info("Subject does not exist.");
+        } else {
+            // SQL Query
+            String classIdSQL = "SELECT ClassID FROM Subjects WHERE SubjectName = ?";
+
+            // try-catch block
+            try (PreparedStatement rm = Database.getConn().prepareStatement(classIdSQL)) {
+
+                // inserting value in Query
+                rm.setString(1, name);
+
+                ResultSet rs = rm.executeQuery();
+
+                // fetching SubjectID
+                if (rs.next()) {
+                    return rs.getInt("SubjectID");
+                }
+
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error while fetching ClassID of subject", e);
+            }
+        }
+        // automated error code
+        return -1;
+    }
+
     // see if subject exists
     public boolean subjectExists(String name) {
         // SQL query to check
-        String check = "SELECT COUNT(*) AS count FROM Subjects WHERE SubjectName = ?;";
+        String ExistSQL = "SELECT COUNT(*) AS count FROM Subjects WHERE SubjectName = ?;";
 
         // prepared statement in try block
-        try (PreparedStatement rm = Database.getConn().prepareStatement(check)) {
+        try (PreparedStatement rm = Database.getConn().prepareStatement(ExistSQL)) {
 
             // adding value to query
             rm.setString(1, name);
@@ -124,19 +151,17 @@ public class SubjectDAO {
         return false;
     }
 
-    /* FIX THE FOLLOWING METHODS - insertSubject() FIRST */
-
+    // Insert 1 Subject in DB
     public boolean insertSubject(String ClassName, String name) {
-
+        int classID = check.getValidClassID(ClassName);
         // STOP if return ERROR code (-1)
-        if (check.getValidClassID() == -1) {
+        if (classID == -1) {
             logger.info("Incorrect ID");
         } else {
-
-            int classID = check.getValidClassID(ClassName);
+            // assign a variable to the classID.
 
             // SQL Query
-            String subjectSQL = "INSERT INTO Subject (SubjectName, ClassID) VALUES (?,?)";
+            String subjectSQL = "INSERT INTO Subjects (SubjectName, ClassID) VALUES (?,?)";
             try (PreparedStatement rm = Database.getConn().prepareStatement(subjectSQL)) {
                 // set values in the query
                 rm.setString(1, name);
@@ -161,43 +186,64 @@ public class SubjectDAO {
         return false;
     }
 
-    public boolean insertSubjects(String ClassName, Scanner input) {
-        // adding Subjects
-        // STOP if return ERROR code (-1)
+    public boolean updateSubject(String ClassName, String name, String updateName) {
         if (check.getValidClassID(ClassName) == -1) {
-            logger.config("Unable to get ValidID of Class");
-            logger.warning("Class Does not exist.");
+            logger.config("Class doesn't exist.");
         } else {
-            while (true) {
-                try {
-                    boolean subjectAdded = insertSubject(ClassName, ClassName);
-                    if (subjectAdded) {
-                        logger.finest("Class Successfully entered");
-                    } else {
-                        System.out.println("Class must be entered to continue.");
-                        continue;
-                    }
+            if (!subjectExists(name)) {
+                logger.config("Subject doesn't exist.");
+            } else {
+                // Query to update Subject
+                String updateSubjSQL = "UPDATE Subjects SET SubjectName = ? WHERE SubjectName = ? AND ClassID = ?";
+                try (PreparedStatement rm = Database.getConn().prepareStatement(updateSubjSQL)) {
+                    rm.setString(1, updateName);
+                    rm.setString(2, name);
+                    rm.setInt(3, check.getValidClassID(ClassName));
 
-                    // to stop the loop (user enters 0)
-                    // used string as input as using any other type may cause newline buffer problem
-                    System.out.println("Press 0 to stop.");
-                    String c;
-                    c = input.nextLine();
-
-                    if (c.equals("0")) {
+                    int rs = rm.executeUpdate();
+                    if (rs > 0) {
                         return true;
+                    } else {
+                        logger.warning("Unable to update SubjectName. ");
+                        return false;
                     }
+
                 } catch (Exception e) {
-                    logger.warning("Error Adding Class Data");
-                    e.printStackTrace();
+                    logger.log(Level.WARNING, "Error while updating subject: ", e);
                 }
             }
-
-            return false;
         }
+        return false;
+
     }
 
     public boolean deleteSubject(String ClassName, String name) {
+        if (!(subjectExists(name))) {
+            System.out.println("No Match found");
+        } else {
+            String delSubjectSQL = "DELETE FROM Subjects WHERE SubjectName = ? AND ClassID = ?";
+            try (PreparedStatement rm = Database.getConn().prepareStatement(delSubjectSQL)) {
+
+                // set values in the query
+                rm.setString(1, name);
+                rm.setInt(2, getClassIdBySubject(name));
+
+                // execute query
+                int rs = rm.executeUpdate();
+
+                if (rs > 0) {
+                    // confirmation
+                    logger.info("Subject Deleted");
+                    return true;
+                } else {
+                    logger.config("Subject unable to delete.");
+                    return false;
+                }
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error while deleting Subject: ", e);
+            }
+        }
+
         return false;
     }
 
