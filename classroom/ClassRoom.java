@@ -1,21 +1,38 @@
-package school_management_system_java.classroom;
+package classroom;
 
 import java.util.Scanner;
+
 public class ClassRoom {
 
-    private String classroom;
-    private int n;
-    
-    // method to add classes
-    public void addClass(Scanner input) {
-        System.out.println("Class: " + n);
-        n++;
-        classroom = input.nextLine();
+    private int classID;
+    private String className;
+
+    public ClassRoom(int classID, String className) {
+        this.classID = classID;
+        this.className = className;
     }
 
-    public String getClassroom() {
-        return classroom;
+    public ClassRoom() {
+
     }
 
+    public int getClassID() {
+        return classID;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    // method to get classes
+    public String setClass(Scanner input) {
+        System.out.println("Enter class name: ");
+        className = input.nextLine();
+        return className;
+    }
+
+    public String toString() {
+        return className + " ID is " + classID + ".";
+    }
 
 }
