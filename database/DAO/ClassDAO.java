@@ -95,30 +95,33 @@ public class ClassDAO {
              * stored ResultSet variable, 'rs'.
              */
 
-            ResultSet rs = rm.executeQuery();
+            try (ResultSet rs = rm.executeQuery()) {
 
-            /*
-             * ResultSet (rs) returns a table with one row.
-             * It does not automatically point to the matched column. To do that you do
-             * rs.next().
-             * - res.next() returns row.
-             * - true if more than 1
-             * - false if 0
-             * 
-             * 
-             * NOTE: THINK OF MAKING A METHOD TO SEE THE ID FROM NAME LIKE getIDClass() or
-             * smthing.
-             */
+                /*
+                 * ResultSet (rs) returns a table with one row.
+                 * It does not automatically point to the matched column. To do that you do
+                 * rs.next().
+                 * - res.next() returns row.
+                 * - true if more than 1
+                 * - false if 0
+                 * 
+                 * 
+                 * NOTE: THINK OF MAKING A METHOD TO SEE THE ID FROM NAME LIKE getIDClass() or
+                 * smthing.
+                 */
 
-            if (rs.next()) {
-                int count = rs.getInt("count");
-                if (count > 0) {
-                    System.out.println("Match found");
-                    return true;
-                } else {
-                    System.out.println("No match found");
-                    return false;
+                if (rs.next()) {
+                    int count = rs.getInt("count");
+                    if (count > 0) {
+                        System.out.println("Match found");
+                        return true;
+                    } else {
+                        System.out.println("No match found");
+                        return false;
+                    }
                 }
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error Executing ClassExists Query");
             }
 
         } catch (Exception e) {
@@ -178,7 +181,6 @@ public class ClassDAO {
                     logger.finest("Class Successfully entered");
                 } else {
                     System.out.println("Class must be entered to continue.");
-                    continue;
                 }
 
                 // to stop the loop (user enters 0)
@@ -201,7 +203,7 @@ public class ClassDAO {
         if (!(Classexists(name))) {
             System.out.println("No Match found");
         } else {
-            String deleteClassSQL = "DELETE TABLE Class WHERE ClassName = ?;";
+            String deleteClassSQL = "DELETE FROM Class WHERE ClassName = ?";
             try (PreparedStatement rm = Database.getConn().prepareStatement(deleteClassSQL)) {
 
                 // set values in the query
@@ -226,4 +228,5 @@ public class ClassDAO {
         return false;
 
     }
+
 }
