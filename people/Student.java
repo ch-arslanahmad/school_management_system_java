@@ -1,29 +1,33 @@
-package school_management_system_java.people;
-import java.util.Scanner;
+package people;
+
 public class Student extends Person {
 
-    public Student(String name, int age) {
+    public Student(int id, String name, int classID) {
         this.name = name;
-        this.age = age;
+        this.id = id;
+        this.classID = classID;
+    }
+
+    public int getClassID() {
+        return classID;
+    }
+
+    // Override Methods
+    @Override
+    public int getID() {
+        return id;
     }
 
     @Override
-    String getName() {
+    public String getName() {
         return name;
     }
-    
+
     @Override
-    int getAge() {
-        return age;
+    public String toString() {
+        return "Name: " + name
+                + "\nID: " + id
+                + "\nClassID: " + classID;
     }
 
-
-    void setDetails(Scanner input) {
-        System.out.print("Enter Student name: ");
-        name = input.nextLine();
-        System.out.print("Enter Student Age: ");
-        age = input.nextInt();
-    }
-
-    
 }
