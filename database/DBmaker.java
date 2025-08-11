@@ -1,12 +1,11 @@
 package database;
-import school_management_system_java.classroom.ClassRoom;
+import database.DAO.*;
 
 import java.io.File;
 import java.sql.*;
 import java.util.Scanner;
 import java.util.logging.*;
 
-import DAO.ClassDAO;
 public class DBmaker {
    private static final Logger logger = Logger.getLogger(testing.class.getName());
     private static FileHandler fh;
