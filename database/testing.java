@@ -1,42 +1,43 @@
+package database;
+
 import java.sql.*;
 import java.util.Scanner;
 import java.util.logging.*;
 import java.io.File;
 
-
 class testing {
 
     private static final Logger logger = Logger.getLogger(testing.class.getName());
     private static FileHandler fh;
-    
+
     // STATIC block for **LOGGING**
     static {
-    // 
-    try {
-        // so logging is not shown in console
-        LogManager.getLogManager().reset();
-        String a = "testlog.txt";
-        File file = new File(a);
+        //
+        try {
+            // so logging is not shown in console
+            LogManager.getLogManager().reset();
+            String a = "testlog.txt";
+            File file = new File(a);
             // if file does not exist, create it
-            if(!(file.exists())) {
+            if (!(file.exists())) {
                 file.createNewFile();
             }
-        fh = new FileHandler(a, true);
-        logger.addHandler(fh);
-        fh.setFormatter(new SimpleFormatter());
-        logger.setLevel(Level.FINE);
+            fh = new FileHandler(a, true);
+            logger.addHandler(fh);
+            fh.setFormatter(new SimpleFormatter());
+            logger.setLevel(Level.FINE);
 
-        // checking if file exists
-        if(file.exists()) {
-            logger.info("Log File is created!");
+            // checking if file exists
+            if (file.exists()) {
+                logger.info("Log File is created!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
     }
-    }
-
 
     Connection conn;
+
     // method to setupConnection
     boolean setupConnection(Scanner input) {
         boolean isConnected = false;
@@ -47,12 +48,12 @@ class testing {
             // Connecting the database file
             conn = DriverManager.getConnection("jdbc:sqlite:people.db");
             // run only if connection is not null
-            if(conn != null) {
-                isConnected =  true;
+            if (conn != null) {
+                isConnected = true;
                 logger.info("Connection Established");
                 // insert class in SQL lite
                 insertClass(conn, input);
-                
+
             }
             // if connection not made
             else {
@@ -65,10 +66,9 @@ class testing {
 
             logger.warning("Error establishing connection with database/sqlite");
 
-        }
-        finally {
+        } finally {
             try {
-               conn.close();             
+                conn.close();
             } catch (Exception e) {
                 System.out.println("Connection not properly closed");
                 e.printStackTrace();
@@ -77,7 +77,6 @@ class testing {
         return isConnected;
 
     }
-
 
     // method to add student in the database;
     boolean insertClass(Connection conn, Scanner input) {
@@ -88,7 +87,7 @@ class testing {
         try {
             // writing query in a string variable
             String addClass = "INSERT INTO Class (ClassName) VALUES (?)";
-            
+
             // creating a prepared statement: injects variables instead of a whole query
             PreparedStatement writesql = conn.prepareStatement(addClass);
 
@@ -99,16 +98,14 @@ class testing {
             writesql.execute();
             insertedClass = true;
 
-            if(insertedClass) {
+            if (insertedClass) {
                 logger.info("Values Successfully Inserted.");
                 System.out.println("Successfully entered");
                 conn.close();
-            }
-            else {
+            } else {
                 System.out.println("ERROR Values NOT added.");
                 logger.warning("ERROR Values NOT added");
             }
-
 
         } catch (Exception e) {
             System.out.println("Error adding data: ");
@@ -129,7 +126,7 @@ class testing {
         testing test = new testing();
 
         test.setupConnection(input);
-        
+
         test.closeLog();
 
     }
