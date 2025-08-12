@@ -247,4 +247,36 @@ public class SubjectDAO {
         return false;
     }
 
+    // list all subjects
+    public boolean listSubjects() {
+        // Query to list all Subjects
+        String listSubjectSQL = "SELECT Subjects.SubjectName, Class.ClassName "
+                + "FROM Subjects "
+                + "JOIN Class ON Subjects.ClassID = Class.ClassID";
+        // try-block
+        try (PreparedStatement rm = Database.getConn().prepareStatement(listSubjectSQL)) {
+            // variable to count total rows printed
+            int count = 0;
+            // inner try-block to fetch and display each row
+            try (ResultSet rs = rm.executeQuery()) {
+                // loop to display every row
+                while (rs.next()) {
+                    // display each row
+                    displayf(rs.getString("SubjectName"), rs.getString("ClassName"));
+                    count++;
+                }
+                // return true if Subjects are displayed
+                return count > 0;
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error while executing Query to List Subjects: ", e);
+            }
+
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while listing Subjects: ", e);
+        }
+
+        return false;
+
+    }
+
 }
