@@ -10,6 +10,8 @@ import java.sql.*;
 import java.util.Scanner;
 import java.util.logging.*;
 
+import javax.security.auth.Subject;
+
 // public class
 public class ClassDAO {
 
@@ -223,6 +225,43 @@ public class ClassDAO {
             } catch (Exception e) {
                 logger.log(Level.WARNING, "Error while deleting Class: ", e);
             }
+        }
+
+        return false;
+
+    }
+
+    // list all Class -- FIX THIS - THIS WILL REQUIRE SOMETHING MORE DETAILED AS IT
+    // MAY BE BEST TO LIST:
+    // - list all classes
+    // - list all subjects of the classes
+    // - list all students of the class
+    public boolean listClass() {
+        // Query to list all Class
+        String listSubjectSQL = "SELECT Class.ClassName, Subjects.SubjectName, Student.StudentName "
+                + "FROM Class "
+                + "JOIN Student ON Student.ClassID = Class.ClassID "
+                + "JOIN Subjects ON Subject.ClassID = Class.ClassID";
+        // try-block
+        try (PreparedStatement rm = Database.getConn().prepareStatement(listSubjectSQL)) {
+            // variable to count total rows printed
+            int count = 0;
+            // inner try-block to fetch and display each row
+            try (ResultSet rs = rm.executeQuery()) {
+                // loop to display every row
+                while (rs.next()) {
+                    // display each row
+                    displayf(rs.getString("ClassName"), rs.getString("SubjectName"), rs.getString("StudentName"));
+                    count++;
+                }
+                // return true if classes are displayed
+                return count > 0;
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error while executing Query to List classes with details: ", e);
+            }
+
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while listing Classes: ", e);
         }
 
         return false;

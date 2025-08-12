@@ -199,4 +199,36 @@ public class StudentDAO {
 
     }
 
+    // list all students
+    public boolean listStudent() {
+        // Query to list all students
+        String listSubjectSQL = "SELECT Student.StudentName, Class.ClassName "
+                + "FROM Student "
+                + "JOIN Class ON Student.ClassID = Class.ClassID";
+        // try-block
+        try (PreparedStatement rm = Database.getConn().prepareStatement(listSubjectSQL)) {
+            // variable to count total rows printed
+            int count = 0;
+            // inner try-block to fetch and display each row
+            try (ResultSet rs = rm.executeQuery()) {
+                // loop to display every row
+                while (rs.next()) {
+                    // display each row
+                    displayf(rs.getString("StudentName"), rs.getString("ClassName"));
+                    count++;
+                }
+                // return true if Students are displayed
+                return count > 0;
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error while executing Query to List Students: ", e);
+            }
+
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while listing Students: ", e);
+        }
+
+        return false;
+
+    }
+
 }
