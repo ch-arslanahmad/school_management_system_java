@@ -1,7 +1,8 @@
 package database.DAO;
 
 // package imports
-import database.*;
+import database.Database;
+import display.ConsoleDisplay;
 
 //imports
 import java.io.File;
@@ -199,31 +200,43 @@ public class StudentDAO {
 
     }
 
+    ConsoleDisplay display = new ConsoleDisplay();
+
     // list all students
     public boolean listStudent() {
         // Query to list all students
-        String listSubjectSQL = "SELECT Student.StudentName, Class.ClassName "
+        String listStudentSQL = "SELECT Student.StudentName, Class.ClassName "
                 + "FROM Student "
-                + "JOIN Class ON Student.ClassID = Class.ClassID";
+                + "LEFT JOIN Class ON Student.ClassID = Class.ClassID";
         // try-block
-        try (PreparedStatement rm = Database.getConn().prepareStatement(listSubjectSQL)) {
+        // added the initilization of connnection so its automatically closed by the
+        // try-catch block
+        try (Connection conn = Database.getConn();
+                PreparedStatement rm = conn.prepareStatement(listStudentSQL)) {
             // variable to count total rows printed
             int count = 0;
             // inner try-block to fetch and display each row
             try (ResultSet rs = rm.executeQuery()) {
+                System.out.printf("%-20s | %-20s\n", "Student", "Class");
+
                 // loop to display every row
                 while (rs.next()) {
                     // display each row
-                    displayf(rs.getString("StudentName"), rs.getString("ClassName"));
+                    display.displayf(rs.getString("StudentName"), rs.getString("ClassName"));
                     count++;
                 }
                 // return true if Students are displayed
-                return count > 0;
-            } catch (Exception e) {
+                if (count > 0) {
+                    logger.info("Students are successfully displayed.");
+                    return true;
+                } else {
+                    logger.warning("Student are not displayed.");
+                }
+            } catch (SQLException e) {
                 logger.log(Level.WARNING, "Error while executing Query to List Students: ", e);
             }
 
-        } catch (Exception e) {
+        } catch (SQLException e) {
             logger.log(Level.WARNING, "Error while listing Students: ", e);
         }
 
