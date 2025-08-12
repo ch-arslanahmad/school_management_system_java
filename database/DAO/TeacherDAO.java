@@ -2,6 +2,7 @@ package database.DAO;
 
 // package imports
 import database.*;
+import display.ConsoleDisplay;
 
 //imports
 import java.io.File;
@@ -189,42 +190,53 @@ public class TeacherDAO {
 
     }
 
+    ConsoleDisplay display = new ConsoleDisplay();
 
-    // list all Teac                // loop to display every row
-hers
+    /*
+     * LEFT JOIN is better for this method as it will list all the columns of the
+     * left and its related things of the column of the right if they exist unless
+     * explicitly show, 'NULL'.
+     */
+
+    // list all Teachers
     public boolean listTeacher() {
         // Query to list all Teachers
         String listSubjectSQL = "SELECT Teacher.TeacherName, Subjects.SubjectName "
                 + "FROM Teacher "
-                + "JOIN Subject ON Teacher.SubjectID = Subjects.SubjectID";
+                + "LEFT JOIN Subjects ON Teacher.SubjectID = Subjects.SubjectID";
 
         // try-block
-        try (PreparedStatement rm = Database.getConn().prepareStatement(listSubjectSQL)) {
+        try (Connection conn = Database.getConn(); PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
 
             // variable to count total rows printed
             int count = 0;
             // inner try-block to fetch and display each row
             try (ResultSet rs = rm.executeQuery()) {
+
+                System.out.printf("%-20s | %-20s\n", "Teacher", "Subject");
+
                 // loop to display every row
                 while (rs.next()) {
+                    String teachname = rs.getString("TeacherName") != null ? rs.getString("TeacherName") : "NAN";
+                    String subname = rs.getString("SubjectName") != null ? rs.getString("SubjectName") : "NAN";
+
                     // method to display
-                    displayf(rs.getString("TeacherName"), rs.getString("SubjectName"));
+                    display.displayf(teachname, subname);
                     // increment the count
                     count++;
                 }
                 // return true only if teachers are displayed
                 return count > 0;
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 logger.log(Level.WARNING, "Error while executing Query to List Teachers: ", e);
             }
 
-        } catch (Exception e) {
+        } catch (SQLException e) {
             logger.log(Level.WARNING, "Error while listing Teachers: ", e);
         }
 
         return false;
 
     }
-
 
 }
