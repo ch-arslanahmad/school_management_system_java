@@ -9,6 +9,10 @@ public class Teacher extends Person {
         this.classID = classID;
     }
 
+    public Teacher() {
+
+    }
+
     public int getSubjectID() {
         return subjectID;
     }
