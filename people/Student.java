@@ -8,6 +8,10 @@ public class Student extends Person {
         this.classID = classID;
     }
 
+    public Student() {
+
+    }
+
     public int getClassID() {
         return classID;
     }
