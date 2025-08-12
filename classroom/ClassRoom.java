@@ -24,13 +24,6 @@ public class ClassRoom {
         return className;
     }
 
-    // method to get classes
-    public String setClass(Scanner input) {
-        System.out.println("Enter class name: ");
-        className = input.nextLine();
-        return className;
-    }
-
     public String toString() {
         return className + " ID is " + classID + ".";
     }
