@@ -3,7 +3,6 @@ package database;
 import java.io.File;
 import java.sql.*;
 import java.util.logging.*;
-import java.util.Scanner;
 
 public class Database {
 
@@ -15,18 +14,20 @@ public class Database {
     static {
         //
         try {
-            // so logging is not shown in console
-            LogManager.getLogManager().reset();
-            String a = "testlog.txt";
+            /*
+             * // so logging is not shown in console
+             * LogManager.getLogManager().reset();
+             */
+            String a = "DBlog.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {
                 file.createNewFile();
             }
             fh = new FileHandler(a, true);
+            fh.setLevel(Level.FINE);
             logger.addHandler(fh);
             fh.setFormatter(new SimpleFormatter());
-            logger.setLevel(Level.FINE);
 
             // checking if file exists
             if (file.exists()) {
@@ -57,6 +58,7 @@ public class Database {
             if (conn != null) {
                 isConnected = true;
                 logger.info("Connection Established");
+                fh.close();
             }
             // if connection not made
             else {

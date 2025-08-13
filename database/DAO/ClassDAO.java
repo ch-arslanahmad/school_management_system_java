@@ -8,7 +8,6 @@ import classroom.*;
 // imports
 import java.io.File;
 import java.sql.*;
-import java.util.Scanner;
 import java.util.logging.*;
 
 // public class
@@ -26,16 +25,17 @@ public class ClassDAO {
              * // so logging is not shown in console
              * LogManager.getLogManager().reset();
              */
-            String a = "ClassDAO.txt";
+            String a = "ClassDAOlog.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {
                 file.createNewFile();
             }
             fh = new FileHandler(a, true);
+            fh.setLevel(Level.ALL);
+
             logger.addHandler(fh);
             fh.setFormatter(new SimpleFormatter());
-            logger.setLevel(Level.ALL);
 
             // checking if file exists
             if (file.exists()) {
@@ -44,6 +44,11 @@ public class ClassDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void closeLog() {
+        fh.flush();
+        fh.close();
     }
 
     String classNameDAO;

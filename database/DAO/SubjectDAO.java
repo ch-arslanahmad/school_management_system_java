@@ -29,9 +29,10 @@ public class SubjectDAO {
                 file.createNewFile();
             }
             fh = new FileHandler(a, true);
+            fh.setLevel(Level.FINE);
+
             logger.addHandler(fh);
             fh.setFormatter(new SimpleFormatter());
-            logger.setLevel(Level.FINE);
 
             // checking if file exists
             if (file.exists()) {
@@ -40,6 +41,11 @@ public class SubjectDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void closeLog() {
+        fh.flush();
+        fh.close();
     }
 
     // declaring global object of ClassDAO
@@ -65,7 +71,7 @@ public class SubjectDAO {
                 subjectID = rs.getInt("SubjectID");
                 logger.info(name + " ID is: " + subjectID);
             } else {
-                logger.config("Unable to get SubjectID.");
+                logger.info("Unable to get SubjectID.");
             }
 
         } catch (Exception e) {
@@ -74,6 +80,18 @@ public class SubjectDAO {
 
         return subjectID;
 
+    }
+
+    // method to get Valid SubjectID
+
+    public int getValidSubjectID(String name) {
+        if (!subjectExists(name)) {
+            logger.warning("Subject doesnt exist.");
+            return -1;
+        } else {
+            logger.warning("Status of Fetched ID: ");
+            return getClassIdBySubject(name);
+        }
     }
 
     // method to get ClassID of Subject
