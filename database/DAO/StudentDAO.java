@@ -29,9 +29,9 @@ public class StudentDAO {
                 file.createNewFile();
             }
             fh = new FileHandler(a, true);
+            fh.setLevel(Level.FINE);
             logger.addHandler(fh);
             fh.setFormatter(new SimpleFormatter());
-            logger.setLevel(Level.FINE);
 
             // checking if file exists
             if (file.exists()) {
@@ -40,6 +40,11 @@ public class StudentDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void closeLog() {
+        fh.flush();
+        fh.close();
     }
 
     // fetch StudentID
