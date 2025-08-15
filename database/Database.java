@@ -15,10 +15,9 @@ public class Database {
         //
         try {
             /*
-             * // so logging is not shown in console
-             * LogManager.getLogManager().reset();
+             * // so logging is not shown in console LogManager.getLogManager().reset();
              */
-            String a = "DBlog.txt";
+            String a = "log/DBlog.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {
@@ -77,7 +76,7 @@ public class Database {
     // REMOVED conn.close() as its illogical to make a connection and close it right
     // after.
 
-    static void closeCon() {
+    public static void closeCon() {
         try {
             conn.close();
         } catch (Exception e) {
