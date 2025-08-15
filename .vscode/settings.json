@@ -1,9 +1,9 @@
 {
-    "java.project.sourcePaths": [
-        "."
-    ],
-    "java.project.referencedLibraries": [
-        "lib/sqlite-jdbc-3.50.3.0.jar"
-    ],
-    "java.project.outputPath": "bin"
+  "java.project.sourcePaths": ["."],
+  "java.project.referencedLibraries": [
+    "lib/itext-2.1.7.jar",
+    "/home/arslan/Downloads/Github/Project/school_management_system_java/lib/sqlite-jdbc-3.50.3.0.jar"
+  ],
+  "java.project.outputPath": "bin",
+  "java.format.settings.url": ".vscode/java-formatter.xml"
 }
