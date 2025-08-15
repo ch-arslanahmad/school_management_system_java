@@ -4,9 +4,14 @@ package database.DAO;
 import database.*;
 import display.ConsoleDisplay;
 
-//imports
+// imports
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.*;
+
+import classroom.Subjects;
+
 import java.sql.*;
 
 public class SubjectDAO {
@@ -19,10 +24,9 @@ public class SubjectDAO {
         //
         try {
             /*
-             * // so logging is not shown in console
-             * LogManager.getLogManager().reset();
+             * // so logging is not shown in console LogManager.getLogManager().reset();
              */
-            String a = "SubjectDAOlog.txt";
+            String a = "log/SubjectDAOlog.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {
@@ -137,20 +141,16 @@ public class SubjectDAO {
 
             /*
              * 1. We use executeUpdate() because we are not adding, removing anything we are
-             * simply executing the query.
-             * 2. executeQuery returns value in ResultSet Object hence that value is also
-             * stored ResultSet variable, 'rs'.
+             * simply executing the query. 2. executeQuery returns value in ResultSet Object
+             * hence that value is also stored ResultSet variable, 'rs'.
              */
 
             ResultSet rs = rm.executeQuery();
 
             /*
-             * ResultSet (rs) returns a table with one row.
-             * It does not automatically point to the matched column. To do that you do
-             * rs.next().
-             * - res.next() returns row.
-             * - true if more than 1
-             * - false if 0
+             * ResultSet (rs) returns a table with one row. It does not automatically point
+             * to the matched column. To do that you do rs.next(). - res.next() returns row.
+             * - true if more than 1 - false if 0
              */
 
             if (rs.next()) {
@@ -269,10 +269,10 @@ public class SubjectDAO {
     ConsoleDisplay display = new ConsoleDisplay();
 
     // list all subjects
-    public boolean listSubjects() {
+    public List<Subjects> listSubjects() {
+        List<Subjects> subjects = new ArrayList<>();
         // Query to list all Subjects
-        String listSubjectSQL = "SELECT Subjects.SubjectName, Class.ClassName "
-                + "FROM Subjects "
+        String listSubjectSQL = "SELECT Subjects.SubjectName, Class.ClassName " + "FROM Subjects "
                 + "LEFT JOIN Class ON Subjects.ClassID = Class.ClassID";
         // try-block
         try (Connection conn = Database.getConn();
@@ -283,12 +283,12 @@ public class SubjectDAO {
             try (ResultSet rs = rm.executeQuery()) {
                 // loop to display every row
                 while (rs.next()) {
-                    // display each row
-                    display.displayf(rs.getString("SubjectName"), rs.getString("ClassName"));
+                    subjects.add(
+                            new Subjects(rs.getString("SubjectName"), rs.getString("ClassName")));
                     count++;
                 }
-                // return true if Subjects are displayed
-                return count > 0;
+                logger.log(Level.FINE, count + " Subjects added");
+                return subjects;
             } catch (Exception e) {
                 logger.log(Level.WARNING, "Error while executing Query to List Subjects: ", e);
             }
@@ -297,7 +297,7 @@ public class SubjectDAO {
             logger.log(Level.WARNING, "Error while listing Subjects: ", e);
         }
 
-        return false;
+        return null;
 
     }
 
