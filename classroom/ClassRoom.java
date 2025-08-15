@@ -1,15 +1,18 @@
 package classroom;
 
-import java.util.Scanner;
+import java.util.List;
 
 public class ClassRoom {
 
     private int classID;
     private String className;
 
-    public ClassRoom(int classID, String className) {
-        this.classID = classID;
+    public ClassRoom(String className) {
         this.className = className;
+    }
+
+    public ClassRoom(String ClassName, List<Subjects> subjects) {
+
     }
 
     public ClassRoom() {

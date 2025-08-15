@@ -5,12 +5,11 @@ public class Subjects {
     int subjectID;
     String subjectName;
     int classID;
+    String className;
 
-    public Subjects(
-            int subjectID, String subjectName, int classID) {
-        this.subjectID = subjectID;
+    public Subjects(String subjectName, String className) {
         this.subjectName = subjectName;
-        this.classID = classID;
+        this.className = className;
     }
 
     public Subjects() {
@@ -23,6 +22,10 @@ public class Subjects {
 
     public String getSubjectName() {
         return subjectName;
+    }
+
+    public String getClassName() {
+        return className;
     }
 
     public int getClassID() {
