@@ -8,6 +8,8 @@ import classroom.*;
 // imports
 import java.io.File;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.*;
 
 // public class
@@ -22,10 +24,9 @@ public class ClassDAO {
         //
         try {
             /*
-             * // so logging is not shown in console
-             * LogManager.getLogManager().reset();
+             * // so logging is not shown in console LogManager.getLogManager().reset();
              */
-            String a = "ClassDAOlog.txt";
+            String a = "log/ClassDAOlog.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {
@@ -61,7 +62,8 @@ public class ClassDAO {
         String classIDSQL = "SELECT ClassID FROM Class where ClassName = ?;";
         // No reasonable ID will reach this ammount, hence the reason of this value
         classID = -1;
-        try (Connection conn = Database.getConn(); PreparedStatement rm = conn.prepareStatement(classIDSQL)) {
+        try (Connection conn = Database.getConn();
+                PreparedStatement rm = conn.prepareStatement(classIDSQL)) {
 
             rm.setString(1, name);
 
@@ -89,27 +91,25 @@ public class ClassDAO {
         String check = "SELECT COUNT(*) AS count FROM Class WHERE ClassName = ?;";
 
         // prepared statement in try block
-        try (Connection conn = Database.getConn(); PreparedStatement rm = conn.prepareStatement(check)) {
+        try (Connection conn = Database.getConn();
+                PreparedStatement rm = conn.prepareStatement(check)) {
 
             // adding value to query
             rm.setString(1, name);
 
             /*
              * 1. We use executeUpdate() because we are not adding, removing anything we are
-             * simply executing the query to extract some value.
-             * 2. executeQuery returns value in ResultSet Object hence that value is also
-             * stored ResultSet variable, 'rs'.
+             * simply executing the query to extract some value. 2. executeQuery returns
+             * value in ResultSet Object hence that value is also stored ResultSet variable,
+             * 'rs'.
              */
 
             try (ResultSet rs = rm.executeQuery()) {
 
                 /*
-                 * ResultSet (rs) returns a table with one row.
-                 * It does not automatically point to the matched column. To do that you do
-                 * rs.next().
-                 * - res.next() returns row.
-                 * - true if more than 1
-                 * - false if 0
+                 * ResultSet (rs) returns a table with one row. It does not automatically point
+                 * to the matched column. To do that you do rs.next(). - res.next() returns row.
+                 * - true if more than 1 - false if 0
                  * 
                  * 
                  * NOTE: THINK OF MAKING A METHOD TO SEE THE ID FROM NAME LIKE getIDClass() or
@@ -153,7 +153,8 @@ public class ClassDAO {
     public boolean insertClass(String name) {
         // SQL query
         String classSQL = "INSERT INTO Class (ClassName) VALUES (?)";
-        try (Connection conn = Database.getConn(); PreparedStatement rm = conn.prepareStatement(classSQL);) {
+        try (Connection conn = Database.getConn();
+                PreparedStatement rm = conn.prepareStatement(classSQL);) {
 
             // set values in the query
             rm.setString(1, name);
@@ -184,7 +185,8 @@ public class ClassDAO {
             return false;
         }
         String deleteClassSQL = "DELETE FROM Class WHERE ClassName = ?";
-        try (Connection conn = Database.getConn(); PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
+        try (Connection conn = Database.getConn();
+                PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
 
             // set values in the query
             rm.setString(1, name);
@@ -210,20 +212,19 @@ public class ClassDAO {
 
     ConsoleDisplay display = new ConsoleDisplay();
 
-    // list all Class -- FIX THIS - THIS WILL REQUIRE SOMETHING MORE DETAILED AS IT
+    // list all Class+ -- FIX THIS - THIS WILL REQUIRE SOMETHING MORE DETAILED AS IT
     // MAY BE BEST TO LIST:
     // - list all classes
     // - list all subjects of the classes
     // - list all students of the class
-    public boolean listClass() {
+    public boolean listAll() {
         // Query to list all Class
-        String listSubjectSQL = "SELECT Class.ClassName, Subjects.SubjectName, Student.StudentName "
-                + "FROM Class "
-                + "LEFT JOIN Student ON Student.ClassID = Class.ClassID "
+        String listAllSQL = "SELECT Class.ClassName, Subjects.SubjectName, Student.StudentName "
+                + "FROM Class " + "LEFT JOIN Student ON Student.ClassID = Class.ClassID "
                 + "LEFT JOIN Subjects ON Subjects.ClassID = Class.ClassID";
         // try-block
         try (Connection conn = Database.getConn();
-                PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
+                PreparedStatement rm = conn.prepareStatement(listAllSQL)) {
             // variable to count total rows printed
             int count = 0;
             // inner try-block to fetch and display each row
@@ -240,7 +241,8 @@ public class ClassDAO {
                 // return true if classes are displayed
                 return count > 0;
             } catch (SQLException e) {
-                logger.log(Level.WARNING, "Error while executing Query to List classes with details: ", e);
+                logger.log(Level.WARNING,
+                        "Error while executing Query to List classes with details: ", e);
             }
 
         } catch (SQLException e) {
@@ -251,4 +253,29 @@ public class ClassDAO {
 
     }
 
+    public List<ClassRoom> listClass() {
+        List<ClassRoom> classroom = new ArrayList<>();
+        String listClassSQL = "SELECT ClassName, ClassID FROM Class";
+        try (Connection conn = Database.getConn();
+                PreparedStatement rm = conn.prepareStatement(listClassSQL)) {
+
+            try (ResultSet rs = rm.executeQuery()) {
+                if (!rs.isBeforeFirst()) {
+                    System.out.println("No Data is available.");
+                } else {
+                    while (rs.next()) {
+                        classroom.add(new ClassRoom(rs.getString("ClassName")));
+                    }
+                    return classroom;
+                }
+            } catch (SQLException e) {
+                logger.log(Level.WARNING, "Unable to return Classes: ", e);
+            }
+
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Unable to list all Classes", e);
+        }
+
+        return null;
+    }
 }
