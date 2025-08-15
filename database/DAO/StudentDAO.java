@@ -4,7 +4,7 @@ package database.DAO;
 import database.Database;
 import display.ConsoleDisplay;
 
-//imports
+// imports
 import java.io.File;
 import java.util.logging.*;
 import java.sql.*;
@@ -19,10 +19,9 @@ public class StudentDAO {
         //
         try {
             /*
-             * // so logging is not shown in console
-             * LogManager.getLogManager().reset();
+             * // so logging is not shown in console LogManager.getLogManager().reset();
              */
-            String a = "StudentDAOlog.txt";
+            String a = "log/StudentDAOlog.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {
@@ -120,10 +119,8 @@ public class StudentDAO {
         // - the ClassID column of both the 'Student' & 'Class' Table
         // - WHERE StudentName = ?" - It says fetch that row where StudentName.
         /* SO LONG STORY SHORT: It will fetch ClassName from StudentName */
-        String fetchStudentClass = "SELECT Class.ClassName"
-                + "FROM Student"
-                + "JOIN Class ON Student.ClassID = Class.ClassID"
-                + "WHERE StudentName = ?";
+        String fetchStudentClass = "SELECT Class.ClassName" + "FROM Student"
+                + "JOIN Class ON Student.ClassID = Class.ClassID" + "WHERE StudentName = ?";
 
         try (PreparedStatement rm = Database.getConn().prepareStatement(fetchStudentClass)) {
             rm.setString(1, name);
@@ -210,8 +207,7 @@ public class StudentDAO {
     // list all students
     public boolean listStudent() {
         // Query to list all students
-        String listStudentSQL = "SELECT Student.StudentName, Class.ClassName "
-                + "FROM Student "
+        String listStudentSQL = "SELECT Student.StudentName, Class.ClassName " + "FROM Student "
                 + "LEFT JOIN Class ON Student.ClassID = Class.ClassID";
         // try-block
         // added the initilization of connnection so its automatically closed by the
