@@ -18,7 +18,7 @@ public class DBmaker {
         try {
             // so logging is not shown in console
             LogManager.getLogManager().reset();
-            String a = "DBmakerlog.txt";
+            String a = "log/DBmakerlog.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {
