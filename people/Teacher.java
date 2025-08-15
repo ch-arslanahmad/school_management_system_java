@@ -1,12 +1,20 @@
 package people;
 
 public class Teacher extends Person {
+    protected int subjectID;
 
     public Teacher(int id, String name, int subjectID, int classID) {
         this.id = id;
         this.name = name;
         this.subjectID = subjectID;
-        this.classID = classID;
+    }
+
+    public Teacher(String name) {
+
+    }
+
+    public Teacher(String name, int classID) {
+
     }
 
     public Teacher() {
@@ -15,10 +23,6 @@ public class Teacher extends Person {
 
     public int getSubjectID() {
         return subjectID;
-    }
-
-    public int getClassID() {
-        return classID;
     }
 
     // Override Methods
@@ -34,10 +38,7 @@ public class Teacher extends Person {
 
     @Override
     public String toString() {
-        return "Name: " + name
-                + "\nID: " + id
-                + "\nClassID: " + classID
-                + "\nSubjectID: " + subjectID;
+        return "Name: " + name + "\nID: " + id + "\nSubjectID: " + subjectID;
     }
 
 }

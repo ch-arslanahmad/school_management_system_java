@@ -1,6 +1,7 @@
 package people;
 
 public class Student extends Person {
+    protected int classID;
 
     public Student(int id, String name, int classID) {
         this.name = name;
