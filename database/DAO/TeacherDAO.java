@@ -4,7 +4,7 @@ package database.DAO;
 import database.*;
 import display.ConsoleDisplay;
 
-//imports
+// imports
 import java.io.File;
 import java.util.logging.*;
 import java.sql.*;
@@ -19,10 +19,9 @@ public class TeacherDAO {
         //
         try {
             /*
-             * // so logging is not shown in console
-             * LogManager.getLogManager().reset();
+             * // so logging is not shown in console LogManager.getLogManager().reset();
              */
-            String a = "TeacherDAOlog.txt";
+            String a = "logTeacherDAOlog.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {
@@ -111,8 +110,7 @@ public class TeacherDAO {
     public String fetchTeacherSubject(String name) {
         // this requires a fairly long query, similar explaination is already given in
         // TeacherDAO
-        String fetchTeacherClass = "SELECT Subjects.SubjectName "
-                + "FROM Teacher "
+        String fetchTeacherClass = "SELECT Subjects.SubjectName " + "FROM Teacher "
                 + "JOIN SUbjects ON Teacher.SubjectID = Subjects.SubjectID "
                 + "WHERE TeacherName = ?";
 
@@ -208,11 +206,11 @@ public class TeacherDAO {
     public boolean listTeacher() {
         // Query to list all Teachers
         String listSubjectSQL = "SELECT Teacher.TeacherName, Subjects.SubjectName "
-                + "FROM Teacher "
-                + "LEFT JOIN Subjects ON Teacher.SubjectID = Subjects.SubjectID";
+                + "FROM Teacher " + "LEFT JOIN Subjects ON Teacher.SubjectID = Subjects.SubjectID";
 
         // try-block
-        try (Connection conn = Database.getConn(); PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
+        try (Connection conn = Database.getConn();
+                PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
 
             // variable to count total rows printed
             int count = 0;
@@ -223,8 +221,12 @@ public class TeacherDAO {
 
                 // loop to display every row
                 while (rs.next()) {
-                    String teachname = rs.getString("TeacherName") != null ? rs.getString("TeacherName") : "NAN";
-                    String subname = rs.getString("SubjectName") != null ? rs.getString("SubjectName") : "NAN";
+                    String teachname = rs.getString("TeacherName") != null
+                            ? rs.getString("TeacherName")
+                            : "NAN";
+                    String subname = rs.getString("SubjectName") != null
+                            ? rs.getString("SubjectName")
+                            : "NAN";
 
                     // method to display
                     display.displayf(teachname, subname);
