@@ -3,12 +3,13 @@ Testing Database SQL-Lite with java to build school management system project
 
 
 
-Disable auto commit in JAVA
-What is Auto commit?
+<h2 align= center>Disable auto commit in JAVA<h2>
+
+##### What is Auto commit?
 It is set to true by default, which allows it to after executing the query, change the database without any validation, which in case may cause error and leave the database connection loose, which can cause database locks in SQLite or other problems like incorrect/incomplete/corrupted data inserted.
 It is generally recommended that you set the autocommit to false, that makes the execution temporary.
-if during validation or error handling, an error occurs, you can simply rollback to the previous state.
-If no problems occur, the autocommit will change it to true and hence data will be successfully passed & made permanent in the database without any problems.
+- if during validation or error handling, an error occurs, you can simply rollback to the previous state.
+- If no problems occur, the autocommit will change it to true and hence data will be successfully passed & made permanent in the database without any problems.
 Hence it is recommended to:
 
 ```
@@ -21,8 +22,8 @@ conn.rollback();
 conn.setAutoCommit(true);
 ```
 
-For testing
-
+**For testing**
+```
 CREATE TABLE Class (
   ClassID INTEGER PRIMARY KEY AUTOINCREMENT,
   ClassName TEXT
@@ -40,11 +41,11 @@ CREATE TABLE Student (
   ClassID INTEGER,
   FOREIGN KEY (ClassID) REFERENCES Class(ClassID)
 );
+```
+__
 
 Inserting Columns in Tables
-
-–
-
+```
 CREATE TABLE Students(
 StudentID INT PRIMARY KEY,
 FirstName VARCHAR(50)
@@ -105,8 +106,10 @@ CREATE TABLE "Grade" (
     FOREIGN KEY("StudentID") REFERENCES "Student"("StudentID") ON DELETE CASCADE,
     FOREIGN KEY("SubjectID") REFERENCES "Subjects"("SubjectID") ON DELETE CASCADE
 );
+```
 
 Inserting Dummy Values (Testing)
+```
 INSERT INTO Class (ClassID, ClassName) VALUES (1,'Class 1');
 INSERT INTO Class (ClassID, ClassName) VALUES (2,'Class 2');
 INSERT INTO Class (ClassID, ClassName) VALUES (3,'Class 3');
@@ -134,30 +137,33 @@ INSERT INTO sqlite_sequence (name,seq) VALUES ('Class',3);
 INSERT INTO sqlite_sequence (name,seq) VALUES ('Student',6);
 INSERT INTO sqlite_sequence (name,seq) VALUES ('Subjects',6);
 INSERT INTO sqlite_sequence (name,seq) VALUES ('Teacher',6);
+```
 
 Updating Values in a Column of a Table
+```
 UPDATE Subjects SET ObtainedMarks = 95 WHERE SubjectID = 1;
 UPDATE Subjects SET ObtainedMarks = 88 WHERE SubjectID = 2;
 UPDATE Subjects SET ObtainedMarks = 70 WHERE SubjectID = 3;
 UPDATE Subjects SET ObtainedMarks = 40 WHERE SubjectID = 4;
 UPDATE Subjects SET ObtainedMarks = 71 WHERE SubjectID = 5;
 UPDATE Subjects SET ObtainedMarks = 65 WHERE SubjectID = 6;
-
+```
 CREATING VIEW
 
 Another thing that i came across while dealing with DB is
-View
-Triggers
+- View
+- Triggers
 I chose View for my DB at last.
-View:
+**View:**
 View is like a set of instructions stored in the database and you can use it to view the result of the query, hence the name, it is best for read only. View is like a query for a shortcut.
-Triggers:
+**Triggers:**
 Trigger is a stored formula in a column that will automatically change based on a formula.
 If you are familiar with excel, it is like in Excel, where formulas are stored in a cell. This is the same with the difference being the scale to a whole column rather than a single cell.
 
 View Query:
 
 First Version:
+```
 CREATE VIEW GradeView AS
 SELECT
     g.SubjectID,                     -- subject reference
@@ -173,8 +179,9 @@ SELECT
     END AS Grade
 FROM Grade g --- naming this table Grade
 JOIN Subjects s ON g.SubjectID = s.SubjectID; --Joinining Based on similar subjectID
-
+```
 Improved Version: (Finalized and currently used) - Customized to my DB
+```
 CREATE VIEW GradesView AS
 SELECT
     st.StudentID,
@@ -198,7 +205,10 @@ To call this simply type,
 SELECT *FROM viewName;
 i.e.,
 SELECT* FROM GradesView;
+```
 
 Update: This shows, all the co
 SQL Query to for Report of all Students in a Class
+```
 SELECT Subjects.SubjectName, Subjects.Marks, Subjects.ObtMarks, Grade.totalMarks, Grade.
+``
