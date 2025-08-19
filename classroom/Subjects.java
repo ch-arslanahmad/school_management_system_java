@@ -34,6 +34,7 @@ public class Subjects {
         this.Obtmarks = Obtmarks;
     }
 
+    // individual - BASIC
     public int getMarks() {
         return marks;
     }
@@ -42,10 +43,33 @@ public class Subjects {
         return Obtmarks;
     }
 
+    // percentage in this subject
     public double getPercentage() {
         return (Obtmarks * 100) / marks;
     }
 
+    // generic percentage finder
+    public double getPercentage(int marks, int Obtmarks) {
+        return (Obtmarks * 100) / marks;
+    }
+
+    // grade in this subject
+    public char getGrade() {
+        double percentage = getPercentage();
+        if (percentage >= 90) {
+            return 'A';
+        } else if (percentage >= 80) {
+            return 'B';
+        } else if (percentage >= 70) {
+            return 'C';
+        } else if (percentage >= 60) {
+            return 'D';
+        } else {
+            return 'F';
+        }
+    }
+
+    // generic grade finder
     public char getGrade(double percentage) {
         if (percentage >= 90) {
             return 'A';
