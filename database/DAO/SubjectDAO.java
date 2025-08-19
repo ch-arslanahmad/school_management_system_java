@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.*;
 
+import classroom.ClassRoom;
 import classroom.Subjects;
 
 import java.sql.*;
@@ -283,12 +284,12 @@ public class SubjectDAO {
             try (ResultSet rs = rm.executeQuery()) {
                 // loop to display every row
                 while (rs.next()) {
-                    subjects.add(
-                            new Subjects(rs.getString("SubjectName"), rs.getString("ClassName")));
+                    subjects.add(new Subjects(rs.getString("SubjectName"),
+                            new ClassRoom(rs.getString("ClassName"))));
                     count++;
                 }
-                logger.log(Level.FINE, count + " Subjects added");
-                return subjects;
+                logger.log(Level.FINE, count + " Subjects Listed");
+                return subjects; // return the List Array
             } catch (Exception e) {
                 logger.log(Level.WARNING, "Error while executing Query to List Subjects: ", e);
             }
