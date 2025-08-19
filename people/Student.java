@@ -1,20 +1,29 @@
 package people;
 
-public class Student extends Person {
-    protected int classID;
+import java.util.List;
 
-    public Student(int id, String name, int classID) {
+import classroom.ClassRoom;
+import classroom.Subjects;
+
+public class Student extends Person {
+    ClassRoom classRoom;
+
+    // Constructor for method listStudent()
+    public Student(String name, ClassRoom classRoom) {
         this.name = name;
-        this.id = id;
-        this.classID = classID;
+        this.classRoom = classRoom;
+    }
+
+    public Student(String name) {
+        this.name = name;
     }
 
     public Student() {
 
     }
 
-    public int getClassID() {
-        return classID;
+    public String getClassName() {
+        return classRoom.getClassName();
     }
 
     // Override Methods
@@ -30,9 +39,7 @@ public class Student extends Person {
 
     @Override
     public String toString() {
-        return "Name: " + name
-                + "\nID: " + id
-                + "\nClassID: " + classID;
+        return "Name: " + name + "\nID: " + id;
     }
 
 }

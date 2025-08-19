@@ -1,28 +1,21 @@
 package people;
 
-public class Teacher extends Person {
-    protected int subjectID;
+import classroom.Subjects;
 
-    public Teacher(int id, String name, int subjectID, int classID) {
-        this.id = id;
+public class Teacher extends Person {
+    Subjects subject;
+
+    public Teacher(String name, Subjects subject) {
         this.name = name;
-        this.subjectID = subjectID;
+        this.subject = subject;
     }
 
     public Teacher(String name) {
-
-    }
-
-    public Teacher(String name, int classID) {
-
+        this.name = name;
     }
 
     public Teacher() {
 
-    }
-
-    public int getSubjectID() {
-        return subjectID;
     }
 
     // Override Methods
@@ -38,7 +31,7 @@ public class Teacher extends Person {
 
     @Override
     public String toString() {
-        return "Name: " + name + "\nID: " + id + "\nSubjectID: " + subjectID;
+        return "Name: " + name + "\nID: " + id;
     }
 
 }
