@@ -22,6 +22,7 @@ import com.lowagie.text.pdf.PdfWriter;
 
 import people.Student;
 import classroom.ClassRoom;
+import classroom.Grade;
 import classroom.Subjects;
 import database.Database;
 import database.DAO.ClassDAO;
@@ -223,7 +224,7 @@ public class testPDF {
     }
 
     // --- ReportCard Table Header ---
-    void TableReport() {
+    void TableReport(List<SchoolData> data) {
         try {
 
             PdfPTable marksTable = new PdfPTable(5);
@@ -267,19 +268,31 @@ public class testPDF {
             marksTable.addCell(h5);
 
             // Dummy Data
-            String[][] subjects = { { "Mathematics", "100", "95", "95%", "A" },
-                    { "English", "100", "87", "87%", "B+" },
-                    { "Physics", "100", "92", "92%", "A-" },
-                    { "Chemistry", "100", "85", "85%", "B" },
-                    { "History", "100", "90", "90%", "A" },
-                    { "Physical Education", "100", "98", "98%", "A+" }, };
+            /*
+             * String[][] subjects = { { "Mathematics", "100", "95", "95%", "A" }, {
+             * "English", "100", "87", "87%", "B+" }, { "Physics", "100", "92", "92%", "A-"
+             * }, { "Chemistry", "100", "85", "85%", "B" }, { "History", "100", "90", "90%",
+             * "A" }, { "Physical Education", "100", "98", "98%", "A+" }, };
+             */
 
-            for (String[] row : subjects) {
-                for (String col : row) {
-                    PdfPCell cell = new PdfPCell(new Phrase(col, normalFont));
-                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    cell.setPadding(5f);
-                    marksTable.addCell(cell);
+            /*
+             * for (String[] row : subjects) { for (String col : row) { PdfPCell cell = new
+             * PdfPCell(new Phrase(col, normalFont));
+             * cell.setHorizontalAlignment(Element.ALIGN_CENTER); cell.setPadding(5f);
+             * marksTable.addCell(cell); } }
+             */
+
+            for (SchoolData d : data) {
+                for (Subjects s : d.getSubjects()) {
+                    marksTable.addCell(new PdfPCell(new Phrase(s.getSubjectName(), normalFont)));
+                    marksTable.addCell(
+                            new PdfPCell(new Phrase(String.valueOf(s.getMarks()), normalFont)));
+                    marksTable.addCell(
+                            new PdfPCell(new Phrase(String.valueOf(s.getObtmarks()), normalFont)));
+                    marksTable.addCell(new PdfPCell(
+                            new Phrase(String.valueOf(s.getPercentage()), normalFont)));
+                    marksTable.addCell(new PdfPCell(
+                            new Phrase(String.valueOf(s.getGrade(s.getPercentage())), normalFont)));
                 }
             }
 
@@ -356,7 +369,7 @@ public class testPDF {
     void createStudentReport(String StudentName) {
         try {
             StudentDAO student = new StudentDAO();
-            StudentName = "Ahmed Raza";
+            List<SchoolData> data = student.fetchStudentReport(new Student(StudentName));
             if (!student.studentExists(StudentName)) {
                 System.out.println("Student does not exist.");
                 return;
@@ -369,9 +382,10 @@ public class testPDF {
             studentInfoReport(StudentName, student.fetchStudentClass(StudentName)); // Writes
                                                                                     // Student Info
 
-            TableReport(); // create report table
+            TableReport(data); // create report table
 
-            ReportTotals(600, 599, 99, "A+"); // report totals
+            // solve this
+            ReportTotals(500, 599, 99, "A+"); // report totals
 
             lineBreak(); // line break
             sign(); // footer of signatories
