@@ -129,8 +129,8 @@ public class StudentDAO {
         // - the ClassID column of both the 'Student' & 'Class' Table
         // - WHERE StudentName = ?" - It says fetch that row where StudentName.
         /* SO LONG STORY SHORT: It will fetch ClassName from StudentName */
-        String fetchStudentClass = "SELECT Class.ClassName" + "FROM Student"
-                + "JOIN Class ON Student.ClassID = Class.ClassID" + "WHERE StudentName = ?";
+        String fetchStudentClass = "SELECT Class.ClassName " + "FROM Student "
+                + "JOIN Class ON Student.ClassID = Class.ClassID " + "WHERE StudentName = ?";
 
         try (Connection conn = Database.getConn();
                 PreparedStatement rm = conn.prepareStatement(fetchStudentClass)) {
@@ -142,10 +142,10 @@ public class StudentDAO {
                 }
 
             } catch (Exception e) {
-                logger.log(Level.WARNING, "Error while fetching ClassName of Student");
+                logger.log(Level.WARNING, "Error while executing fetchStudentClass Query: ", e);
             }
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while fetching ClassName of Student.");
+            logger.log(Level.WARNING, "Error while fetching Student ClassName: ", e);
         }
 
         return "-1";
@@ -250,7 +250,7 @@ public class StudentDAO {
             logger.log(Level.WARNING, "Error while listing Students: ", e);
         }
 
-        return null;
+        return new ArrayList<>();
 
     }
 
@@ -275,19 +275,20 @@ public class StudentDAO {
         } catch (Exception e) {
             logger.log(Level.WARNING, "Errors while listing Student Classes", e);
         }
-        return null;
+        return new ArrayList<>();
     }
 
     // method to return StudentReport Data
     public List<SchoolData> fetchStudentReport(Student student) {
         List<SchoolData> studentData = new ArrayList<>();
+        List<Subjects> subjects = new ArrayList<>();
 
         // i created a view for this named 'GradesView'
         // cannot call it
 
         // this lengthy query is used to not getStudent Name writen multiple times
-        String fetchStudentReport = "SELECT SubjectName, TotalMarks , ObtainedMarks , Percentage, Grade "
-                + "FROM GradesView" + "WHERE StudentName = ?;";
+        String fetchStudentReport = "SELECT SubjectName, TotalMarks , ObtMarks , Percentage, Grade "
+                + "FROM GradesView " + "WHERE StudentName = ?";
 
         try (Connection conn = Database.getConn();
                 PreparedStatement rm = conn.prepareStatement(fetchStudentReport)) {
@@ -297,15 +298,17 @@ public class StudentDAO {
             ResultSet rs = rm.executeQuery();
 
             while (rs.next()) {
-                studentData.add(new SchoolData((new Subjects(rs.getString("SubjectName"),
-                        rs.getInt("TotalMarks"), rs.getInt("ObtainedMarks")))));
+                Subjects subject = new Subjects(rs.getString("SubjectName"),
+                        rs.getInt("TotalMarks"), rs.getInt("ObtMarks"));
+                subjects.add(subject);
             }
+            studentData.add(new SchoolData(subjects));
             return studentData;
 
         } catch (Exception e) {
             e.printStackTrace();
+            return new ArrayList<>();
         }
-        return null;
 
     }
 
