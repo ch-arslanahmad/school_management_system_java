@@ -9,12 +9,12 @@ find . -name "*.class" -delete
 
 # 3. Compile all Java files
 echo "Compiling all sources..."
-javac -d bin -cp "lib/sqlite-jdbc-3.50.3.0.jar" $(find . -name "*.java") || {
+javac -d bin -cp "lib/sqlite-jdbc-3.50.3.0.jar:lib/itext-2.1.7.jar" $(find . -name "*.java") || {
     echo "Compilation failed."
     exit 1
 }
 
-# 4. Run specified class (default: database.testing)
-CLASS_TO_RUN="${1:-database.testing}"
+# 4. Run specified class (default: display.testPDF)
+CLASS_TO_RUN="${1:-display.testPDF}"
 echo "Running $CLASS_TO_RUN..."
-java -cp "bin:lib/sqlite-jdbc-3.50.3.0.jar" "$CLASS_TO_RUN"
+java -cp "bin:lib/sqlite-jdbc-3.50.3.0.jar:lib/itext-2.1.7.jar" "$CLASS_TO_RUN"
