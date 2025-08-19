@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import classroom.ClassRoom;
-import classroom.Grade;
 import classroom.Subjects;
 import people.Student;
 import people.Teacher;
@@ -14,8 +13,10 @@ public class SchoolData {
     private List<Student> students;
     private List<Teacher> teachers;
 
-    public SchoolData(List<Subjects> subjects) {
-        this.subjects = subjects;
+    Subjects subject;
+
+    public SchoolData() {
+
     }
 
     public SchoolData(List<ClassRoom> classes, List<Student> students) {
@@ -37,19 +38,16 @@ public class SchoolData {
 
     ClassRoom room;
     Student student;
-    List<Subjects> subjects;
-    Grade grade; // for totals & for each subject
+    List<Subjects> subjects = new ArrayList<>();
 
-    Subjects subject; // specific subject
-
-    public SchoolData(List<Subjects> subjects, Grade grade) {
+    // for Student-Report
+    public SchoolData(List<Subjects> subjects) {
         this.subjects = subjects;
-        this.grade = grade;
     }
 
-    // for Student-Report one subject
-    public SchoolData(Subjects subject) {
-        this.subject = subject;
+    public SchoolData(Student student, List<Subjects> subjects) {
+        this.student = student;
+        this.subjects = subjects;
     }
 
     // returns a className in School Data
@@ -62,44 +60,28 @@ public class SchoolData {
         return student.getName();
     }
 
-    // total percentage
-    public double getFullPercentage() {
-        List<Double> percentages = getSubjectPercentage();
-        double percentage = 0;
-        for (Double p : percentages) {
-            percentage += p;
-        }
-        return percentage;
+    public int getMarks() {
+        return subject.getMarks();
     }
 
-    // percentage by subject
-    public List<Double> getSubjectPercentage() {
-        List<Double> percentages = new ArrayList<>();
-
-        for (Subjects p : subjects) {
-            percentages.add(p.getPercentage());
-        }
-
-        return percentages;
+    public int getObtmarks() {
+        return subject.getObtmarks();
     }
 
-    public char getFullGrade() {
-        Subjects g = new Subjects();
-        return g.getGrade(getFullPercentage());
+    public double getPercentage(int totalMarks, int ObtMarks) {
+        return subject.getPercentage(totalMarks, ObtMarks);
     }
 
-    // get Subject grade
-    public List<Character> getSubjectGrade() {
-        List<Character> grades = new ArrayList<>();
-
-        for (Subjects g : subjects) {
-            grades.add(g.getGrade(getFullPercentage()));
-        }
-        return grades;
-
+    // returns grades
+    public char getGrade(double percentage) {
+        return subject.getGrade(percentage);
     }
 
-    // returns a studentGrade in School Data
+    // SOLVED the listing problem, they were returning initilized empty lists of
+    // objects even though the intent was to return a list of variables of the
+    // object. It is solved via for-each loop.
+
+    // returns a list of classNames in School Data
     public List<ClassRoom> getClasses() {
         return classes;
     }
@@ -108,12 +90,12 @@ public class SchoolData {
         return students;
     }
 
-    // returns a list of subjects
+    // returns a list of subjects objects (name, marks, obtMarks)
     public List<Subjects> getSubjects() {
         return subjects;
     }
 
-    public List<Teacher> getTeachers() {
+    public List<Teacher> getTeachersName() {
         return teachers;
     }
 

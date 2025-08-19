@@ -4,25 +4,15 @@ package display;
 import java.awt.Color; // for cell background color
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.*;
 
-import com.lowagie.text.Chunk;
-import com.lowagie.text.Document;
-import com.lowagie.text.Element;
-import com.lowagie.text.FontFactory;
-import com.lowagie.text.Font;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Phrase;
-import com.lowagie.text.Rectangle;
-import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfPCell;
-import com.lowagie.text.pdf.PdfWriter;
+import com.lowagie.text.*;
+
+import com.lowagie.text.pdf.*;
 
 import people.Student;
 import classroom.ClassRoom;
-import classroom.Grade;
 import classroom.Subjects;
 import database.Database;
 import database.DAO.ClassDAO;
@@ -35,7 +25,7 @@ import school.SchoolData;
 public class testPDF {
 
     // variables for LOGGing
-    private static final Logger logger = Logger.getLogger(ClassDAO.class.getName());
+    private static final Logger logger = Logger.getLogger(testPDF.class.getName());
     private static FileHandler fh;
 
     // STATIC block for **LOGGING**
@@ -204,7 +194,7 @@ public class testPDF {
     }
 
     // --- Student Info ---
-    void studentInfoReport(String name, String className) {
+    void studentInfoReport(String name, String className, int ID) {
         try {
 
             table = new PdfPTable(2);
@@ -213,7 +203,7 @@ public class testPDF {
             // Name Row
             addStudentRow(table, "Name", name, "Class", className, BoldFont, normalFont);
 
-            addStudentRow(table, "ID", "123456", "Year", "2025", BoldFont, normalFont);
+            addStudentRow(table, "ID", String.valueOf(ID), "Year", "2025", BoldFont, normalFont);
 
             document.add(table);
 
@@ -284,15 +274,30 @@ public class testPDF {
 
             for (SchoolData d : data) {
                 for (Subjects s : d.getSubjects()) {
-                    marksTable.addCell(new PdfPCell(new Phrase(s.getSubjectName(), normalFont)));
-                    marksTable.addCell(
-                            new PdfPCell(new Phrase(String.valueOf(s.getMarks()), normalFont)));
-                    marksTable.addCell(
-                            new PdfPCell(new Phrase(String.valueOf(s.getObtmarks()), normalFont)));
-                    marksTable.addCell(new PdfPCell(
-                            new Phrase(String.valueOf(s.getPercentage()), normalFont)));
-                    marksTable.addCell(new PdfPCell(
-                            new Phrase(String.valueOf(s.getGrade(s.getPercentage())), normalFont)));
+                    PdfPCell subject = new PdfPCell(new Phrase(s.getSubjectName(), normalFont));
+                    subject.setPadding(headSize);
+                    marksTable.addCell(subject);
+
+                    PdfPCell marks = new PdfPCell(
+                            new Phrase(String.valueOf(s.getMarks()), normalFont));
+                    marks.setPadding(headSize);
+                    marksTable.addCell(marks);
+
+                    PdfPCell Obtmarks = new PdfPCell(
+                            new Phrase(String.valueOf(s.getObtmarks()), normalFont));
+                    Obtmarks.setPadding(headSize);
+                    marksTable.addCell(Obtmarks);
+
+                    PdfPCell percentage = new PdfPCell(
+                            new Phrase(String.valueOf(s.getPercentage()), normalFont));
+                    percentage.setPadding(headSize);
+                    marksTable.addCell(percentage);
+
+                    PdfPCell grade = new PdfPCell(
+                            new Phrase(String.valueOf(s.getGrade(s.getPercentage())), normalFont));
+                    grade.setPadding(headSize);
+                    marksTable.addCell(grade);
+
                 }
             }
 
@@ -304,23 +309,23 @@ public class testPDF {
     }
 
     // --- Totals of Report---
-    void ReportTotals(int totalmarks, int totalObtmarks, float percentage, String Grade) {
+    void ReportTotals(int totalmarks, int totalObtmarks, double percentage, char Grade) {
         try {
             // marks
             Phrase mark = new Phrase();
-            mark.add(new Chunk("Total Marks", BoldFont));
+            mark.add(new Chunk("Total Marks: ", BoldFont));
             mark.add(new Chunk(String.valueOf(totalmarks) + " / ", normalFont));
-            mark.add(new Chunk(String.valueOf(totalObtmarks) + " / ", normalFont));
+            mark.add(new Chunk(String.valueOf(totalObtmarks) + " \n\n ", normalFont));
 
             // percentage
             Phrase perc = new Phrase();
-            perc.add(new Chunk("Percentage", BoldFont));
-            perc.add(new Chunk(String.valueOf(percentage) + "%", normalFont));
+            perc.add(new Chunk("Percentage: ", BoldFont));
+            perc.add(new Chunk(String.valueOf(percentage) + "%\n\n", normalFont));
 
             // final Grade
             Phrase grade = new Phrase();
-            grade.add(new Chunk("Grade", BoldFont));
-            grade.add(new Chunk(Grade, normalFont));
+            grade.add(new Chunk("Grade: ", BoldFont));
+            grade.add(new Chunk(Grade + "\n\n", normalFont));
 
             Paragraph totals = new Paragraph();
             totals.add(mark);
@@ -344,7 +349,7 @@ public class testPDF {
             SchoolDAO method = new SchoolDAO();
             School school = method.getSchoolInfo();
 
-            PdfPTable signTable = new PdfPTable(2);
+            PdfPTable signTable = new PdfPTable(1);
             signTable.setWidthPercentage(95);
 
             // phrase: principal + sign
@@ -365,27 +370,47 @@ public class testPDF {
         }
     }
 
-    // create the whole Student Report
-    void createStudentReport(String StudentName) {
+    // handle the creation of whole Student Report
+    void handleStudentReport(String StudentName) {
+        // creating a file for studentReport
+        try {
+            createPDF("studentReport.pdf");
+            setHeading("Student Report");
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "(studentReport) Error making PDF & SETTING HEADING.");
+            return; // stop if theres an error
+        }
         try {
             StudentDAO student = new StudentDAO();
-            List<SchoolData> data = student.fetchStudentReport(new Student(StudentName));
             if (!student.studentExists(StudentName)) {
                 System.out.println("Student does not exist.");
                 return;
             }
 
-            createPDF("Student.pdf");
+            List<SchoolData> data = student.fetchStudentReport(new Student(StudentName));
+            // fetching data from database
 
             addInstitutionHeader("STUDENT REPORT");
 
-            studentInfoReport(StudentName, student.fetchStudentClass(StudentName)); // Writes
-                                                                                    // Student Info
+            studentInfoReport(StudentName, student.fetchStudentClass(StudentName),
+                    student.fetchStudentID(StudentName)); // Writes
+            // Student Info
+            int totalMarks = 0;
+            int ObtMarks = 0;
+            double totalPercentage = 0;
 
+            for (SchoolData d : data) {
+                for (Subjects s : d.getSubjects()) {
+                    totalMarks += s.getMarks();
+                    ObtMarks += s.getObtmarks();
+                }
+            }
+            totalPercentage = (ObtMarks * 100) / totalMarks;
+            Subjects s = new Subjects();
+            char finalGrade = s.getGrade(totalPercentage);
             TableReport(data); // create report table
 
-            // solve this
-            ReportTotals(500, 599, 99, "A+"); // report totals
+            ReportTotals(totalMarks, ObtMarks, totalPercentage, finalGrade); // report totals
 
             lineBreak(); // line break
             sign(); // footer of signatories
@@ -394,6 +419,21 @@ public class testPDF {
         } catch (Exception e) {
             System.err.println("Error making Student Report PDF.");
             e.printStackTrace();
+        }
+    }
+
+    // create the StudentReport with validation
+    void generateStudentReport() {
+        StudentDAO student = new StudentDAO(); // student object
+        String name = "Ali Khan"; // this is testing for dummy data
+        if (!student.studentExists(name)) {
+            System.out.println(name + " doesn't exist in Database.");
+            return;
+        }
+        try {
+            handleStudentReport(name);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error Generating Student Report.", e);
         }
     }
 
@@ -482,19 +522,6 @@ public class testPDF {
         }
     }
 
-    // method to make individual Student Report FILE (only with nothing)
-    public void makeStudentReportFile() {
-        // create files
-        try {
-            createPDF("studentClass.pdf");
-            setHeading("Student Report");
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "(studentReport) Error making PDF & SETTING HEADING.");
-            return; // stop if theres an error
-        }
-
-    }
-
     // create Table - Testing Table
     public void createTeTable() {
         table = new PdfPTable(1); // 1 columns
@@ -551,13 +578,12 @@ public class testPDF {
         testPDF pdf = new testPDF();
 
         try {
-            pdf.studentClassTable();
+            pdf.generateStudentReport();
             pdf.closeDoc();
             Database.closeCon();
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         logger.info("Logging Test Complete");
         closeLog();
 
