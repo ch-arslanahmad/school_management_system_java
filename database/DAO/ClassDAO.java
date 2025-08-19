@@ -26,7 +26,7 @@ public class ClassDAO {
             /*
              * // so logging is not shown in console LogManager.getLogManager().reset();
              */
-            String a = "log/ClassDAOlog.txt";
+            String a = "log/ClassDAO.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {

@@ -27,7 +27,7 @@ public class SubjectDAO {
             /*
              * // so logging is not shown in console LogManager.getLogManager().reset();
              */
-            String a = "log/SubjectDAOlog.txt";
+            String a = "log/SubjectDAO.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {

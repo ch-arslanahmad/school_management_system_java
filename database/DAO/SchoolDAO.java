@@ -11,7 +11,7 @@ import database.Database;
 
 public class SchoolDAO {
     // variables for LOGGing
-    private static final Logger logger = Logger.getLogger(StudentDAO.class.getName());
+    private static final Logger logger = Logger.getLogger(SchoolDAO.class.getName());
     private static FileHandler fh;
 
     // STATIC block for **LOGGING**
@@ -21,7 +21,7 @@ public class SchoolDAO {
             /*
              * // so logging is not shown in console LogManager.getLogManager().reset();
              */
-            String a = "log/StudentDAOlog.txt";
+            String a = "log/SchoolDAOlog.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {
@@ -61,7 +61,7 @@ public class SchoolDAO {
                 return new School(rs.getString("Name"), rs.getString("Principal"));
             }
         }
-        return null;
+        return new School();
     }
 
     public void updateSchool(School school) throws SQLException {
