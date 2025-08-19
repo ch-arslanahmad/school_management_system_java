@@ -8,7 +8,7 @@ import java.util.Scanner;
 import java.util.logging.*;
 
 public class DBmaker {
-    private static final Logger logger = Logger.getLogger(testing.class.getName());
+    private static final Logger logger = Logger.getLogger(DBmaker.class.getName());
     private static FileHandler fh;
 
     // STATIC block for **LOGGING**
@@ -18,7 +18,7 @@ public class DBmaker {
         try {
             // so logging is not shown in console
             LogManager.getLogManager().reset();
-            String a = "log/DBmakerlog.txt";
+            String a = "log/DBmaker.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {
@@ -45,8 +45,7 @@ public class DBmaker {
         Database.setupConnection();
 
         System.out.println("To Use this APP you must create a database.");
-        System.out.println("First lets add a class.");
-        // added classes
+        System.out.println("First lets add a class or multiple classes.");
 
         // add subjects to the classes
 
