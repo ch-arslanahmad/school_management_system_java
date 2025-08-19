@@ -73,8 +73,6 @@ public class Database {
         }
         return isConnected;
     }
-    // REMOVED conn.close() as its illogical to make a connection and close it right
-    // after.
 
     public static void closeCon() {
         try {
