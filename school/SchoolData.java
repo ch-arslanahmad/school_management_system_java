@@ -40,12 +40,16 @@ public class SchoolData {
     List<Subjects> subjects;
     Grade grade; // for totals & for each subject
 
-    // for Student-Report
-    public SchoolData(ClassRoom room, Student student, List<Subjects> subjects, Grade grade) {
-        this.room = room;
-        this.student = student;
+    Subjects subject; // specific subject
+
+    public SchoolData(List<Subjects> subjects, Grade grade) {
         this.subjects = subjects;
         this.grade = grade;
+    }
+
+    // for Student-Report one subject
+    public SchoolData(Subjects subject) {
+        this.subject = subject;
     }
 
     // returns a className in School Data

@@ -12,7 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.*;
 
+import javax.security.auth.Subject;
+
 import classroom.ClassRoom;
+import classroom.Subjects;
 
 import java.sql.*;
 
@@ -273,6 +276,37 @@ public class StudentDAO {
             logger.log(Level.WARNING, "Errors while listing Student Classes", e);
         }
         return null;
+    }
+
+    // method to return StudentReport Data
+    public List<SchoolData> fetchStudentReport(Student student) {
+        List<SchoolData> studentData = new ArrayList<>();
+
+        // i created a view for this named 'GradesView'
+        // cannot call it
+
+        // this lengthy query is used to not getStudent Name writen multiple times
+        String fetchStudentReport = "SELECT SubjectName, TotalMarks , ObtainedMarks , Percentage, Grade "
+                + "FROM GradesView" + "WHERE StudentName = ?;";
+
+        try (Connection conn = Database.getConn();
+                PreparedStatement rm = conn.prepareStatement(fetchStudentReport)) {
+
+            rm.setString(1, student.getName());
+
+            ResultSet rs = rm.executeQuery();
+
+            while (rs.next()) {
+                studentData.add(new SchoolData((new Subjects(rs.getString("SubjectName"),
+                        rs.getInt("TotalMarks"), rs.getInt("ObtainedMarks")))));
+            }
+            return studentData;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+
     }
 
 }
