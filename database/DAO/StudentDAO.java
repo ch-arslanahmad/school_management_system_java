@@ -3,10 +3,17 @@ package database.DAO;
 // package imports
 import database.Database;
 import display.ConsoleDisplay;
+import people.Student;
+import school.SchoolData;
 
 // imports
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.*;
+
+import classroom.ClassRoom;
+
 import java.sql.*;
 
 public class StudentDAO {
@@ -122,7 +129,8 @@ public class StudentDAO {
         String fetchStudentClass = "SELECT Class.ClassName" + "FROM Student"
                 + "JOIN Class ON Student.ClassID = Class.ClassID" + "WHERE StudentName = ?";
 
-        try (PreparedStatement rm = Database.getConn().prepareStatement(fetchStudentClass)) {
+        try (Connection conn = Database.getConn();
+                PreparedStatement rm = conn.prepareStatement(fetchStudentClass)) {
             rm.setString(1, name);
             try (ResultSet rs = rm.executeQuery()) {
 
@@ -204,8 +212,9 @@ public class StudentDAO {
 
     ConsoleDisplay display = new ConsoleDisplay();
 
-    // list all students
-    public boolean listStudent() {
+    // list all students with class
+    public List<Student> listStudent() {
+        List<Student> student = new ArrayList<>();
         // Query to list all students
         String listStudentSQL = "SELECT Student.StudentName, Class.ClassName " + "FROM Student "
                 + "LEFT JOIN Class ON Student.ClassID = Class.ClassID";
@@ -215,21 +224,18 @@ public class StudentDAO {
         try (Connection conn = Database.getConn();
                 PreparedStatement rm = conn.prepareStatement(listStudentSQL)) {
             // variable to count total rows printed
-            int count = 0;
             // inner try-block to fetch and display each row
             try (ResultSet rs = rm.executeQuery()) {
-                System.out.printf("%-20s | %-20s\n", "Student", "Class");
-
                 // loop to display every row
                 while (rs.next()) {
                     // display each row
-                    display.displayf(rs.getString("StudentName"), rs.getString("ClassName"));
-                    count++;
+                    student.add(new Student(rs.getString("StudentName"),
+                            new ClassRoom(rs.getString("ClassName"))));
                 }
                 // return true if Students are displayed
-                if (count > 0) {
+                if (student.size() > 0) {
                     logger.info("Students are successfully displayed.");
-                    return true;
+                    return student; // returns student with classes
                 } else {
                     logger.warning("Student are not displayed.");
                 }
@@ -241,8 +247,32 @@ public class StudentDAO {
             logger.log(Level.WARNING, "Error while listing Students: ", e);
         }
 
-        return false;
+        return null;
 
+    }
+
+    public List<SchoolData> studentsClass() {
+        List<ClassRoom> room = new ArrayList<>();
+        List<Student> student = new ArrayList<>();
+        List<SchoolData> studentClass = new ArrayList<>();
+
+        String stdClassSQL = "SELECT Class.ClassName, Student.StudentName " + "FROM Class "
+                + "JOIN Student ON Student.ClassID = Class.ClassID;";
+
+        try (Connection conn = Database.getConn();
+                PreparedStatement rm = conn.prepareStatement(stdClassSQL)) {
+
+            ResultSet rs = rm.executeQuery();
+            while (rs.next()) {
+                room.add(new ClassRoom(rs.getString("ClassName")));
+                student.add(new Student(rs.getString("StudentName")));
+            }
+            studentClass.add(new SchoolData(room, student));
+            return studentClass;
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Errors while listing Student Classes", e);
+        }
+        return null;
     }
 
 }
