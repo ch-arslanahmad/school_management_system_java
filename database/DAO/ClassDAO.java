@@ -62,7 +62,7 @@ public class ClassDAO {
         String classIDSQL = "SELECT ClassID FROM Class where ClassName = ?;";
         // No reasonable ID will reach this ammount, hence the reason of this value
         classID = -1;
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(classIDSQL)) {
 
             rm.setString(1, name);
@@ -91,7 +91,7 @@ public class ClassDAO {
         String check = "SELECT COUNT(*) AS count FROM Class WHERE ClassName = ?;";
 
         // prepared statement in try block
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(check)) {
 
             // adding value to query
@@ -153,7 +153,7 @@ public class ClassDAO {
     public boolean insertClass(String name) {
         // SQL query
         String classSQL = "INSERT INTO Class (ClassName) VALUES (?)";
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(classSQL);) {
 
             // set values in the query
@@ -185,7 +185,7 @@ public class ClassDAO {
             return false;
         }
         String deleteClassSQL = "DELETE FROM Class WHERE ClassName = ?";
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
 
             // set values in the query
@@ -223,8 +223,10 @@ public class ClassDAO {
                 + "FROM Class " + "LEFT JOIN Student ON Student.ClassID = Class.ClassID "
                 + "LEFT JOIN Subjects ON Subjects.ClassID = Class.ClassID";
         // try-block
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(listAllSQL)) {
+            conn.setAutoCommit(false);
+
             // variable to count total rows printed
             int count = 0;
             // inner try-block to fetch and display each row
@@ -239,13 +241,16 @@ public class ClassDAO {
                     count++;
                 }
                 // return true if classes are displayed
+                conn.commit();
                 return count > 0;
             } catch (SQLException e) {
+                conn.rollback();
                 logger.log(Level.WARNING,
                         "Error while executing Query to List classes with details: ", e);
             }
 
         } catch (SQLException e) {
+
             logger.log(Level.WARNING, "Error while listing Classes: ", e);
         }
 
@@ -256,7 +261,7 @@ public class ClassDAO {
     public List<ClassRoom> listClass() {
         List<ClassRoom> classroom = new ArrayList<>();
         String listClassSQL = "SELECT ClassName, ClassID FROM Class";
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(listClassSQL)) {
 
             try (ResultSet rs = rm.executeQuery()) {
@@ -276,6 +281,6 @@ public class ClassDAO {
             logger.log(Level.WARNING, "Unable to list all Classes", e);
         }
 
-        return null;
+        return new ArrayList<>();
     }
 }
