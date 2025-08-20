@@ -1,8 +1,12 @@
 package database;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.net.ConnectException;
 import java.sql.*;
 import java.util.logging.*;
+
+import org.sqlite.FileException;
 
 public class Database {
 
@@ -38,55 +42,33 @@ public class Database {
     }
 
     // DATABASE CONNECTION
-    private static Connection conn;
 
     // setupConnection of DB
-    static boolean setupConnection() {
-        boolean isConnected = false;
-        conn = null;
+    public static Connection getConnection() {
+        String path = "database/people.db";
         try {
             File dbFile = new File("database/people.db");
             if (!dbFile.exists()) {
-                throw new SQLException("File Not found.");
+                throw new FileNotFoundException("File Not found: "); // stop if file is not found
             }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+
+        }
+        Connection conn = null;
+        try {
             // Load JDBC Driver
             Class.forName("org.sqlite.JDBC");
             // Connecting the database file
-            conn = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
-            // run only if connection is not null
-            if (conn != null) {
-                isConnected = true;
-                logger.info("Connection Established");
-                fh.close();
-            }
-            // if connection not made
-            else {
-                logger.warning("Connection Problem");
-            }
+            conn = DriverManager.getConnection("jdbc:sqlite:" + path);
 
         } catch (Exception e) {
             System.out.print("Error establishing connection with database/sqlite: ");
             e.printStackTrace();
 
             logger.warning("Error establishing connection with database/sqlite");
-
         }
-        return isConnected;
+        return conn;
     }
 
-    public static void closeCon() {
-        try {
-            conn.close();
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while closing connection: ", e);
-        }
-    }
-
-    public static Connection getConn() {
-        if (setupConnection()) {
-            return conn;
-        } else {
-            return null;
-        }
-    }
 }

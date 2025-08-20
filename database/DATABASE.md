@@ -2,6 +2,10 @@
 Testing Database SQL-Lite with java to build school management system project
 
 
+### Finalizing (Current-Version):
+- ClassDAO (uncompleted)
+
+
 
 <h2 align= center>Disable auto commit in JAVA<h2>
 
