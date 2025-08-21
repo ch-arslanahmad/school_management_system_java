@@ -152,19 +152,50 @@ UPDATE Subjects SET ObtainedMarks = 40 WHERE SubjectID = 4;
 UPDATE Subjects SET ObtainedMarks = 71 WHERE SubjectID = 5;
 UPDATE Subjects SET ObtainedMarks = 65 WHERE SubjectID = 6;
 ```
-CREATING VIEW
+
+**Grade Table**
+CREATE TABLE "Grade" (
+	"GradeID"	INTEGER,
+	"StudentID"	INTEGER,
+	"SubjectID"	INTEGER,
+	"ObtainedMarks" INTEGER,
+	FOREIGN KEY("StudentID") REFERENCES "Student"("StudentID") ON DELETE CASCADE,
+	FOREIGN KEY("SubjectID") REFERENCES "Subjects"("SubjectID") ON DELETE CASCADE,
+	PRIMARY KEY("GradeID" AUTOINCREMENT)
+);
+
+
+
+
+
+
+
+
+
+
+
+**CREATING VIEW**
 
 Another thing that i came across while dealing with DB is
 - View
 - Triggers
 I chose View for my DB at last.
+Update: Now have to use trigger too.
 **View:**
 View is like a set of instructions stored in the database and you can use it to view the result of the query, hence the name, it is best for read only. View is like a query for a shortcut.
+*REASON for its USE:*
+I need a view soly (for now) simply for the reason of getting a grade table which has percentage, character grade with total and obtained marks.
+
 **Triggers:**
-Trigger is a stored formula in a column that will automatically change based on a formula.
+Trigger is a stored formula in a column that will automatically change/execute based on a formula.
 If you are familiar with excel, it is like in Excel, where formulas are stored in a cell. This is the same with the difference being the scale to a whole column rather than a single cell.
 
-View Query:
+*REASON for its USE:*
+Making a trigger:
+- checking class consistency, as only adding marks of a subject of a student that his class has.
+- Checking if the obtained marks given are not larger than the total marks.
+
+View Queries:
 
 First Version:
 ```
@@ -209,6 +240,24 @@ To call this simply type,
 SELECT *FROM viewName;
 i.e.,
 SELECT* FROM GradesView;
+```
+
+**Trigger-used**
+```
+CREATE TRIGGER CheckStudentClass
+BEFORE INSERT ON Grade
+FOR EACH ROW
+BEGIN
+
+-- if & ONLY if students class matches the subject class, continue
+
+    SELECT
+        CASE
+            WHEN (SELECT ClassID FROM Student WHERE StudentID = NEW.StudentID)
+               != (SELECT ClassID FROM Subjects WHERE SubjectID = NEW.SubjectID)
+            THEN RAISE(ABORT, 'MISMATCH: Subject is not in the Student Class.')
+        END;
+END;
 ```
 
 Update: This shows, all the co
