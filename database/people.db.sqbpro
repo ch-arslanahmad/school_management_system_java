@@ -1,1 +1,15 @@
+<<<<<<< HEAD
 <?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="/home/arslan/Downloads/Github/Project/school_management_system_java/database/people.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="3446"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,5:mainClass"/><default_encoding codec=""/><browse_table_settings/></tab_browse><tab_sql><sql name="SQL 1">SELECT * FROM getGrades;</sql><current_tab id="0"/></tab_sql></sqlb_project>
+=======
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="/home/arslan/Downloads/Github/Project/school_management_system_java/database/people.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="3446"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,5:mainClass"/><default_encoding codec=""/><browse_table_settings/></tab_browse><tab_sql><sql name="SQL 1"></sql><sql name="Edit Trigger CheckObtainedMarks">DROP TRIGGER &quot;main&quot;.&quot;CheckObtainedMarks&quot;;
+CREATE TRIGGER CheckObtainedMarks
+BEFORE INSERT ON Grade
+FOR EACH ROW
+BEGIN
+    SELECT
+        CASE
+            WHEN NEW.ObtainedMarks &gt; (SELECT Marks FROM Subjects WHERE SubjectID = NEW.SubjectID)
+            THEN RAISE(ABORT, 'Obtained marks cannot be greater than total marks of the subject.')
+        END;
+END</sql><current_tab id="1"/></tab_sql></sqlb_project>
+>>>>>>> ab65decf337bdafac2b0fbdf6d72897fa11edff3
