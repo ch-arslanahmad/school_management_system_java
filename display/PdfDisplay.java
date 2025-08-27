@@ -22,10 +22,10 @@ import database.DAO.StudentDAO;
 import database.DAO.SubjectDAO;
 import school.School;
 
-public class testPDF {
+public class PdfDisplay {
 
     // variables for LOGGing
-    private static final Logger logger = Logger.getLogger(testPDF.class.getName());
+    private static final Logger logger = Logger.getLogger(PdfDisplay.class.getName());
     private static FileHandler fh;
 
     // STATIC block for **LOGGING**
@@ -35,7 +35,7 @@ public class testPDF {
             /*
              * // so logging is not shown in console LogManager.getLogManager().reset();
              */
-            String a = "log/testPDF.txt";
+            String a = "log/PdfDisplay.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {
