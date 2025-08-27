@@ -2,7 +2,6 @@ package database.DAO;
 
 // package imports
 import database.*;
-import display.ConsoleDisplay;
 
 // imports
 import java.io.File;
@@ -63,9 +62,12 @@ public class SubjectDAO {
 
     // method to get ID from Subject
     public int getIDfromSubject(String name) {
+        if (!subjectExists(name)) {
+            return -1;
+        }
         String subjectIDSQL = "SELECT SubjectID FROM Subjects where SubjectName = ?;";
         subjectID = -1;
-        try (PreparedStatement rm = Database.getConn().prepareStatement(subjectIDSQL)) {
+        try (PreparedStatement rm = Database.getConnection().prepareStatement(subjectIDSQL)) {
 
             rm.setString(1, name);
 
@@ -109,7 +111,7 @@ public class SubjectDAO {
             String classIdSQL = "SELECT ClassID FROM Subjects WHERE SubjectName = ?";
 
             // try-catch block
-            try (PreparedStatement rm = Database.getConn().prepareStatement(classIdSQL)) {
+            try (PreparedStatement rm = Database.getConnection().prepareStatement(classIdSQL)) {
 
                 // inserting value in Query
                 rm.setString(1, name);
@@ -135,7 +137,7 @@ public class SubjectDAO {
         String ExistSQL = "SELECT COUNT(*) AS count FROM Subjects WHERE SubjectName = ?;";
 
         // prepared statement in try block
-        try (PreparedStatement rm = Database.getConn().prepareStatement(ExistSQL)) {
+        try (PreparedStatement rm = Database.getConnection().prepareStatement(ExistSQL)) {
 
             // adding value to query
             rm.setString(1, name);
@@ -172,67 +174,75 @@ public class SubjectDAO {
     }
 
     // Insert 1 Subject in DB
-    public boolean insertSubject(String ClassName, String name) {
+    public boolean insertSubject(String ClassName, String name, int Marks) {
         int classID = check.getValidClassID(ClassName);
         // STOP if return ERROR code (-1)
         if (classID == -1) {
             logger.info("Incorrect ID");
-        } else {
-            // assign a variable to the classID.
-
-            // SQL Query
-            String subjectSQL = "INSERT INTO Subjects (SubjectName, ClassID) VALUES (?,?)";
-            try (PreparedStatement rm = Database.getConn().prepareStatement(subjectSQL)) {
-                // set values in the query
-                rm.setString(1, name);
-                rm.setInt(2, classID);
-
-                // execute query
-                int rs = rm.executeUpdate();
-
-                if (rs > 0) {
-                    // confirmation
-                    logger.info("Subject Added");
-                    return true;
-                } else {
-                    logger.config("Subject Not Added.");
-                    return false;
-                }
-            } catch (Exception e) {
-                // writing text with errors
-                logger.log(Level.WARNING, "Error while Inserting Subject: ", e);
-            }
+            return false;
         }
+
+        // SQL Query
+        String subjectSQL = "INSERT INTO Subjects (SubjectName, ClassID, Marks) VALUES (?,?,?)";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(subjectSQL)) {
+            // set values in the query
+            rm.setString(1, name);
+            rm.setInt(2, classID);
+            rm.setInt(3, Marks);
+
+            // execute query
+            int rs = rm.executeUpdate();
+
+            if (rs > 0) {
+                // confirmation
+                logger.info("Subject Added");
+                conn.commit(); // commmit if true
+                return true;
+            } else {
+                logger.config("Subject Not Added.");
+                conn.rollback(); // rollback if error
+                return false;
+            }
+        } catch (Exception e) {
+            // writing text with errors
+            logger.log(Level.WARNING, "Error while Inserting Subject: ", e);
+        }
+
         return false;
     }
 
     public boolean updateSubject(String ClassName, String name, String updateName) {
         if (check.getValidClassID(ClassName) == -1) {
             logger.config("Class doesn't exist.");
-        } else {
-            if (!subjectExists(name)) {
-                logger.config("Subject doesn't exist.");
-            } else {
-                // Query to update Subject
-                String updateSubjSQL = "UPDATE Subjects SET SubjectName = ? WHERE SubjectName = ? AND ClassID = ?";
-                try (PreparedStatement rm = Database.getConn().prepareStatement(updateSubjSQL)) {
-                    rm.setString(1, updateName);
-                    rm.setString(2, name);
-                    rm.setInt(3, check.getValidClassID(ClassName));
-
-                    int rs = rm.executeUpdate();
-                    if (rs > 0) {
-                        return true;
-                    } else {
-                        logger.warning("Unable to update SubjectName. ");
-                        return false;
-                    }
-
-                } catch (Exception e) {
-                    logger.log(Level.WARNING, "Error while updating subject: ", e);
-                }
-            }
+            return false;
         }
+        if (!subjectExists(name)) {
+            logger.config("Subject doesn't exist.");
+            return false;
+        }
+        // Query to update Subject
+        String updateSubjSQL = "UPDATE Subjects SET SubjectName = ? WHERE SubjectName = ? AND ClassID = ?";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(updateSubjSQL)) {
+            rm.setString(1, updateName);
+            rm.setString(2, name);
+            rm.setInt(3, check.getValidClassID(ClassName));
+
+            int rs = rm.executeUpdate();
+            if (rs > 0) {
+                conn.commit(); // commit (if true)
+                return true;
+            } else {
+                logger.warning("Unable to update SubjectName. ");
+                conn.rollback(); // rollback (if error)
+                return false;
+            }
+
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while updating subject: ", e);
+        }
+
         return false;
 
     }
@@ -240,34 +250,35 @@ public class SubjectDAO {
     public boolean deleteSubject(String ClassName, String name) {
         if (!(subjectExists(name))) {
             System.out.println("No Match found");
-        } else {
-            String delSubjectSQL = "DELETE FROM Subjects WHERE SubjectName = ? AND ClassID = ?";
-            try (PreparedStatement rm = Database.getConn().prepareStatement(delSubjectSQL)) {
-
-                // set values in the query
-                rm.setString(1, name);
-                rm.setInt(2, getClassIdBySubject(name));
-
-                // execute query
-                int rs = rm.executeUpdate();
-
-                if (rs > 0) {
-                    // confirmation
-                    logger.info("Subject Deleted");
-                    return true;
-                } else {
-                    logger.config("Subject unable to delete.");
-                    return false;
-                }
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Error while deleting Subject: ", e);
-            }
+            return false;
         }
 
+        String delSubjectSQL = "DELETE FROM Subjects WHERE SubjectName = ? AND ClassID = ?";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(delSubjectSQL)) {
+
+            // set values in the query
+            rm.setString(1, name);
+            rm.setInt(2, getClassIdBySubject(name));
+
+            // execute query
+            int rs = rm.executeUpdate();
+
+            if (rs > 0) {
+                // confirmation
+                logger.info("Subject Deleted");
+                conn.commit(); // commit if true
+                return true;
+            } else {
+                logger.config("Subject unable to delete.");
+                conn.rollback(); // rollback if error
+                return false;
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while deleting Subject: ", e);
+        }
         return false;
     }
-
-    ConsoleDisplay display = new ConsoleDisplay();
 
     // list all subjects
     public List<Subjects> listSubjects() {
@@ -276,8 +287,8 @@ public class SubjectDAO {
         String listSubjectSQL = "SELECT Subjects.SubjectName, Class.ClassName " + "FROM Subjects "
                 + "LEFT JOIN Class ON Subjects.ClassID = Class.ClassID";
         // try-block
-        try (Connection conn = Database.getConn();
-                PreparedStatement rm = Database.getConn().prepareStatement(listSubjectSQL)) {
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = Database.getConnection().prepareStatement(listSubjectSQL)) {
             // variable to count total rows printed
             int count = 0;
             // inner try-block to fetch and display each row

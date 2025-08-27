@@ -4,6 +4,7 @@ package database.DAO;
 // package imports
 import database.*;
 import display.ConsoleDisplay;
+import people.Student;
 import classroom.*;
 // imports
 import java.io.File;
@@ -47,6 +48,7 @@ public class ClassDAO {
         }
     }
 
+    // USE THIS METHOD IN EVERY FILE WHICH HAS LOG
     public static void closeLog() {
         fh.flush();
         fh.close();
@@ -60,7 +62,7 @@ public class ClassDAO {
     // method to get ID from Class (-1 Error Code)
     public int getIDfromClass(String name) {
         String classIDSQL = "SELECT ClassID FROM Class where ClassName = ?;";
-        // No reasonable ID will reach this ammount, hence the reason of this value
+        // No reasonable ID will reach this amount, hence the reason of this value
         classID = -1;
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(classIDSQL)) {
@@ -149,13 +151,12 @@ public class ClassDAO {
 
     }
 
-    // to insert 1 class
+    // to insert a class
     public boolean insertClass(String name) {
         // SQL query
         String classSQL = "INSERT INTO Class (ClassName) VALUES (?)";
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(classSQL);) {
-
             // set values in the query
             rm.setString(1, name);
 
@@ -166,9 +167,11 @@ public class ClassDAO {
             if (rs > 0 || rs == 1) {
                 // confirmation
                 logger.info("Class Added");
+                conn.commit(); // commit
                 return true;
             } else {
                 logger.warning("Class Not Added.");
+                conn.rollback(); // rollback
                 return false;
             }
 
@@ -187,7 +190,6 @@ public class ClassDAO {
         String deleteClassSQL = "DELETE FROM Class WHERE ClassName = ?";
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
-
             // set values in the query
             rm.setString(1, name);
 
@@ -197,10 +199,12 @@ public class ClassDAO {
             if (rs > 0 || rs == 1) {
                 // confirmation
                 logger.info("Class Deleted");
+                conn.commit(); // commit
                 return true;
             } else {
                 logger.warning("Class unable to delete.");
-                return false;
+                conn.rollback();
+                return false; // rollback
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error while deleting Class: ", e);
@@ -210,6 +214,48 @@ public class ClassDAO {
 
     }
 
+    // update class row (classname)
+    public boolean updateClass(String name, String updateName) {
+
+        if (!Classexists(name)) {
+            logger.warning("Class Doesnt exist.");
+            return false;
+        }
+
+        if (updateName == null || updateName.isEmpty()) {
+            logger.warning("New ClassName cannot be empty.");
+            return false;
+        }
+
+        if (Classexists(updateName)) {
+            logger.warning("'" + updateName + "' name already exists.");
+
+        }
+
+        String updateClass = "UPDATE Class SET ClassName = ? WHERE ClassName = ?";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(updateClass)) {
+            conn.setAutoCommit(false); // start the transaction
+            rm.setString(1, updateName);
+            rm.setString(2, name);
+
+            int rs = rm.executeUpdate();
+            if (rs > 0) {
+                conn.commit(); // commit if true
+                logger.info("Committed Successfully");
+                return true;
+            } else {
+                conn.rollback(); // rollback if error
+                logger.info("Committed Successfully");
+                return false;
+            }
+            // for the most part, as autocommit is disabled.
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while updating Class: ", e);
+        }
+        return false;
+    }
+
     ConsoleDisplay display = new ConsoleDisplay();
 
     // list all Class+ -- FIX THIS - THIS WILL REQUIRE SOMETHING MORE DETAILED AS IT
@@ -217,7 +263,9 @@ public class ClassDAO {
     // - list all classes
     // - list all subjects of the classes
     // - list all students of the class
-    public boolean listAll() {
+    public List<ClassRoom> listAll() {
+        List<ClassRoom> rooms = new ArrayList<>();
+
         // Query to list all Class
         String listAllSQL = "SELECT Class.ClassName, Subjects.SubjectName, Student.StudentName "
                 + "FROM Class " + "LEFT JOIN Student ON Student.ClassID = Class.ClassID "
@@ -225,26 +273,24 @@ public class ClassDAO {
         // try-block
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(listAllSQL)) {
-            conn.setAutoCommit(false);
 
             // variable to count total rows printed
-            int count = 0;
             // inner try-block to fetch and display each row
             try (ResultSet rs = rm.executeQuery()) {
-                System.out.printf("%-20s | %-20s | %-20s\n", "Class", "Subject", "Student");
+                // System.out.printf("%-20s | %-20s | %-20s\n", "Class", "Subject", "Student");
 
                 // loop to display every row
                 while (rs.next()) {
+                    ClassRoom room = new ClassRoom(rs.getString("ClassName"),
+                            new Subjects(rs.getString("SubjectName")),
+                            new Student(rs.getString("StudentName")));
+                    rooms.add(room);
                     // display each row
-                    display.displayf(rs.getString("ClassName"), rs.getString("SubjectName"),
-                            rs.getString("StudentName"));
-                    count++;
+                    // display.displayf(rs.getString("ClassName"), rs.getString("SubjectName"),
+                    // rs.getString("StudentName"));
                 }
-                // return true if classes are displayed
-                conn.commit();
-                return count > 0;
+                return rooms;
             } catch (SQLException e) {
-                conn.rollback();
                 logger.log(Level.WARNING,
                         "Error while executing Query to List classes with details: ", e);
             }
@@ -254,16 +300,16 @@ public class ClassDAO {
             logger.log(Level.WARNING, "Error while listing Classes: ", e);
         }
 
-        return false;
+        return new ArrayList<>();
 
     }
 
+    // list All Classes
     public List<ClassRoom> listClass() {
         List<ClassRoom> classroom = new ArrayList<>();
-        String listClassSQL = "SELECT ClassName, ClassID FROM Class";
+        String listClassSQL = "SELECT ClassName FROM Class";
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(listClassSQL)) {
-
             try (ResultSet rs = rm.executeQuery()) {
                 if (!rs.isBeforeFirst()) {
                     System.out.println("No Data is available.");
@@ -283,4 +329,5 @@ public class ClassDAO {
 
         return new ArrayList<>();
     }
+
 }

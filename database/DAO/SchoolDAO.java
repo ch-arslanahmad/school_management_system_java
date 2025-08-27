@@ -41,19 +41,31 @@ public class SchoolDAO {
         }
     }
 
-    public void insertSchool(School school) throws SQLException {
+    public static void closeLog() {
+        fh.flush();
+        fh.close();
+    }
+
+    public boolean insertSchool(String name, String principal) {
         String sql = "INSERT INTO School (Name, Principal) VALUES (?, ?)";
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(sql)) {
-            rm.setString(1, school.getName());
-            rm.setString(2, school.getPrincipal());
-            rm.executeUpdate();
+            rm.setString(1, name);
+            rm.setString(2, principal);
+            int rs = rm.executeUpdate();
+
+            if (rs > 0) {
+                return true;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "ERROR inserting SchoolInfo: ", e);
         }
+        return false;
     }
 
     public School getSchoolInfo() throws SQLException {
         String sql = "SELECT Name, Principal FROM School";
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(sql)) {
             ResultSet rs = rm.executeQuery();
 
@@ -66,7 +78,7 @@ public class SchoolDAO {
 
     public void updateSchool(School school) throws SQLException {
         String sql = "UPDATE School SET Name = ?, Principal = ? WHERE id = 1";
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(sql)) {
             rm.setString(1, school.getName());
             rm.setString(2, school.getPrincipal());
@@ -80,7 +92,7 @@ public class SchoolDAO {
 
     public void deleteSchool(String schoolName) throws SQLException {
         String sql = "DELETE FROM School WHERE Name = ?";
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(sql)) {
             rm.setString(1, schoolName);
             int rs = rm.executeUpdate();
@@ -97,7 +109,7 @@ public class SchoolDAO {
 
     /*
      * public List<Subjects> studentReport() throws SQLException { String
-     * studentReport = ""; try (Connection conn = Database.getConn();
+     * studentReport = ""; try (Connection conn = Database.getConnection();
      * PreparedStatement rm = conn.prepareStatement(studentReport)) {
      * 
      * } catch (Exception e) { logger.log(Level.WARNING,
