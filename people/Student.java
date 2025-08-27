@@ -1,9 +1,6 @@
 package people;
 
-import java.util.List;
-
 import classroom.ClassRoom;
-import classroom.Subjects;
 
 public class Student extends Person {
     ClassRoom classRoom;
