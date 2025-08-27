@@ -4,6 +4,7 @@ package display;
 import java.awt.Color; // for cell background color
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.*;
 
@@ -12,15 +13,14 @@ import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
 
 import people.Student;
+import people.Teacher;
 import classroom.ClassRoom;
 import classroom.Subjects;
-import database.Database;
 import database.DAO.ClassDAO;
 import database.DAO.SchoolDAO;
 import database.DAO.StudentDAO;
 import database.DAO.SubjectDAO;
 import school.School;
-import school.SchoolData;
 
 public class testPDF {
 
@@ -74,16 +74,99 @@ public class testPDF {
     Document document;
     PdfWriter writer;
     Paragraph heading;
-    PdfPTable table;
 
-    public void createPDF(String path) {
+    // display one column of 'className'
+    public void displayClass(List<ClassRoom> classes) {
+        addInstitutionHeader("Classes");
+        try {
+            PdfPTable table = Table(1);
+            table.setWidthPercentage(50);
+            table.setSpacingAfter(15f);
+
+            table.addCell(headCell("Class"));
+            for (ClassRoom cls : classes) {
+                table.addCell(styleCell(cls.getClassName()));
+            }
+            document.add(table);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error printing Classes on PDF: ", e);
+        }
+    }
+
+    // display 2 columns of 'subjects'
+    public void displaySubject(List<Subjects> subjects) {
+        addInstitutionHeader("Subjects");
+        try {
+            PdfPTable table = Table(2);
+            table.setWidthPercentage(90);
+            table.setSpacingAfter(15f);
+            table.setWidths(new float[] { 2, 1 }); // controls spacing
+
+            table.addCell(headCell("Subject"));
+            table.addCell(headCell("Class"));
+            for (Subjects s : subjects) {
+                table.addCell(styleCell(s.getSubjectName()));
+                table.addCell(styleCell(s.getClassName()));
+            }
+            document.add(table);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error printing Subjects on PDF: ", e);
+        }
+    }
+
+    public void displayTeacher(List<Teacher> teachers) {
+        addInstitutionHeader("Teachers");
+        try {
+            PdfPTable table = Table(2);
+            table.setWidthPercentage(90);
+            table.setSpacingAfter(15f);
+            table.setWidths(new float[] { 2, 1 }); // controls spacing
+
+            table.addCell(headCell("Teacher"));
+            table.addCell(headCell("Subject"));
+            for (Teacher t : teachers) {
+                table.addCell(styleCell(t.getName()));
+                table.addCell(styleCell(t.getSubjectName()));
+            }
+            document.add(table);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error printing Teachers on PDF: ", e);
+        }
+    }
+
+    public void displayStudent(List<Student> students) {
+        addInstitutionHeader("Student");
+        try {
+            PdfPTable table = Table(2);
+            table.setWidthPercentage(90);
+            table.setSpacingAfter(15f);
+            table.setWidths(new float[] { 2, 1 }); // controls spacing
+
+            table.addCell(headCell("Students"));
+            table.addCell(headCell("Classes"));
+            for (Student t : students) {
+                table.addCell(styleCell(t.getName()));
+                table.addCell(styleCell(t.getClassName()));
+            }
+            document.add(table);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error printing Students on PDF: ", e);
+        }
+    }
+
+    public String createPDF(String path) {
         try {
             document = new Document();
             writer = PdfWriter.getInstance(document, new FileOutputStream(path));
             document.open();
-        } catch (Exception e) {
-            e.printStackTrace();
+            File file = new File(path);
+            if (file.exists()) {
+                return file.getAbsolutePath();
+            }
+        } catch (DocumentException | IOException e) {
+            logger.log(Level.WARNING, "Unable to make PDF: ", e);
         }
+        return null;
     }
 
     // (PDF) - Heading Styles
@@ -126,7 +209,7 @@ public class testPDF {
 
     // create Table with n number of columns
     public PdfPTable Table(int NofColumn) {
-        table = new PdfPTable(NofColumn); // n columns
+        PdfPTable table = new PdfPTable(NofColumn); // n columns
         table.setWidthPercentage(70);
 
         // spacing before/after table
@@ -136,7 +219,7 @@ public class testPDF {
     }
 
     // --- School Name ---
-    void addInstitutionHeader(String title) {
+    public void addInstitutionHeader(String title) {
         // "PARKLAND HIGH SCHOOL"
         // STUDENT REPORT CARD
 
@@ -152,7 +235,7 @@ public class testPDF {
             reportTitle.setSpacingAfter(15f);
             document.add(reportTitle);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.WARNING, "Error adding Institute Header: ", e);
         }
     }
 
@@ -197,7 +280,7 @@ public class testPDF {
     void studentInfoReport(String name, String className, int ID) {
         try {
 
-            table = new PdfPTable(2);
+            PdfPTable table = new PdfPTable(2);
             table.setWidthPercentage(90);
             table.setWidths(new float[] { 2, 1.5f }); // controls spacing
             // Name Row
@@ -209,12 +292,12 @@ public class testPDF {
 
             lineBreak();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.WARNING, "Error printing Student Info: ", e);
         }
     }
 
     // --- ReportCard Table Header ---
-    void TableReport(List<SchoolData> data) {
+    void TableReport(List<Subjects> data) {
         try {
 
             PdfPTable marksTable = new PdfPTable(5);
@@ -272,38 +355,37 @@ public class testPDF {
              * marksTable.addCell(cell); } }
              */
 
-            for (SchoolData d : data) {
-                for (Subjects s : d.getSubjects()) {
-                    PdfPCell subject = new PdfPCell(new Phrase(s.getSubjectName(), normalFont));
-                    subject.setPadding(headSize);
-                    marksTable.addCell(subject);
+            for (Subjects s : data) {
+                PdfPCell subject = new PdfPCell(new Phrase(s.getSubjectName(), normalFont));
+                subject.setPadding(headSize);
+                marksTable.addCell(subject);
 
-                    PdfPCell marks = new PdfPCell(
-                            new Phrase(String.valueOf(s.getMarks()), normalFont));
-                    marks.setPadding(headSize);
-                    marksTable.addCell(marks);
+                PdfPCell marks = new PdfPCell(new Phrase(String.valueOf(s.getMarks()), normalFont));
+                marks.setPadding(headSize);
+                marksTable.addCell(marks);
 
-                    PdfPCell Obtmarks = new PdfPCell(
-                            new Phrase(String.valueOf(s.getObtmarks()), normalFont));
-                    Obtmarks.setPadding(headSize);
-                    marksTable.addCell(Obtmarks);
+                PdfPCell Obtmarks = new PdfPCell(
+                        new Phrase(String.valueOf(s.getObtmarks()), normalFont));
+                Obtmarks.setPadding(headSize);
+                marksTable.addCell(Obtmarks);
 
-                    PdfPCell percentage = new PdfPCell(
-                            new Phrase(String.valueOf(s.getPercentage()), normalFont));
-                    percentage.setPadding(headSize);
-                    marksTable.addCell(percentage);
+                PdfPCell percentage = new PdfPCell(
+                        new Phrase(String.valueOf(s.getPercentage()), normalFont));
+                percentage.setPadding(headSize);
+                marksTable.addCell(percentage);
 
-                    PdfPCell grade = new PdfPCell(
-                            new Phrase(String.valueOf(s.getGrade(s.getPercentage())), normalFont));
-                    grade.setPadding(headSize);
-                    marksTable.addCell(grade);
+                PdfPCell grade = new PdfPCell(
+                        new Phrase(String.valueOf(s.getGrade(s.getPercentage())), normalFont));
+                grade.setPadding(headSize);
+                marksTable.addCell(grade);
 
-                }
             }
 
             document.add(marksTable);
 
-        } catch (Exception e) {
+        } catch (
+
+        Exception e) {
             e.printStackTrace();
         }
     }
@@ -370,8 +452,8 @@ public class testPDF {
         }
     }
 
-    // handle the creation of whole Student Report
-    void handleStudentReport(String StudentName) {
+    // handle the FULL creation of whole Student Report
+    public void handleStudentReport(String StudentName) {
         // creating a file for studentReport
         try {
             createPDF("studentReport.pdf");
@@ -387,7 +469,7 @@ public class testPDF {
                 return;
             }
 
-            List<SchoolData> data = student.fetchStudentReport(new Student(StudentName));
+            List<Subjects> data = student.fetchStudentReport(new Student(StudentName));
             // fetching data from database
 
             addInstitutionHeader("STUDENT REPORT");
@@ -399,11 +481,9 @@ public class testPDF {
             int ObtMarks = 0;
             double totalPercentage = 0;
 
-            for (SchoolData d : data) {
-                for (Subjects s : d.getSubjects()) {
-                    totalMarks += s.getMarks();
-                    ObtMarks += s.getObtmarks();
-                }
+            for (Subjects d : data) {
+                totalMarks += d.getMarks();
+                ObtMarks += d.getObtmarks();
             }
             totalPercentage = (ObtMarks * 100) / totalMarks;
             Subjects s = new Subjects();
@@ -449,7 +529,7 @@ public class testPDF {
         }
 
         try {
-            table = Table(1);
+            PdfPTable table = Table(1);
             ClassDAO room = new ClassDAO();
             List<ClassRoom> classList = room.listClass();
             table.addCell(headCell("Class"));
@@ -476,7 +556,7 @@ public class testPDF {
         }
 
         try {
-            table = Table(2);
+            PdfPTable table = Table(2);
             SubjectDAO sub = new SubjectDAO();
             List<Subjects> subjectList = sub.listSubjects();
             table.addCell(headCell("Subject"));
@@ -506,7 +586,7 @@ public class testPDF {
 
         // tables
         try {
-            table = Table(2);
+            PdfPTable table = Table(2);
             StudentDAO stu = new StudentDAO();
             List<Student> studentClasses = stu.listStudent();
             table.addCell(headCell("Classes"));
@@ -524,7 +604,7 @@ public class testPDF {
 
     // create Table - Testing Table
     public void createTeTable() {
-        table = new PdfPTable(1); // 1 columns
+        PdfPTable table = new PdfPTable(1); // 1 columns
         table.setWidthPercentage(70);
 
         table.setSpacingBefore(15f);
@@ -571,21 +651,5 @@ public class testPDF {
             e.printStackTrace();
             return false;
         }
-    }
-
-    // MAIN METHOD FOR TESTING
-    public static void main(String[] args) {
-        testPDF pdf = new testPDF();
-
-        try {
-            pdf.generateStudentReport();
-            pdf.closeDoc();
-            Database.closeCon();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        logger.info("Logging Test Complete");
-        closeLog();
-
     }
 }
