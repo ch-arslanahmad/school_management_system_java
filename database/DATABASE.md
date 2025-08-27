@@ -1,6 +1,10 @@
 # database
-Testing Database SQL-Lite with java to build school management system project
+Testing & using Database SQL-Lite with java to build school management system project.
+What I have learned:
+- SQL (CRUD Queries, Joins, View, Trigger)
+- Database Connection & Understanding
 
+My learnings is as follows:
 
 ### Finalizing (Current-Version):
 - ClassDAO (uncompleted)
@@ -11,9 +15,10 @@ Testing Database SQL-Lite with java to build school management system project
 
 ##### What is Auto commit?
 It is set to true by default, which allows it to after executing the query, change the database without any validation, which in case may cause error and leave the database connection loose, which can cause database locks in SQLite or other problems like incorrect/incomplete/corrupted data inserted.
+- It is used when you are changing data only.
 It is generally recommended that you set the autocommit to false, that makes the execution temporary.
 - if during validation or error handling, an error occurs, you can simply rollback to the previous state.
-- If no problems occur, the autocommit will change it to true and hence data will be successfully passed & made permanent in the database without any problems.
+- It is only applicable to all CRUD operations aside from read.
 Hence it is recommended to:
 
 ```
@@ -26,18 +31,7 @@ conn.rollback();
 conn.setAutoCommit(true);
 ```
 
-
-# my 2 thinking
-- MAKE A SEPERATE FILE FOR DB Queries
-- think about getting grades along with marks
-
-
-
-
-
-
-
-
+I have put this so in the `Database.java` file so every connection made must have autocommit set to `false`. 
 
 **CREATING VIEW**
 
