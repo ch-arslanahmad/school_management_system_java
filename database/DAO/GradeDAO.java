@@ -9,7 +9,7 @@ import database.Database;
 
 public class GradeDAO {
     // variables for LOGGing
-    private static final Logger logger = Logger.getLogger(StudentDAO.class.getName());
+    private static final Logger logger = Logger.getLogger(GradeDAO.class.getName());
     private static FileHandler fh;
 
     // STATIC block for **LOGGING**
