@@ -1,6 +1,5 @@
 package school;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import classroom.ClassRoom;
@@ -10,6 +9,7 @@ import people.Teacher;
 
 public class SchoolData {
     private List<ClassRoom> classes;
+    private List<Subjects> subjects;
     private List<Student> students;
     private List<Teacher> teachers;
 
@@ -19,28 +19,20 @@ public class SchoolData {
 
     }
 
-    public SchoolData(List<ClassRoom> classes, List<Student> students) {
-        this.classes = classes;
-        this.students = students;
-    }
-
     /*
-     * My Thinking is that: 1. There is one 'ClassRoom', which has one 'Student' 2.
-     * While has multiple, 'Subjects', in which each subject aside from its normal
-     * details, - It also holds marks, obtained marks. - then from that character
-     * grade, percentages are calculated.
-     * 
-     * 3. The total Obtained marks & marks are in 'Grade' - where total percentages
-     * & grade is calculated.
-     * 
-     * SO NOW:
+     * public SchoolData(List<ClassRoom> classes, List<Student> students) {
+     * this.classes = classes; this.students = students; }
      */
 
     ClassRoom room;
     Student student;
-    List<Subjects> subjects = new ArrayList<>();
 
-    // for Student-Report
+    // studentsClass() method
+    public SchoolData(ClassRoom room, Student student) {
+        this.room = room;
+        this.student = student;
+    }
+
     public SchoolData(List<Subjects> subjects) {
         this.subjects = subjects;
     }
