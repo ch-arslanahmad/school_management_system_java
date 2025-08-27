@@ -1,3 +1,5 @@
+// THIS HOLDS CODE THAT WAS SIMPLY FOR TESTING
+
 /*
  * current consideration, compile using the following commands (not simple run)
  * 
