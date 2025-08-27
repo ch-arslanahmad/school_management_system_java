@@ -2,11 +2,8 @@ package database;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.ConnectException;
 import java.sql.*;
 import java.util.logging.*;
-
-import org.sqlite.FileException;
 
 public class Database {
 
@@ -41,6 +38,11 @@ public class Database {
         }
     }
 
+    public static void closeLog() {
+        fh.flush();
+        fh.close();
+    }
+
     // DATABASE CONNECTION
 
     // setupConnection of DB
@@ -61,13 +63,14 @@ public class Database {
             Class.forName("org.sqlite.JDBC");
             // Connecting the database file
             conn = DriverManager.getConnection("jdbc:sqlite:" + path);
-
+            conn.setAutoCommit(false); // universal auto commit - disabled
         } catch (Exception e) {
             System.out.print("Error establishing connection with database/sqlite: ");
             e.printStackTrace();
 
             logger.warning("Error establishing connection with database/sqlite");
         }
+
         return conn;
     }
 

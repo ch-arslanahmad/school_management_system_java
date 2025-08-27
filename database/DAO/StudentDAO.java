@@ -4,15 +4,12 @@ package database.DAO;
 import database.Database;
 import display.ConsoleDisplay;
 import people.Student;
-import school.SchoolData;
 
 // imports
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.*;
-
-import javax.security.auth.Subject;
 
 import classroom.ClassRoom;
 import classroom.Subjects;
@@ -60,12 +57,13 @@ public class StudentDAO {
     public int fetchStudentID(String name) {
         if (!studentExists(name)) {
             logger.warning("Student does not exist. Add Student.");
+            return -1;
         } else {
             // SQL Query
             String StudentIDSQL = "SELECT StudentID FROM Student where StudentName= ?";
 
             // try-catch block
-            try (PreparedStatement rm = Database.getConn().prepareStatement(StudentIDSQL)) {
+            try (PreparedStatement rm = Database.getConnection().prepareStatement(StudentIDSQL)) {
 
                 // putting value in query
                 rm.setString(1, name);
@@ -94,7 +92,7 @@ public class StudentDAO {
         String ExistSQL = "SELECT COUNT(*) AS count FROM Student WHERE StudentName = ?";
 
         // prepared statement in try block
-        try (PreparedStatement rm = Database.getConn().prepareStatement(ExistSQL)) {
+        try (PreparedStatement rm = Database.getConnection().prepareStatement(ExistSQL)) {
 
             // adding value to query
             rm.setString(1, name);
@@ -132,7 +130,7 @@ public class StudentDAO {
         String fetchStudentClass = "SELECT Class.ClassName " + "FROM Student "
                 + "JOIN Class ON Student.ClassID = Class.ClassID " + "WHERE StudentName = ?";
 
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(fetchStudentClass)) {
             rm.setString(1, name);
             try (ResultSet rs = rm.executeQuery()) {
@@ -163,7 +161,7 @@ public class StudentDAO {
         } else {
             String studentSQL = "INSERT INTO Students (StudentName, ClassID) VALUES (?,?)";
 
-            try (PreparedStatement rm = Database.getConn().prepareStatement(studentSQL)) {
+            try (PreparedStatement rm = Database.getConnection().prepareStatement(studentSQL)) {
                 rm.setString(1, name);
                 rm.setInt(2, classID);
 
@@ -189,7 +187,7 @@ public class StudentDAO {
             System.out.println("No Match found");
         } else {
             String deleteClassSQL = "DELETE FROM Student WHERE StudentName = ?";
-            try (PreparedStatement rm = Database.getConn().prepareStatement(deleteClassSQL)) {
+            try (PreparedStatement rm = Database.getConnection().prepareStatement(deleteClassSQL)) {
 
                 // set values in the query
                 rm.setString(1, name);
@@ -213,6 +211,29 @@ public class StudentDAO {
 
     }
 
+    // update studentName
+    public boolean updateStudent(String name, String updateName) {
+
+        if (!studentExists(name)) {
+            return false;
+        }
+        String updateStudent = "UPDATE Student SET StudentName = ? WHERE StudentName = ?";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(updateStudent)) {
+
+            rm.setString(1, updateName);
+            rm.setString(2, name);
+
+            int rs = rm.executeUpdate();
+            if (rs > 0) {
+                return true;
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while updating Student: ", e);
+        }
+        return false;
+    }
+
     ConsoleDisplay display = new ConsoleDisplay();
 
     // list all students with class
@@ -224,7 +245,7 @@ public class StudentDAO {
         // try-block
         // added the initilization of connnection so its automatically closed by the
         // try-catch block
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(listStudentSQL)) {
             // variable to count total rows printed
             // inner try-block to fetch and display each row
@@ -254,43 +275,17 @@ public class StudentDAO {
 
     }
 
-    public List<SchoolData> studentsClass() {
-        List<ClassRoom> room = new ArrayList<>();
-        List<Student> student = new ArrayList<>();
-        List<SchoolData> studentClass = new ArrayList<>();
-
-        String stdClassSQL = "SELECT Class.ClassName, Student.StudentName " + "FROM Class "
-                + "JOIN Student ON Student.ClassID = Class.ClassID;";
-
-        try (Connection conn = Database.getConn();
-                PreparedStatement rm = conn.prepareStatement(stdClassSQL)) {
-
-            ResultSet rs = rm.executeQuery();
-            while (rs.next()) {
-                room.add(new ClassRoom(rs.getString("ClassName")));
-                student.add(new Student(rs.getString("StudentName")));
-            }
-            studentClass.add(new SchoolData(room, student));
-            return studentClass;
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Errors while listing Student Classes", e);
-        }
-        return new ArrayList<>();
-    }
-
     // method to return StudentReport Data
-    public List<SchoolData> fetchStudentReport(Student student) {
-        List<SchoolData> studentData = new ArrayList<>();
-        List<Subjects> subjects = new ArrayList<>();
+    public List<Subjects> fetchStudentReport(Student student) {
+        List<Subjects> subjectsList = new ArrayList<>();
 
-        // i created a view for this named 'GradesView'
-        // cannot call it
+        // i created a view for this named 'getGrades'
+        // cannot call it directly
+        // this lengthy query is used, so not getStudent/ClassName Name writen multiple
+        // times
+        String fetchStudentReport = "SELECT SubjectName, Marks, ObtainedMarks, Percentage, Grade FROM getGrades WHERE StudentName = ?";
 
-        // this lengthy query is used to not getStudent Name writen multiple times
-        String fetchStudentReport = "SELECT SubjectName, TotalMarks , ObtMarks , Percentage, Grade "
-                + "FROM GradesView " + "WHERE StudentName = ?";
-
-        try (Connection conn = Database.getConn();
+        try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(fetchStudentReport)) {
 
             rm.setString(1, student.getName());
@@ -298,12 +293,11 @@ public class StudentDAO {
             ResultSet rs = rm.executeQuery();
 
             while (rs.next()) {
-                Subjects subject = new Subjects(rs.getString("SubjectName"),
-                        rs.getInt("TotalMarks"), rs.getInt("ObtMarks"));
-                subjects.add(subject);
+                Subjects subject = new Subjects(rs.getString("SubjectName"), rs.getInt("Marks"),
+                        rs.getInt("ObtainedMarks"));
+                subjectsList.add(subject);
             }
-            studentData.add(new SchoolData(subjects));
-            return studentData;
+            return subjectsList;
 
         } catch (Exception e) {
             e.printStackTrace();
