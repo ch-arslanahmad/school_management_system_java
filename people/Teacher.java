@@ -18,6 +18,10 @@ public class Teacher extends Person {
 
     }
 
+    public String getSubjectName() {
+        return subject.getSubjectName();
+    }
+
     // Override Methods
     @Override
     public int getID() {
