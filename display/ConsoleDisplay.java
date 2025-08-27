@@ -14,7 +14,7 @@ import school.School;
 public class ConsoleDisplay implements Display {
 
     // variables for LOGGing
-    private static final Logger logger = Logger.getLogger(testPDF.class.getName());
+    private static final Logger logger = Logger.getLogger(ConsoleDisplay.class.getName());
     private static FileHandler fh;
 
     // STATIC block for **LOGGING**

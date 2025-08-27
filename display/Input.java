@@ -8,7 +8,7 @@ import database.DBmaker;
 
 public class Input {
 
-    private static final Logger logger = Logger.getLogger(DBmaker.class.getName());
+    private static final Logger logger = Logger.getLogger(Input.class.getName());
     private static FileHandler fh;
 
     // STATIC block for **LOGGING**
