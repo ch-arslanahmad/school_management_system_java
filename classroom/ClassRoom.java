@@ -2,11 +2,15 @@ package classroom;
 
 import java.util.List;
 
+import people.Student;
+
 public class ClassRoom {
 
     private int classID;
     private String className;
     List<Subjects> subjects;
+    Subjects subject;
+    Student student;
 
     public ClassRoom(String className) {
         this.className = className;
@@ -15,6 +19,13 @@ public class ClassRoom {
     public ClassRoom(String className, List<Subjects> subjects) {
         this.className = className;
         this.subjects = subjects;
+    }
+
+    // for listAll() method in ClassDAO
+    public ClassRoom(String className, Subjects subject, Student student) {
+        this.className = className;
+        this.subject = subject;
+        this.student = student;
     }
 
     public ClassRoom() {
