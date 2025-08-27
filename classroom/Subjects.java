@@ -16,7 +16,20 @@ public class Subjects {
         this.classRoom = classRoom;
     }
 
-    // constructor for studentReport
+    //
+    ClassRoom room;
+
+    public Subjects(ClassRoom room, String subjectName, int marks) {
+        this.room = room;
+        this.subjectName = subjectName;
+        this.marks = marks;
+    }
+
+    public void setObtmarks(int obtmarks) {
+        this.Obtmarks = obtmarks;
+    }
+
+    // constructor for studentReport - row by row
     public Subjects(String subjectName, int marks, int Obtmarks) {
         this.subjectName = subjectName;
         this.marks = marks;
