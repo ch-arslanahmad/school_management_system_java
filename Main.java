@@ -12,7 +12,7 @@ import database.DAO.SubjectDAO;
 import database.DAO.TeacherDAO;
 import display.ConsoleDisplay;
 import display.Input;
-import display.testPDF;
+import display.PdfDisplay;
 import people.Student;
 import people.Teacher;
 
@@ -303,7 +303,7 @@ public class Main {
 
         // print on PDF
 
-        testPDF pdf = new testPDF(); // PDF object
+        PdfDisplay pdf = new PdfDisplay(); // PDF object
 
         if (choice == 2) {
             String path = pdf.createPDF("Classes.pdf"); // create Class PDF
@@ -379,7 +379,7 @@ public class Main {
 
         // print on PDF
 
-        testPDF pdf = new testPDF(); // PDF object
+        PdfDisplay pdf = new PdfDisplay(); // PDF object
 
         if (choice == 2) {
             String path = pdf.createPDF("Subjects.pdf"); // create Subjects PDF
@@ -448,7 +448,7 @@ public class Main {
 
         // print on PDF
 
-        testPDF pdf = new testPDF(); // PDF object
+        PdfDisplay pdf = new PdfDisplay(); // PDF object
 
         if (choice == 2) {
             String path = pdf.createPDF("Teachers.pdf"); // create Teachers PDF
@@ -493,7 +493,7 @@ public class Main {
     }
 
     // FOR PDF in ManageDisplayStu Method
-    void stuPrintPDF(testPDF pdf, List<Student> students, int choice, Input input) {
+    void stuPrintPDF(PdfDisplay pdf, List<Student> students, int choice, Input input) {
         if (choice == 1) {
             // Student list in 'PDF'
             String path = pdf.createPDF("Students.pdf"); // create Students PDF
@@ -512,7 +512,7 @@ public class Main {
     }
 
     public void ManageDisplayStu(List<Student> students /* for student list */, ConsoleDisplay show,
-            testPDF pdf, int choice, Input input) {
+            PdfDisplay pdf, int choice, Input input) {
         System.out.println("1. Console\n2. PDF\n");
         int ch = validateShowInput(2, input);
 
@@ -551,7 +551,7 @@ public class Main {
         // VALIDATING INPUT
         choice = validateShowInput(2, input);
 
-        testPDF pdf = new testPDF(); // PDF object
+        PdfDisplay pdf = new PdfDisplay(); // PDF object
 
         // if they want student list print
         if (choice == 1) {
