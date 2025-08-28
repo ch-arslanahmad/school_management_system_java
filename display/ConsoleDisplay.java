@@ -30,7 +30,7 @@ public class ConsoleDisplay implements Display {
             if (!(file.exists())) {
                 file.createNewFile();
             }
-            fh = new FileHandler(a, true);
+            fh = new FileHandler(a, 1024 * 1024, 1, true); // path, size, n of files, append or not
             fh.setLevel(Level.ALL);
 
             logger.addHandler(fh);

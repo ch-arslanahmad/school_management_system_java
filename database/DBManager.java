@@ -28,7 +28,7 @@ public class DBManager {
             if (!(file.exists())) {
                 file.createNewFile();
             }
-            fh = new FileHandler(a, true);
+            fh = new FileHandler(a, 1024 * 1024, 1, true); // path, size, n of files, append or not
             logger.addHandler(fh);
             fh.setFormatter(new SimpleFormatter());
             logger.setLevel(Level.FINE);

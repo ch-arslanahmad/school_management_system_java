@@ -27,13 +27,13 @@ public class TeacherDAO {
             /*
              * // so logging is not shown in console LogManager.getLogManager().reset();
              */
-            String a = "logTeacherDAO.txt";
+            String a = "log/TeacherDAO.txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {
                 file.createNewFile();
             }
-            fh = new FileHandler(a, true);
+            fh = new FileHandler(a, 1024 * 1024, 1, true); // path, size, n of files, append or not
             fh.setLevel(Level.FINE);
             ;
             logger.addHandler(fh);
