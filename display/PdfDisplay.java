@@ -5,12 +5,14 @@ import java.awt.Color; // for cell background color
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.*;
 
 import com.lowagie.text.*;
 
 import com.lowagie.text.pdf.*;
+import com.lowagie.text.pdf.draw.VerticalPositionMark;
 
 import people.Student;
 import people.Teacher;
@@ -573,7 +575,7 @@ public class PdfDisplay {
         }
     }
 
-    // method to write student classes list
+    // method to write student classes policy
     public void studentClassTable() {
         // create files
         try {
@@ -675,6 +677,21 @@ public class PdfDisplay {
         return info;
     }
 
+    // Rs - phrase
+    public Phrase createPhrase(String label, int value) {
+        // Combine label + value into one chunk
+        Chunk labelChunk = new Chunk(label + ": ",
+                FontFactory.getFont(FontFactory.COURIER_BOLD, 12));
+        Chunk valueChunk = new Chunk(String.valueOf(value) + "Rs", new Font(Font.HELVETICA, 11));
+
+        // Wrap inside phrase + paragraph
+        Phrase phrase = new Phrase();
+        phrase.add(labelChunk);
+        phrase.add(valueChunk);
+
+        return phrase;
+    }
+
     public static void main(String[] args) {
         Document document = new Document();
 
@@ -719,7 +736,7 @@ public class PdfDisplay {
             Paragraph loc = new Paragraph("Chawal Chowk, Bahria Section, Hussain Society, Lahore",
                     FontFactory.getFont(FontFactory.HELVETICA, 9));
 
-            Paragraph n = new Paragraph("Fee Reciept",
+            Paragraph n = new Paragraph("Payment Voucher",
                     FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
 
             Schoolname.addElement(p);
@@ -743,8 +760,108 @@ public class PdfDisplay {
             infoTable.addCell(test.createInfoCell("ID", "101111"));
             infoTable.addCell(test.createInfoCell("Class", "9th"));
             infoTable.addCell(test.createInfoCell("Session", "Aug, 2025"));
-
             document.add(infoTable);
+
+            Paragraph sline = new Paragraph(
+                    "_____________________________________________________________________________");
+            sline.setAlignment(Element.ALIGN_RIGHT);
+            sline.setSpacingBefore(0f);
+            sline.setSpacingAfter(0f);
+            sline.setLeading(0f, 0.2f); // line spacing control document.add(Sline);
+            Phrase remarks = new Phrase();
+            Chunk label = new Chunk("Remarks: ",
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12));
+            Chunk mark = new Chunk("MONTHLY FEE",
+                    FontFactory.getFont(FontFactory.COURIER, 12, Font.UNDERLINE));
+            Chunk right = new Chunk(new VerticalPositionMark());
+            Chunk payLabel = new Chunk("Payments(¤)",
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12));
+            remarks.add(Chunk.NEWLINE); // Adds a line break
+            remarks.add(Chunk.NEWLINE); // Adds a line break
+            remarks.add(label);
+            remarks.add(mark);
+            remarks.add(right);
+            remarks.add(payLabel);
+
+            document.add(remarks); // adding remarks section
+
+            // PAYMENTS SECTION
+            // ********************
+
+            PdfPTable payments = new PdfPTable(1);
+            payments.setWidthPercentage(100);
+
+            List<String> labels = Arrays.asList("Tuition Fee", "Exam Fee", "Stationery");
+            List<Integer> values = Arrays.asList(5000, 1000, 750);
+
+            Paragraph line = new Paragraph("________________");
+            line.setAlignment(Element.ALIGN_RIGHT);
+            line.setSpacingBefore(0f);
+            line.setSpacingAfter(0f);
+            line.setLeading(0f, 0.2f); // line spacing control
+            document.add(line);
+
+            int totals = 0;
+            for (int ii : values) {
+                totals += ii;
+            }
+
+            for (int i = 0; i < labels.size(); i++) {
+                String labeli = labels.get(i);
+                Integer value = values.get(i);
+
+                Paragraph para = new Paragraph(test.createPhrase(labeli, value));
+
+                // Right align the paragraph
+                para.setAlignment(Element.ALIGN_RIGHT);
+
+                // Add paragraph
+                document.add(para);
+
+                document.add(line);
+
+                // Add spacing between rows if needed
+                para.setSpacingAfter(4f);
+
+            }
+
+            document.add(payments);
+
+            Paragraph finals = new Paragraph(test.createPhrase("Total", totals));
+            finals.setAlignment(Element.ALIGN_RIGHT);
+            document.add(finals);
+
+            // LISTING PROBLEM
+
+            test.lineBreak();
+
+            // Create a list (ordered or unordered)
+            com.lowagie.text.List list = new com.lowagie.text.List(com.lowagie.text.List.UNORDERED);
+            // First item
+            Phrase policy1 = new Phrase();
+            policy1.add(new Chunk(
+                    "Late payment amount will be charged after due date and can't be waived. The collection on your behalf will be used for need based scholarships.\n",
+                    FontFactory.getFont(FontFactory.HELVETICA, 12)));
+            list.add(new ListItem(policy1));
+
+            Phrase policy2 = new Phrase();
+
+            policy2.add(new Chunk(
+                    "All Fees are non refundable and can be changed without prior notice.\n",
+                    FontFactory.getFont(FontFactory.HELVETICA, 12)));
+
+            list.add(new ListItem(policy2));
+
+            Phrase policy3 = new Phrase();
+
+            policy3.add(new Chunk(
+                    "Withholding tax @ 5% leviable effective July 01, 2013 under section 2361 of the ITO, 2001 where annual fee exceeds Rs. 200,000/-",
+                    FontFactory.getFont(FontFactory.HELVETICA, 12)));
+
+            list.add(new ListItem(policy3));
+
+            // Finally add the list to the document
+            document.add(list);
 
         } catch (Exception e) {
             e.printStackTrace();
