@@ -652,4 +652,107 @@ public class PdfDisplay {
             return false;
         }
     }
+
+    // FOR RECEIPT
+    // ***********
+
+    // creating info cell
+    public PdfPCell createInfoCell(String placeholder, String val) {
+        Phrase infoPhrase = new Phrase(); // creating a phrase
+
+        Chunk label = new Chunk(placeholder + ": ",
+                FontFactory.getFont(FontFactory.COURIER_BOLD, 10));
+
+        Chunk name = new Chunk(val, FontFactory.getFont(FontFactory.HELVETICA, 10));
+
+        infoPhrase.add(label);
+        infoPhrase.add(name);
+
+        PdfPCell info = new PdfPCell(infoPhrase);
+
+        info.setBorder(Rectangle.NO_BORDER);
+
+        return info;
+    }
+
+    public static void main(String[] args) {
+        Document document = new Document();
+
+        PdfDisplay test = new PdfDisplay();
+
+        try {
+            PdfWriter.getInstance(document, new FileOutputStream("Fee.pdf"));
+            document.open();
+
+            String imagePath = "img/logo.jpeg";
+
+            // BASIC RECIEPT HEADER
+            // *************
+
+            // LEFT - IMG
+            // *************
+
+            PdfPTable table = new PdfPTable(2);
+            table.setWidths(new float[] { 1, 4 }); // controls spacing
+
+            Image image = Image.getInstance(imagePath);
+            image.scaleAbsolute(70f, 70f);
+
+            PdfPCell imgCell = new PdfPCell();
+            imgCell.addElement(image);
+
+            // remove borders
+            imgCell.setBorder(Rectangle.NO_BORDER);
+
+            // horizontal + vertical alignment
+            imgCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            imgCell.setVerticalAlignment(Element.ALIGN_CENTER);
+
+            table.addCell(imgCell);
+
+            // RIGHT - INFO
+            // *************
+
+            PdfPCell Schoolname = new PdfPCell();
+            Paragraph p = new Paragraph("AFAQ School",
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 25));
+            Paragraph loc = new Paragraph("Chawal Chowk, Bahria Section, Hussain Society, Lahore",
+                    FontFactory.getFont(FontFactory.HELVETICA, 9));
+
+            Paragraph n = new Paragraph("Fee Reciept",
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
+
+            Schoolname.addElement(p);
+            Schoolname.addElement(n);
+
+            Schoolname.addElement(loc);
+
+            // horizontal + vertical alignment
+            Schoolname.setHorizontalAlignment(Element.ALIGN_BASELINE);
+            Schoolname.setVerticalAlignment(Element.ALIGN_CENTER);
+            Schoolname.setBorder(Rectangle.NO_BORDER);
+
+            table.addCell(Schoolname);
+
+            document.add(table);
+
+            // BASIC INFO SECTION
+            // *************
+            PdfPTable infoTable = new PdfPTable(2);
+            infoTable.addCell(test.createInfoCell("Name", "Ali Khan"));
+            infoTable.addCell(test.createInfoCell("ID", "101111"));
+            infoTable.addCell(test.createInfoCell("Class", "9th"));
+            infoTable.addCell(test.createInfoCell("Session", "Aug, 2025"));
+
+            document.add(infoTable);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // Close the document
+            document.close();
+            closeLog(); // close static log
+        }
+    }
+
 }
