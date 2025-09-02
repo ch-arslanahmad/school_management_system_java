@@ -67,6 +67,8 @@ public class PdfDisplay {
         fh.close();
     }
 
+    static final Font Header = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 25);
+
     // Fonts
     static final Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
     static final Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14,
@@ -703,16 +705,54 @@ public class PdfDisplay {
         return phrase;
     }
 
-    public static void main(String[] args) {
-        Document document = new Document();
+    public com.lowagie.text.List printPolicies() {
+        com.lowagie.text.List list = new com.lowagie.text.List(com.lowagie.text.List.UNORDERED);
+        // First item
+        Phrase policy1 = new Phrase();
+        policy1.add(new Chunk(
+                "Late payment amount will be charged after due date and can't be waived. The collection on your behalf will be used for need based scholarships.\n",
+                FontFactory.getFont(FontFactory.HELVETICA, 12)));
+        list.add(new ListItem(policy1));
 
-        PdfDisplay test = new PdfDisplay();
+        Phrase policy2 = new Phrase();
+
+        policy2.add(
+                new Chunk("All Fees are non refundable and can be changed without prior notice.\n",
+                        FontFactory.getFont(FontFactory.HELVETICA, 12)));
+
+        list.add(new ListItem(policy2));
+
+        Phrase policy3 = new Phrase();
+
+        policy3.add(new Chunk(
+                "Withholding tax @ 5% leviable effective July 01, 2013 under section 2361 of the ITO, 2001 where annual fee exceeds Rs. 200,000/-",
+                FontFactory.getFont(FontFactory.HELVETICA, 12)));
+
+        list.add(new ListItem(policy3));
+        return list;
+    }
+
+    public void handleFeeReciept(String studentName) {
+        StudentDAO student = new StudentDAO();
+        if (!student.studentExists(studentName)) {
+            System.out.println("Student does not exist.");
+            return;
+        }
+
+        Student std = student.getStudentInfo(studentName); // getting all Student Info
+
+        SchoolDAO school = new SchoolDAO();
+
+        School info = school.getSchoolInfo(); // fetching all School Info
+
+        Document document = new Document(); // creating a doc for reciept
 
         try {
+            PdfDisplay test = new PdfDisplay();
             PdfWriter.getInstance(document, new FileOutputStream("Fee.pdf"));
-            document.open();
+            document.open(); // opening doc
 
-            String imagePath = "img/logo.jpeg";
+            String imagePath = "img/logo.jpeg"; // logo img path
 
             // BASIC RECIEPT HEADER
             // *************
@@ -742,9 +782,8 @@ public class PdfDisplay {
             // *************
 
             PdfPCell Schoolname = new PdfPCell();
-            Paragraph p = new Paragraph("AFAQ School",
-                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 25));
-            Paragraph loc = new Paragraph("Chawal Chowk, Bahria Section, Hussain Society, Lahore",
+            Paragraph p = new Paragraph(info.getName(), Header);
+            Paragraph loc = new Paragraph(info.getlocation(),
                     FontFactory.getFont(FontFactory.HELVETICA, 9));
 
             Paragraph n = new Paragraph("Payment Voucher",
@@ -767,10 +806,10 @@ public class PdfDisplay {
             // BASIC INFO SECTION
             // *************
             PdfPTable infoTable = new PdfPTable(2);
-            infoTable.addCell(test.createInfoCell("Name", "Ali Khan"));
-            infoTable.addCell(test.createInfoCell("ID", "101111"));
-            infoTable.addCell(test.createInfoCell("Class", "9th"));
-            infoTable.addCell(test.createInfoCell("Session", "Aug, 2025"));
+            infoTable.addCell(test.createInfoCell("Name", std.getName()));
+            infoTable.addCell(test.createInfoCell("ID", String.valueOf(std.getID())));
+            infoTable.addCell(test.createInfoCell("Class", std.getClassName()));
+            infoTable.addCell(test.createInfoCell("Session", info.getTime()));
             document.add(infoTable);
 
             Paragraph sline = new Paragraph(
@@ -799,11 +838,8 @@ public class PdfDisplay {
             // PAYMENTS SECTION
             // ********************
 
-            PdfPTable payments = new PdfPTable(1);
-            payments.setWidthPercentage(100);
-
-            List<String> labels = Arrays.asList("Tuition Fee", "Exam Fee", "Stationery");
-            List<Integer> values = Arrays.asList(5000, 1000, 750);
+            ClassDAO fee = new ClassDAO();
+            ClassRoom room = fee.getClassFees(std.getClassName());
 
             Paragraph line = new Paragraph("________________");
             line.setAlignment(Element.ALIGN_RIGHT);
@@ -812,31 +848,34 @@ public class PdfDisplay {
             line.setLeading(0f, 0.2f); // line spacing control
             document.add(line);
 
-            int totals = 0;
-            for (int ii : values) {
-                totals += ii;
-            }
+            int tuition = room.getTuition();
+            int exam = room.getPaper();
+            int stationary = room.getStationary();
+            int totals = tuition + exam + stationary;
 
-            for (int i = 0; i < labels.size(); i++) {
-                String labeli = labels.get(i);
-                Integer value = values.get(i);
+            Paragraph fee1 = new Paragraph(test.createPhrase("Tuition Fee", tuition));
+            Paragraph fee2 = new Paragraph(test.createPhrase("Stationary Fee", stationary));
+            Paragraph fee3 = new Paragraph(test.createPhrase("Exam Fee", exam));
 
-                Paragraph para = new Paragraph(test.createPhrase(labeli, value));
+            // Right align the paragraph
+            fee1.setAlignment(Element.ALIGN_RIGHT);
+            fee2.setAlignment(Element.ALIGN_RIGHT);
+            fee3.setAlignment(Element.ALIGN_RIGHT);
 
-                // Right align the paragraph
-                para.setAlignment(Element.ALIGN_RIGHT);
+            // Add spacing between rows if needed
+            fee1.setSpacingAfter(4f);
+            fee2.setSpacingAfter(4f);
+            fee3.setSpacingAfter(4f);
 
-                // Add paragraph
-                document.add(para);
+            // Add paragraph
+            document.add(fee1);
+            document.add(line);
 
-                document.add(line);
+            document.add(fee2);
+            document.add(line);
 
-                // Add spacing between rows if needed
-                para.setSpacingAfter(4f);
-
-            }
-
-            document.add(payments);
+            document.add(fee3);
+            document.add(line);
 
             Paragraph finals = new Paragraph(test.createPhrase("Total", totals));
             finals.setAlignment(Element.ALIGN_RIGHT);
@@ -846,41 +885,21 @@ public class PdfDisplay {
 
             test.lineBreak(document);
 
-            // Create a list (ordered or unordered)
-            com.lowagie.text.List list = new com.lowagie.text.List(com.lowagie.text.List.UNORDERED);
-            // First item
-            Phrase policy1 = new Phrase();
-            policy1.add(new Chunk(
-                    "Late payment amount will be charged after due date and can't be waived. The collection on your behalf will be used for need based scholarships.\n",
-                    FontFactory.getFont(FontFactory.HELVETICA, 12)));
-            list.add(new ListItem(policy1));
-
-            Phrase policy2 = new Phrase();
-
-            policy2.add(new Chunk(
-                    "All Fees are non refundable and can be changed without prior notice.\n",
-                    FontFactory.getFont(FontFactory.HELVETICA, 12)));
-
-            list.add(new ListItem(policy2));
-
-            Phrase policy3 = new Phrase();
-
-            policy3.add(new Chunk(
-                    "Withholding tax @ 5% leviable effective July 01, 2013 under section 2361 of the ITO, 2001 where annual fee exceeds Rs. 200,000/-",
-                    FontFactory.getFont(FontFactory.HELVETICA, 12)));
-
-            list.add(new ListItem(policy3));
+            // Create a list (ordered or unordered) method
 
             // Finally add the list to the document
-            document.add(list);
+            document.add(printPolicies());
 
-        } catch (Exception e) {
+        } catch (
+
+        Exception e) {
             e.printStackTrace();
         } finally {
             // Close the document
             document.close();
             closeLog(); // close static log
         }
+
     }
 
 }
