@@ -48,15 +48,18 @@ public class ConsoleDisplay implements Display {
             if (file.exists()) {
                 logger.info("Log File is created!");
             }
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                closeLog();
+            }));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public static void closeLog() {
+        logger.info("Logger Closed.");
         fh.flush();
         fh.close();
-        logger.info("Logger Closed.");
     }
 
     public void displayf(String value1) {

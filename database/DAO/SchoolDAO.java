@@ -36,12 +36,16 @@ public class SchoolDAO {
             if (file.exists()) {
                 logger.info("Log File is created!");
             }
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                closeLog();
+            }));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public static void closeLog() {
+        logger.info("Log File is closed.");
         fh.flush();
         fh.close();
     }

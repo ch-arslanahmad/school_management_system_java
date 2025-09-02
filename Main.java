@@ -649,9 +649,6 @@ public class Main {
             StudentDAO.closeLog();
             break;
         default:
-            ConsoleDisplay.closeLog();
-            Input.closeLog();
-            DBManager.closeLog();
             break; // stop the switch statement
         }
 
