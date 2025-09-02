@@ -3,12 +3,19 @@ package people;
 import classroom.ClassRoom;
 
 public class Student extends Person {
-    ClassRoom classRoom;
+    ClassRoom room;
 
     // Constructor for method listStudent()
-    public Student(String name, ClassRoom classRoom) {
+    public Student(String name, ClassRoom room) {
         this.name = name;
-        this.classRoom = classRoom;
+        this.room = room;
+    }
+
+    // Student Basic Info
+    public Student(String name, int id, ClassRoom room) {
+        this.name = name;
+        this.id = id;
+        this.room = room;
     }
 
     public Student(String name) {
@@ -20,7 +27,7 @@ public class Student extends Person {
     }
 
     public String getClassName() {
-        return classRoom.getClassName();
+        return room.getClassName();
     }
 
     // Override Methods

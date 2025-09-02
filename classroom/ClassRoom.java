@@ -28,6 +28,18 @@ public class ClassRoom {
         this.student = student;
     }
 
+    // FEES OF CLASS
+
+    int tuition;
+    int stationary;
+    int paper;
+
+    public ClassRoom(int tuition, int stationary, int paper) {
+        this.tuition = tuition;
+        this.stationary = stationary;
+        this.paper = paper;
+    }
+
     public ClassRoom() {
 
     }
@@ -38,6 +50,20 @@ public class ClassRoom {
 
     public String getClassName() {
         return className;
+    }
+
+    // GET FEES
+
+    public int getTuition() {
+        return tuition;
+    }
+
+    public int getStationary() {
+        return stationary;
+    }
+
+    public int getPaper() {
+        return paper;
     }
 
     public String toString() {
