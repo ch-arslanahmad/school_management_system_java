@@ -1,17 +1,27 @@
 package school;
 
+// IMPORT TIME
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 public class School {
     private int id;
     private String name;
     private String principal;
+    private String location;
+
+    public String getTime() {
+        return LocalDate.now().format(DateTimeFormatter.ofPattern("dd,MMM, yyyy"));
+    }
 
     // Constructors
     public School() {
     }
 
-    public School(String name, String principal) {
+    public School(String name, String principal, String location) {
         this.name = name;
         this.principal = principal;
+        this.location = location;
     }
 
     public School(String name) {
@@ -37,6 +47,10 @@ public class School {
 
     public String getPrincipal() {
         return principal;
+    }
+
+    public String getlocation() {
+        return location;
     }
 
     public void setPrincipal(String principal) {
