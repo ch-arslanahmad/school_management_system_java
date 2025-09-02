@@ -313,6 +313,7 @@ public class ClassDAO {
             try (ResultSet rs = rm.executeQuery()) {
                 if (!rs.isBeforeFirst()) {
                     System.out.println("No Data is available.");
+                    return new ArrayList<>();
                 } else {
                     while (rs.next()) {
                         classroom.add(new ClassRoom(rs.getString("ClassName")));
@@ -328,6 +329,30 @@ public class ClassDAO {
         }
 
         return new ArrayList<>();
+    }
+
+    // GET FEE OF A CLASS
+    public ClassRoom getClassFees(String Class) {
+        String feeSQL = "SELECT Tuition_Fee, Stationary_Fee, Paper_Fee FROM Class WHERE ClassName = ?";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(feeSQL)) {
+            rm.setString(1, Class);
+            try (ResultSet rs = rm.executeQuery()) {
+                if (!rs.isBeforeFirst()) {
+                    System.out.println("No Data is available.");
+                }
+                while (rs.next()) {
+                    return new ClassRoom(rs.getInt("Tuition_Fee"), rs.getInt("Stationary_Fee"),
+                            rs.getInt("Paper_Fee"));
+                }
+            } catch (SQLException e) {
+                logger.log(Level.WARNING, "Error while returning Fees of a Class: ", e);
+            }
+
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error while get Fees of a Class: ", e);
+        }
+        return new ClassRoom();
     }
 
 }
