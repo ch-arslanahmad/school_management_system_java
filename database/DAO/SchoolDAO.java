@@ -68,7 +68,7 @@ public class SchoolDAO {
         return false;
     }
 
-    public School getSchoolInfo() throws SQLException {
+    public School getSchoolInfo() {
         String sql = "SELECT * FROM School";
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(sql)) {
@@ -78,11 +78,13 @@ public class SchoolDAO {
                 return new School(rs.getString("Name"), rs.getString("Principal"),
                         rs.getString("location"));
             }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error fetching School info: ", e);
         }
         return new School();
     }
 
-    public void updateSchool(School school) throws SQLException {
+    public void updateSchool(School school) {
         String sql = "UPDATE School SET Name = ?, Principal = ?, location = ? WHERE id = 1";
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(sql)) {
@@ -91,14 +93,17 @@ public class SchoolDAO {
             rm.setString(2, school.getPrincipal());
             rm.setString(3, school.getlocation());
 
-            rm.executeUpdate();
+            int rs = rm.executeUpdate();
+            if (rs > 0) {
+                logger.info("Updated Successful.");
+            }
+
         } catch (SQLException e) {
-            System.out.println("Error updating School");
-            throw e;
+            logger.log(Level.WARNING, "Error while updating School Info: ", e);
         }
     }
 
-    public void deleteSchool(String schoolName) throws SQLException {
+    public void deleteSchool(String schoolName) {
         String sql = "DELETE FROM School WHERE Name = ?";
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(sql)) {
@@ -110,15 +115,15 @@ public class SchoolDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error while deleting School.");
-            throw e;
+            logger.log(Level.WARNING, "Error while deleting School Info: ", e);
+
         }
     }
 
     /*
-     * public List<Subjects> studentReport() throws SQLException { String
-     * studentReport = ""; try (Connection conn = Database.getConnection();
-     * PreparedStatement rm = conn.prepareStatement(studentReport)) {
+     * public List<Subjects> studentReport() { String studentReport = ""; try
+     * (Connection conn = Database.getConnection(); PreparedStatement rm =
+     * conn.prepareStatement(studentReport)) {
      * 
      * } catch (Exception e) { logger.log(Level.WARNING,
      * "Error making fetching Student Report Details", e); throw e; } }
