@@ -11,7 +11,7 @@ public class School {
     private String location;
 
     public String getTime() {
-        return LocalDate.now().format(DateTimeFormatter.ofPattern("dd,MMM, yyyy"));
+        return LocalDate.now().format(DateTimeFormatter.ofPattern("dd ,MMM ,yyyy "));
     }
 
     // Constructors
