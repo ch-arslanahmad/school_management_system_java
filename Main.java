@@ -1,5 +1,4 @@
 import java.util.List;
-import java.util.logging.Handler;
 import java.util.InputMismatchException;
 
 import classroom.ClassRoom;
@@ -83,12 +82,13 @@ public class Main {
                     break;
                 default:
                     if (choice == 0) {
+                        break;
                     } else {
                         System.out.println("Invalid Choice.");
-                        break;
+
                     }
-                    break;
                 }
+                break;
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Integer Input is causing error: ");
                 e.printStackTrace();
@@ -132,12 +132,12 @@ public class Main {
                     break;
                 default:
                     if (choice == 0) {
+                        break;
                     } else {
                         System.out.println("Invalid Choice.");
-                        break;
                     }
-                    break;
                 }
+                break;
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Integer Input is causing error: ");
                 e.printStackTrace();
@@ -181,12 +181,13 @@ public class Main {
                     break;
                 default:
                     if (choice == 0) {
+                        break;
                     } else {
                         System.out.println("Invalid Choice.");
-                        break;
+
                     }
-                    break;
                 }
+                break;
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Integer Input is causing error: ");
                 e.printStackTrace();
@@ -230,12 +231,13 @@ public class Main {
                     break;
                 default:
                     if (choice == 0) {
+                        break;
                     } else {
                         System.out.println("Invalid Choice.");
-                        break;
+
                     }
-                    break;
                 }
+                break;
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Integer Input is causing error: ");
                 e.printStackTrace();
@@ -521,7 +523,12 @@ public class Main {
             System.out.print("Enter StudentName: ");
             String studentName = input.getNormalInput();
             pdf.handleStudentReport(studentName);
-
+        }
+        // print Student report
+        else if (choice == 3) {
+            System.out.print("Enter StudentName: ");
+            String studentName = input.getNormalInput();
+            pdf.handleFeeReciept(studentName);
         }
     }
 
@@ -616,7 +623,6 @@ public class Main {
             if (choice.equals("yes")) {
                 DBmaker data = new DBmaker();
                 data.createDB(input);
-                DBmaker.closeLog(); // close its log
             } else if (choice.equals("no")) {
                 break;
             } else {
@@ -631,22 +637,18 @@ public class Main {
         case 1: // CLASS
             ClassDAO room = new ClassDAO(); // ClassDAO object
             call.handleClassMenu(room, db, show, input);
-            ClassDAO.closeLog();
             break;
         case 2: // SUBJECT
             SubjectDAO subject = new SubjectDAO(); // subjectDAO object
             call.handleSubjectMenu(subject, db, show, input);
-            SubjectDAO.closeLog();
             break;
         case 3: // TEACHERS
             TeacherDAO teacher = new TeacherDAO(); // TeacherDAO object
             call.handleTeacherMenu(teacher, db, show, input);
-            TeacherDAO.closeLog();
             break;
         case 4: // STUDENTS
             StudentDAO student = new StudentDAO(); // StudentDAO object
             call.handleStudentMenu(student, db, show, input);
-            StudentDAO.closeLog();
             break;
         default:
             break; // stop the switch statement
@@ -657,14 +659,8 @@ public class Main {
     // DONT FORGET TO CLOSE DOCUMENT/FILE and other things you opened (if any)
 
     /*
-     * // SOLUTION IS USING ResourceManager LOOK INTO THIS or someway to close all
-     * resources without hassle or something
-     * 
-     * 
-     * ResourceManager.register(fos); // FileOutputStream
-     * ResourceManager.register(conn); // DB Connection
-     * ResourceManager.register(pdfDoc); // PDF Document
-     * 
+     * BETTER (& Current) SOLUTION MADE A LAMBDA FUNCTION THAT executes lines to
+     * close a logger as soon as the JVM closes the file.
      */
 
 }
