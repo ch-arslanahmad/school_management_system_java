@@ -4,7 +4,15 @@ import java.io.File;
 import java.util.List;
 import java.util.logging.*;
 
+import com.lowagie.text.Chunk;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.ListItem;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+
+import classroom.ClassRoom;
 import classroom.Subjects;
+import database.DAO.ClassDAO;
 import database.DAO.SchoolDAO;
 import database.DAO.StudentDAO;
 import people.Student;
@@ -179,4 +187,60 @@ public class ConsoleDisplay implements Display {
         }
     }
 
+    public void handleFeeReciept(String StudentName) {
+        try {
+            StudentDAO student = new StudentDAO();
+            if (!student.studentExists(StudentName)) {
+                System.out.println("Student does not exist.");
+                return;
+            }
+            Student std = student.getStudentInfo(StudentName);
+            SchoolDAO school = new SchoolDAO();
+
+            School info = school.getSchoolInfo();
+
+            System.out.println(info.getName());
+            System.out.println("PAYMENT VOUCHER");
+            System.out.println(info.getlocation() + "\n\n");
+
+            // STUDENT INFO
+
+            System.out.println("Name: " + StudentName);
+            System.out.println("ID: " + std.getID());
+            System.out.println("Class: " + std.getClassName());
+            System.out.println("Session: " + info.getTime());
+
+            // FEES
+
+            System.out.println("Remarks: MONTHLY FEE");
+            ClassDAO fee = new ClassDAO();
+            ClassRoom room = fee.getClassFees(std.getClassName());
+
+            int tuition = room.getTuition();
+            int stationary = room.getStationary();
+            int paper = room.getPaper();
+
+            int total = tuition + stationary + paper;
+
+            System.out.println("Payments(*)");
+            System.out.println("Tuition Fee: " + tuition);
+            System.out.println("Stationary Fee: " + stationary);
+            System.out.println("Paper Money:" + paper);
+            System.out.println("Total:" + total + "\n");
+
+            // POLICIES
+
+            String[] policies = {
+                    "Late payment amount will be charged after due date and can't be waived. The collection on your behalf will be used for need based scholarships.\n",
+                    "All Fees are non refundable and can be changed without prior notice.\n",
+                    "Withholding tax @ 5% leviable effective July 01, 2013 under section 2361 of the ITO, 2001 where annual fee exceeds Rs. 200,000/-", };
+
+            for (String policy : policies) {
+                System.out.println("- " + policy);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
