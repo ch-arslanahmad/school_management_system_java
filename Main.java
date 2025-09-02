@@ -511,8 +511,8 @@ public class Main {
         }
     }
 
-    public void ManageDisplayStu(List<Student> students /* for student list */, ConsoleDisplay show,
-            PdfDisplay pdf, int choice, Input input) {
+    public void ManageDisplayStu(List<Student> students /* for student list (in PDF) */,
+            ConsoleDisplay show, PdfDisplay pdf, int choice, Input input) {
         System.out.println("1. Console\n2. PDF\n");
         int ch = validateShowInput(2, input);
 
@@ -530,9 +530,13 @@ public class Main {
             System.out.print("Enter StudentName: ");
             String studentName = input.getNormalInput();
             show.handleStudentReport(studentName);
+        } else if (choice == 3 && ch == 1) {
+            // add to print reciept on console
+            System.out.print("Enter StudentName: ");
+            String studentName = input.getNormalInput();
+            show.handleFeeReciept(studentName);
         }
-
-        // print PDF
+        // print PDF on ALL CHOICES
         if (ch == 2)
             stuPrintPDF(pdf, students, choice /* choice on what to print */, input);
 
@@ -545,11 +549,11 @@ public class Main {
             return false;
         }
 
-        System.out.print("1. Student List\n2. Individual Student Report\n");
+        System.out.print("1. Student List\n2. Individual Student Report\n3. Fee Receipt\n");
 
         int choice;
         // VALIDATING INPUT
-        choice = validateShowInput(2, input);
+        choice = validateShowInput(3, input);
 
         PdfDisplay pdf = new PdfDisplay(); // PDF object
 
@@ -562,6 +566,10 @@ public class Main {
         // if they want Student Report
         if (choice == 2) {
             ManageDisplayStu(students, show /* Console */, pdf, choice, input);
+        }
+        // fee reciept
+        if (choice == 3) {
+            ManageDisplayStu(students, show, /* Console */ pdf, choice, input);
         }
         return true;
     }
