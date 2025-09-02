@@ -1,5 +1,5 @@
 import java.util.List;
-
+import java.util.logging.Handler;
 import java.util.InputMismatchException;
 
 import classroom.ClassRoom;
@@ -85,8 +85,8 @@ public class Main {
                     if (choice == 0) {
                     } else {
                         System.out.println("Invalid Choice.");
+                        break;
                     }
-
                     break;
                 }
             } catch (InputMismatchException | NumberFormatException e) {
@@ -131,7 +131,11 @@ public class Main {
                     showSubjects(subject, input, show);
                     break;
                 default:
-                    System.out.println("Subjects - Invalid Choice.");
+                    if (choice == 0) {
+                    } else {
+                        System.out.println("Invalid Choice.");
+                        break;
+                    }
                     break;
                 }
             } catch (InputMismatchException | NumberFormatException e) {
@@ -176,6 +180,11 @@ public class Main {
                     showTeachers(teacher, input, show);
                     break;
                 default:
+                    if (choice == 0) {
+                    } else {
+                        System.out.println("Invalid Choice.");
+                        break;
+                    }
                     break;
                 }
             } catch (InputMismatchException | NumberFormatException e) {
@@ -220,6 +229,11 @@ public class Main {
                     showStudents(student, input, show);
                     break;
                 default:
+                    if (choice == 0) {
+                    } else {
+                        System.out.println("Invalid Choice.");
+                        break;
+                    }
                     break;
                 }
             } catch (InputMismatchException | NumberFormatException e) {
