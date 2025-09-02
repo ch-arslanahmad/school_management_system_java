@@ -150,10 +150,32 @@ public class StudentDAO {
 
     }
 
-    ClassDAO check = new ClassDAO();
+    public Student getStudentInfo(String studentName) {
+        String infoSQL = "SELECT Student.StudentName, Student.StudentID, Class.ClassName FROM Student JOIN Class ON Student.ClassID = Class.ClassID WHERE Student.StudentName = ?";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(infoSQL)) {
+            rm.setString(1, studentName);
+            try (ResultSet rs = rm.executeQuery()) {
+                if (!rs.isBeforeFirst()) {
+                    System.out.println("No Data is available.");
+                }
+                while (rs.next()) {
+                    return new Student(rs.getString("StudentName"), rs.getInt("StudentID"),
+                            new ClassRoom(rs.getString("ClassName")));
+                }
+            } catch (SQLException e) {
+                logger.log(Level.WARNING, "Error RETURNING Student Info: ", e);
+            }
+
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error fetching Student Info: ", e);
+        }
+        return new Student();
+    }
 
     // insert Student
     public boolean insertStudent(String ClassName, String name) {
+        ClassDAO check = new ClassDAO();
         int classID = check.getIDfromClass(ClassName);
         // -1 is error-code
         if (classID == -1) {
