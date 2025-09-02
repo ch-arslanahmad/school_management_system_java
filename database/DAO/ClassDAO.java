@@ -43,6 +43,9 @@ public class ClassDAO {
             if (file.exists()) {
                 logger.info("Log File is created!");
             }
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                closeLog();
+            }));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -50,6 +53,7 @@ public class ClassDAO {
 
     // USE THIS METHOD IN EVERY FILE WHICH HAS LOG
     public static void closeLog() {
+        logger.info("Log File is closed.");
         fh.flush();
         fh.close();
     }
