@@ -64,9 +64,10 @@ public class DBmaker {
         String schoolName = input.getStrInput();
         System.out.println("Tell me School Principle name: ");
         String principleName = input.getStrInput();
-
+        System.out.println("Tell me School Location: ");
+        String location = input.getStrInput();
         // if School-info is not inserted
-        if (!school.insertSchool(schoolName, principleName)) {
+        if (!school.insertSchool(schoolName, principleName, location)) {
             String error = "Database Creation Abort : School-Info";
             logger.warning(error);
             System.exit(0);

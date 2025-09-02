@@ -46,12 +46,13 @@ public class SchoolDAO {
         fh.close();
     }
 
-    public boolean insertSchool(String name, String principal) {
-        String sql = "INSERT INTO School (Name, Principal) VALUES (?, ?)";
+    public boolean insertSchool(String name, String principal, String location) {
+        String sql = "INSERT INTO School (Name, Principal, location) VALUES (?, ?)";
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(sql)) {
             rm.setString(1, name);
             rm.setString(2, principal);
+            rm.setString(3, location);
             int rs = rm.executeUpdate();
 
             if (rs > 0) {
@@ -64,25 +65,28 @@ public class SchoolDAO {
     }
 
     public School getSchoolInfo() throws SQLException {
-        String sql = "SELECT Name, Principal FROM School";
+        String sql = "SELECT * FROM School";
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(sql)) {
             ResultSet rs = rm.executeQuery();
 
             if (rs.next()) {
-                return new School(rs.getString("Name"), rs.getString("Principal"));
+                return new School(rs.getString("Name"), rs.getString("Principal"),
+                        rs.getString("location"));
             }
         }
         return new School();
     }
 
     public void updateSchool(School school) throws SQLException {
-        String sql = "UPDATE School SET Name = ?, Principal = ? WHERE id = 1";
+        String sql = "UPDATE School SET Name = ?, Principal = ?, location = ? WHERE id = 1";
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(sql)) {
+
             rm.setString(1, school.getName());
             rm.setString(2, school.getPrincipal());
-            rm.setInt(3, school.getId());
+            rm.setString(3, school.getlocation());
+
             rm.executeUpdate();
         } catch (SQLException e) {
             System.out.println("Error updating School");
