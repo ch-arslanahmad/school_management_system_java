@@ -637,6 +637,14 @@ public class PdfDisplay {
         }
     }
 
+    public void lineBreak(Document document) {
+        try {
+            document.add(new Paragraph(" "));
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while adding LineBreak", e);
+        }
+    }
+
     // (PDF) close PDF writer & 'Doc'
     public boolean closeDoc() {
         try {
@@ -663,9 +671,9 @@ public class PdfDisplay {
         Phrase infoPhrase = new Phrase(); // creating a phrase
 
         Chunk label = new Chunk(placeholder + ": ",
-                FontFactory.getFont(FontFactory.COURIER_BOLD, 10));
+                FontFactory.getFont(FontFactory.COURIER_BOLD, 11));
 
-        Chunk name = new Chunk(val, FontFactory.getFont(FontFactory.HELVETICA, 10));
+        Chunk name = new Chunk(val, FontFactory.getFont(FontFactory.HELVETICA, 11));
 
         infoPhrase.add(label);
         infoPhrase.add(name);
@@ -833,7 +841,7 @@ public class PdfDisplay {
 
             // LISTING PROBLEM
 
-            test.lineBreak();
+            test.lineBreak(document);
 
             // Create a list (ordered or unordered)
             com.lowagie.text.List list = new com.lowagie.text.List(com.lowagie.text.List.UNORDERED);
