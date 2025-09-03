@@ -4,10 +4,10 @@ package database.DAO;
 // package imports
 import database.*;
 import display.ConsoleDisplay;
+import display.LogHandler;
 import people.Student;
 import classroom.*;
 // imports
-import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,44 +18,10 @@ public class ClassDAO {
 
     // variables for LOGGing
     private static final Logger logger = Logger.getLogger(ClassDAO.class.getName());
-    private static FileHandler fh;
 
     // STATIC block for **LOGGING**
     static {
-        //
-        try {
-            /*
-             * // so logging is not shown in console LogManager.getLogManager().reset();
-             */
-            String a = "log/ClassDAO.txt";
-            File file = new File(a);
-            // if file does not exist, create it
-            if (!(file.exists())) {
-                file.createNewFile();
-            }
-            fh = new FileHandler(a, 1024 * 1024, 1, true); // path, size, n of files, append or not
-            fh.setLevel(Level.ALL);
-
-            logger.addHandler(fh);
-            fh.setFormatter(new SimpleFormatter());
-
-            // checking if file exists
-            if (file.exists()) {
-                logger.info("Log File is created!");
-            }
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                closeLog();
-            }));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // USE THIS METHOD IN EVERY FILE WHICH HAS LOG
-    public static void closeLog() {
-        logger.info("Log File is closed.");
-        fh.flush();
-        fh.close();
+        LogHandler.createLog(logger, "ClassDAO");
     }
 
     String classNameDAO;

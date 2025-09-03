@@ -600,7 +600,7 @@ public class Main {
         Input input = new Input();
         DBManager db = new DBManager();
 
-        // if DB structure doeI.txt";s not exist return
+        // if DB structure does not exist return
         if (!db.DBvalidate()) {
             return;
         }

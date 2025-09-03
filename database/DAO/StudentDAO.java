@@ -3,10 +3,10 @@ package database.DAO;
 // package imports
 import database.Database;
 import display.ConsoleDisplay;
+import display.LogHandler;
 import people.Student;
 
 // imports
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.*;
@@ -19,42 +19,10 @@ import java.sql.*;
 public class StudentDAO {
     // variables for LOGGing
     private static final Logger logger = Logger.getLogger(StudentDAO.class.getName());
-    private static FileHandler fh;
 
     // STATIC block for **LOGGING**
     static {
-        //
-        try {
-            /*
-             * // so logging is not shown in console LogManager.getLogManager().reset();
-             */
-            String a = "log/StudentDAOlog.txt";
-            File file = new File(a);
-            // if file does not exist, create it
-            if (!(file.exists())) {
-                file.createNewFile();
-            }
-            fh = new FileHandler(a, 1024 * 1024, 1, true); // path, size, n of files, append or not
-            fh.setLevel(Level.FINE);
-            logger.addHandler(fh);
-            fh.setFormatter(new SimpleFormatter());
-
-            // checking if file exists
-            if (file.exists()) {
-                logger.info("Log File is created!");
-            }
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                closeLog();
-            }));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void closeLog() {
-        logger.info("Log File is closed.");
-        fh.flush();
-        fh.close();
+        LogHandler.createLog(logger, "StudentDAO");
     }
 
     // fetch StudentID

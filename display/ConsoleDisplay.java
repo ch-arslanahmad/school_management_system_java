@@ -1,14 +1,7 @@
 package display;
 
-import java.io.File;
 import java.util.List;
 import java.util.logging.*;
-
-import com.lowagie.text.Chunk;
-import com.lowagie.text.FontFactory;
-import com.lowagie.text.ListItem;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Phrase;
 
 import classroom.ClassRoom;
 import classroom.Subjects;
@@ -23,43 +16,10 @@ public class ConsoleDisplay implements Display {
 
     // variables for LOGGing
     private static final Logger logger = Logger.getLogger(ConsoleDisplay.class.getName());
-    private static FileHandler fh;
 
     // STATIC block for **LOGGING**
     static {
-        //
-        try {
-            /*
-             * // so logging is not shown in console LogManager.getLogManager().reset();
-             */
-            String a = "log/ConsoleDisplay.txt";
-            File file = new File(a);
-            // if file does not exist, create it
-            if (!(file.exists())) {
-                file.createNewFile();
-            }
-            fh = new FileHandler(a, 1024 * 1024, 1, true); // path, size, n of files, append or not
-            fh.setLevel(Level.ALL);
-
-            logger.addHandler(fh);
-            fh.setFormatter(new SimpleFormatter());
-
-            // checking if file exists
-            if (file.exists()) {
-                logger.info("Log File is created!");
-            }
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                closeLog();
-            }));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void closeLog() {
-        logger.info("Logger Closed.");
-        fh.flush();
-        fh.close();
+        LogHandler.createLog(logger, "ConsoleDisplay");
     }
 
     public void displayf(String value1) {
