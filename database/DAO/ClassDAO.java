@@ -152,6 +152,32 @@ public class ClassDAO {
         return false;
     }
 
+    // to insert a class with fees
+    public boolean insertWithClassFees(String className, int tuition, int stationary, int exam) {
+
+        if (Classexists(className)) {
+            logger.warning("Class already exists.");
+            return false;
+        }
+
+        String inputFees = "INSERT INTO Class(ClassName, Tuition_Fee,Stationary_Fee,Paper_Fee) VALUES(?,?,?,?)";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(inputFees)) {
+            rm.setInt(0, tuition);
+            rm.setInt(1, stationary);
+            rm.setInt(0, exam);
+            if (rm.executeUpdate() > 0) {
+                return true;
+            } else {
+                logger.warning("Unable to add Class with Fees.");
+                return false;
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error adding Class with fees: ", e);
+        }
+        return false;
+    }
+
     public boolean deleteClass(String name) {
         if (!(Classexists(name))) {
             logger.warning("No Match found");
@@ -299,6 +325,31 @@ public class ClassDAO {
         }
 
         return new ArrayList<>();
+    }
+
+    public boolean updateClassFees(String className, int tuition, int stationary, int exam) {
+
+        if (!Classexists(className)) {
+            logger.warning("Class does not exist.");
+            return false;
+        }
+
+        String inputFees = "UPDATE Class SET Tuition_Fee = ?, Stationary_Fee = ?, Paper_Fee = ? WHERE ClassName = ?";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(inputFees)) {
+            rm.setInt(0, tuition);
+            rm.setInt(1, stationary);
+            rm.setInt(0, exam);
+            if (rm.executeUpdate() > 0) {
+                return true;
+            } else {
+                logger.warning("Unable to update Fees of Class.");
+                return false;
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error updating Class fees: ", e);
+        }
+        return false;
     }
 
     // GET FEE OF A CLASS
