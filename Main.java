@@ -1,4 +1,5 @@
 import java.util.List;
+
 import java.util.InputMismatchException;
 
 import classroom.ClassRoom;
@@ -47,15 +48,17 @@ public class Main {
     }
 
     // TEMPLATE OPTIONS FOR SUB - MENUS
-    String[] options = { "Insert", "Delete", "Update", "Insert Multiple", "Show" };
+    String[] options = { "Insert", "Delete", "Insert Multiple", "Update", "Show" };
 
     // CLASS MENU
     void handleClassMenu(ClassDAO room, DBManager db, ConsoleDisplay show, Input input) {
         while (true) {
             try {
                 showMenu("Classes", options);
-                int choice = input.getIntInput();
+                int choice = validateMenuInput(5, input);
                 switch (choice) {
+                case 0: // stop the loop
+                    return;
                 case 1: // insert class
                     if (!inputClass(room, input)) {
                         System.out.println("Error inserting Class");
@@ -69,31 +72,27 @@ public class Main {
                     }
                     break;
                 case 3: // update class
-                    if (updateClass(room, input)) {
+                    if (!updateClass(room, input)) {
                         System.out.println("Error updating Class");
                         return;
                     }
                     break;
-                case 4: // insert multiple classes
-                    db.insertClassesDB(room, input); // this method is in DBManager
-                    break;
+                case 4: { // insert multiple
+                    db.insertClassesDB(room, input);
+                }
                 case 5: // show classes
                     showClasses(room, input, show);
                     break;
                 default:
-                    if (choice == 0) {
-                        break;
-                    } else {
-                        System.out.println("Invalid Choice.");
-
-                    }
+                    System.out.println("Invalid Choice.");
+                    break;
                 }
-                break;
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Integer Input is causing error: ");
                 e.printStackTrace();
             }
         }
+
     }
 
     // SUBJECT MENU
@@ -101,8 +100,10 @@ public class Main {
         while (true) {
             try {
                 showMenu("Subjects", options);
-                int choice = input.getIntInput();
+                int choice = validateMenuInput(5, input);
                 switch (choice) {
+                case 0: // stop the loop
+                    return;
                 case 1: // insert
                     if (inputSubject(subject, input)) {
                         System.out.println("Error inserting Subject");
@@ -131,13 +132,9 @@ public class Main {
                     showSubjects(subject, input, show);
                     break;
                 default:
-                    if (choice == 0) {
-                        break;
-                    } else {
-                        System.out.println("Invalid Choice.");
-                    }
+                    System.out.println("Invalid Choice.");
+                    break;
                 }
-                break;
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Integer Input is causing error: ");
                 e.printStackTrace();
@@ -151,27 +148,29 @@ public class Main {
         while (true) {
             try {
                 showMenu("Teachers", options);
-                int choice = input.getIntInput();
+                int choice = validateMenuInput(5, input);
                 switch (choice) {
+                case 0: // stop the loop
+                    return;
                 case 1: // insert
-                    if (inputTeacher(teacher, input)) {
+                    if (!inputTeacher(teacher, input)) {
                         System.out.println("Error inserting Teacher");
                         return;
                     }
                     break;
                 case 2: // delete
-                    if (deleteTeacher(teacher, input)) {
+                    if (!deleteTeacher(teacher, input)) {
                         System.out.println("Error deleting Teacher");
                         return;
                     }
                     break;
                 case 3: // update
-                    if (updateTeacher(teacher, input)) {
+                    if (!updateTeacher(teacher, input)) {
                         System.out.println("Error updating Teacher");
                         return;
                     }
                 case 4: // insert MULTIPLE
-                    if (db.insertTeachersDB(teacher, input)) {
+                    if (!db.insertTeachersDB(teacher, input)) {
                         System.out.println("Error inserting multiple teachers");
                         return;
                     }
@@ -180,14 +179,9 @@ public class Main {
                     showTeachers(teacher, input, show);
                     break;
                 default:
-                    if (choice == 0) {
-                        break;
-                    } else {
-                        System.out.println("Invalid Choice.");
-
-                    }
+                    System.out.println("Invalid Choice.");
+                    break;
                 }
-                break;
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Integer Input is causing error: ");
                 e.printStackTrace();
@@ -200,22 +194,24 @@ public class Main {
         while (true) {
             try {
                 showMenu("Students", options);
-                int choice = input.getIntInput();
+                int choice = validateMenuInput(5, input);
                 switch (choice) {
+                case 0:
+                    return; // stop the loop
                 case 1: // insert
-                    if (inputStudent(student, input)) {
+                    if (!inputStudent(student, input)) {
                         System.out.println("Error inserting Student.");
                         return;
                     }
                     break;
                 case 2: // delete
-                    if (deleteStudent(student, input)) {
+                    if (!deleteStudent(student, input)) {
                         System.out.println("Error deleting Student.");
                         return;
                     }
                     break;
                 case 3: // update
-                    if (updateStudent(student, input)) {
+                    if (!updateStudent(student, input)) {
                         System.out.println("Error updating Student.");
                         return;
                     }
@@ -230,14 +226,9 @@ public class Main {
                     showStudents(student, input, show);
                     break;
                 default:
-                    if (choice == 0) {
-                        break;
-                    } else {
-                        System.out.println("Invalid Choice.");
-
-                    }
+                    System.out.println("Invalid Choice.");
+                    break;
                 }
-                break;
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Integer Input is causing error: ");
                 e.printStackTrace();
@@ -246,7 +237,7 @@ public class Main {
     }
 
     // VALIDATION of Show Input
-    public int validateShowInput(int n, Input input) {
+    public int validateMenuInput(int n, Input input) {
         int choice;
         // loop to only stop when valid input given
         while (true) {
@@ -254,7 +245,7 @@ public class Main {
                 System.out.print("Enter your choice: ");
                 choice = input.getIntInput();
                 if (choice > -1 && choice <= n) {
-                    return choice;
+                    return choice; // ... returns choice
                 } else {
                     System.out.print("Try again. Only, (0-" + n + ")\t");
                 }
@@ -265,31 +256,134 @@ public class Main {
         }
     }
 
-    // CLASS
-    public boolean inputClass(ClassDAO room, Input input) {
-        System.out.print("Enter your ClassName: ");
-        if (room.insertClass(input.getNormalInput())) {
-            return true;
-        } else {
-            return false;
+    // CLASS with MENU (with or without fees)
+    boolean inputClass(ClassDAO room, Input input) {
+        while (true) { // ... infinite until '0' input
+            System.out.println("1. Add ClassName without Fees\n2. Add Class with Fees");
+            int choice = validateMenuInput(2, input);
+            switch (choice) {
+            case 0: {
+                return true;
+            }
+            case 1: {
+                System.out.print("Enter ClassName: ");
+                String className = input.getNormalInput();
+                if (room.Classexists(className)) {
+                    System.out.println("Class Already exists.");
+                    break;
+                }
+
+                return room.insertClass(input.getNormalInput());
+            }
+            case 2: {
+                System.out.print("Enter ClassName: ");
+                String className = input.getNormalInput();
+                if (room.Classexists(className)) {
+                    System.out.println("Class Already exists.");
+                    break;
+                }
+                System.out.print("Enter Tuition Fee: ");
+                int tuition = input.getIntInput();
+                System.out.print("Enter Stationary Fee: ");
+                int stationary = input.getIntInput();
+                System.out.print("Enter Exam/Paper Fee: ");
+                int exam = input.getIntInput();
+                return room.insertWithClassFees(className, tuition, stationary, exam);
+            }
+            default:
+                System.out.println("Invalid choice.");
+                break;
+            }
         }
     }
 
     public boolean deleteClass(ClassDAO room, Input input) {
-        System.out.print("Enter your ClassName: ");
-        if (room.deleteClass(input.getNormalInput())) {
-            return true;
-        } else {
-            return false;
+        while (true) {
+            System.out.print("Enter your ClassName (0 to exit): ");
+            String className = input.getNormalInput();
+            if (!room.Classexists(className)) {
+                System.out.println("Class does not exist.");
+                return false;
+            }
+            if (room.deleteClass(className)) {
+                return true;
+            } else if (className.equals("0")) {
+                return true;
+            } else {
+                System.out.println("Valid ClassName. Press 0 to exit.");
+            }
         }
     }
 
     public boolean updateClass(ClassDAO room, Input input) {
-        System.out.print("Enter the className: ");
-        String name = input.getNormalInput();
-        System.out.print("Enter the updated className: ");
-        String UpdateName = input.getNormalInput();
-        if (room.updateClass(name, UpdateName)) {
+        while (true) {
+            System.out.println(
+                    "1. Update ClassName Only\n2. Update Class with Fees\n3. Only Fees of Class");
+            int choice = validateMenuInput(3, input);
+            switch (choice) {
+            case 0: {
+                return true;
+            }
+            case 1: {
+                System.out.println("Enter previous ClassName: ");
+                String className = input.getNormalInput();
+                if (!room.Classexists(className)) {
+                    System.out.println("Class does not exist.");
+                    return false;
+                }
+                System.out.println("Enter updated ClassName: ");
+                String updateClass = input.getNormalInput();
+                if (room.updateClass(className, updateClass)) {
+                    return true;
+                }
+            }
+            case 2: {
+                System.out.println("Enter previous ClassName: ");
+                String className = input.getNormalInput();
+                if (!room.Classexists(className)) {
+                    System.out.println("Class does not exist.");
+                    return false;
+                }
+                System.out.println("Enter updated ClassName: ");
+                String updateClass = input.getNormalInput();
+                if (!room.updateClass(className, updateClass)) {
+                    return false;
+                }
+                // ENTER FEES
+                System.out.println("Enter Tuition Fee: ");
+                int tuition = input.getIntInput();
+                System.out.println("Enter Stationary Fee: ");
+                int stationary = input.getIntInput();
+                System.out.println("Enter Exam/Paper Fee: ");
+                int exam = input.getIntInput();
+                if (room.updateClassFees(updateClass, tuition, stationary, exam)) {
+                    return true;
+                }
+                break;
+            }
+            case 3:
+                updateFees(room, input); // updating fee method
+            default:
+                break;
+            }
+        }
+    }
+
+    // update/set fees of a class
+    public boolean updateFees(ClassDAO room, Input input) {
+        System.out.println("Enter ClassName: ");
+        String className = input.getNormalInput();
+        if (!room.Classexists(className)) {
+            System.out.println("Class does not exist");
+        }
+        // ENTER FEES
+        System.out.println("Enter Tuition Fee: ");
+        int tuition = input.getIntInput();
+        System.out.println("Enter Stationary Fee: ");
+        int stationary = input.getIntInput();
+        System.out.println("Enter Exam/Paper Fee: ");
+        int exam = input.getIntInput();
+        if (room.updateClassFees(className, tuition, stationary, exam)) {
             return true;
         }
         return false;
@@ -305,7 +399,7 @@ public class Main {
         System.out.println("1. Console\n2. PDF\n");
         int choice;
         // VALIDATING INPUT
-        choice = validateShowInput(2, input); // has loop
+        choice = validateMenuInput(2, input); // has loop
         // now divide if to print in PDF / Console
 
         // print on CONSOLE
@@ -335,22 +429,41 @@ public class Main {
     // SUBJECT
     public boolean inputSubject(SubjectDAO subject, Input input) {
         System.out.print("Enter the Class: ");
-        String className = input.getStrInput();
+        String className = input.getNormalInput();
+        ClassDAO room = new ClassDAO();
+        if (!room.Classexists(className)) {
+            System.out.println("Class does not exist.");
+            return false;
+        }
         System.out.print("Enter the Subject: ");
-        String subjectName = input.getStrInput();
+        String subjectName = input.getNormalInput();
+        if (subject.subjectExists(subjectName)) {
+            System.out.println("Subject already exist.");
+            return false;
+        }
         System.out.print("Enter the Subject Total Marks: ");
         int marks = input.getIntInput();
+
         if (subject.insertSubject(className, subjectName, marks)) {
             return true;
         }
         return false;
     }
 
+    // deleting subject
     public boolean deleteSubject(SubjectDAO subject, Input input) {
         System.out.print("Enter the Class: ");
-        String className = input.getStrInput();
+        String className = input.getNormalInput();
+        ClassDAO room = new ClassDAO();
+        if (!room.Classexists(className)) { // stop if class doesnt exist
+            System.out.println("Class does not exist.");
+            return false;
+        }
         System.out.print("Enter the Subject: ");
-        String subjectName = input.getStrInput();
+        String subjectName = input.getNormalInput();
+        if (!subject.subjectExists(subjectName)) { // * stop if subject doesn't exist
+            System.out.println("Subject does not exist.");
+        }
         if (subject.deleteSubject(className, subjectName)) {
             return true;
         }
@@ -359,11 +472,20 @@ public class Main {
 
     public boolean updateSubject(SubjectDAO subject, Input input) {
         System.out.print("Enter the Class: ");
-        String className = input.getStrInput();
+        String className = input.getNormalInput();
+        ClassDAO room = new ClassDAO();
+        if (!room.Classexists(className)) {
+            System.out.println("Class does not exist.");
+            return false;
+        }
         System.out.print("Enter the SubjectName: ");
-        String subjectName = input.getStrInput();
+        String subjectName = input.getNormalInput();
+        if (!subject.subjectExists(subjectName)) {
+            System.out.println("Subject does not exist.");
+            return false;
+        }
         System.out.print("Enter the Updated Name: ");
-        String uptName = input.getStrInput();
+        String uptName = input.getNormalInput();
 
         if (subject.updateSubject(className, subjectName, uptName)) {
             return true;
@@ -381,7 +503,7 @@ public class Main {
         System.out.println("1. Console\n2. PDF\n");
         int choice;
         // VALIDATING INPUT
-        choice = validateShowInput(2, input);
+        choice = validateMenuInput(2, input);
         // now divide if to print in PDF / Console
 
         // print on CONSOLE
@@ -411,9 +533,17 @@ public class Main {
     // TEACHER
     public boolean inputTeacher(TeacherDAO teacher, Input input) {
         System.out.print("Enter the Subject of Teacher: ");
-        String subjectName = input.getStrInput();
+        SubjectDAO subject = new SubjectDAO();
+        String subjectName = input.getNormalInput();
+        if (!subject.subjectExists(subjectName)) {
+            System.out.println("Subject does not exist.");
+            return false;
+        }
         System.out.print("Enter the Teacher: ");
-        String name = input.getStrInput();
+        String name = input.getNormalInput();
+        if (teacher.teacherExists(name)) {
+            System.out.println("Teacher already exists.");
+        }
         if (teacher.insertTeacher(subjectName, name)) {
             return true;
         }
@@ -422,7 +552,12 @@ public class Main {
 
     public boolean deleteTeacher(TeacherDAO teacher, Input input) {
         System.out.print("Enter the TeacherName: ");
-        String name = input.getStrInput();
+        String name = input.getNormalInput();
+
+        if (!teacher.teacherExists(name)) {
+            System.out.println("Teacher does not exist.");
+            return false;
+        }
         if (teacher.deleteTeacher(name)) {
             return true;
         }
@@ -431,9 +566,13 @@ public class Main {
 
     public boolean updateTeacher(TeacherDAO teacher, Input input) {
         System.out.print("Enter the TeacherName: ");
-        String name = input.getStrInput();
+        String name = input.getNormalInput();
+        if (!teacher.teacherExists(name)) {
+            System.out.println("Teacher does not exist.");
+            return false;
+        }
         System.out.print("Enter the Updated Name: ");
-        String uptName = input.getStrInput();
+        String uptName = input.getNormalInput();
         if (teacher.updateTeacher(name, uptName)) {
             return true;
         }
@@ -450,7 +589,7 @@ public class Main {
 
         int choice;
         // VALIDATING INPUT
-        choice = validateShowInput(2, input);
+        choice = validateMenuInput(2, input);
         // now divide if to print in PDF / Console
 
         // print on CONSOLE
@@ -479,9 +618,14 @@ public class Main {
     // STUDENT
     public boolean inputStudent(StudentDAO student, Input input) {
         System.out.print("Enter the Class of Student: ");
-        String className = input.getStrInput();
+        String className = input.getNormalInput();
+        ClassDAO room = new ClassDAO();
+        if (!room.Classexists(className)) {
+            System.out.println("Class does not exist.");
+            return false;
+        }
         System.out.print("Enter the StudentName: ");
-        String name = input.getStrInput();
+        String name = input.getNormalInput();
         if (student.insertStudent(className, name)) {
             return true;
         }
@@ -490,7 +634,11 @@ public class Main {
 
     public boolean deleteStudent(StudentDAO student, Input input) {
         System.out.print("Enter the StudentName: ");
-        String name = input.getStrInput();
+        String name = input.getNormalInput();
+        if (!student.studentExists(name)) {
+            System.out.println("Student does not exist.");
+            return false;
+        }
         if (student.deleteStudent(name)) {
             return true;
         }
@@ -499,9 +647,13 @@ public class Main {
 
     public boolean updateStudent(StudentDAO student, Input input) {
         System.out.print("Enter the StudentName: ");
-        String name = input.getStrInput();
+        String name = input.getNormalInput();
+        if (!student.studentExists(name)) {
+            System.out.println("Student does not exist.");
+            return false;
+        }
         System.out.print("Enter the Updated Name: ");
-        String uptName = input.getStrInput();
+        String uptName = input.getNormalInput();
         if (student.updateStudent(name, uptName)) {
             return true;
         }
@@ -535,7 +687,7 @@ public class Main {
     public void ManageDisplayStu(List<Student> students /* for student list (in PDF) */,
             ConsoleDisplay show, PdfDisplay pdf, int choice, Input input) {
         System.out.println("1. Console\n2. PDF\n");
-        int ch = validateShowInput(2, input);
+        int ch = validateMenuInput(2, input);
 
         // FOR CONSOLE
         // Student LIST in 'console'
@@ -574,7 +726,7 @@ public class Main {
 
         int choice;
         // VALIDATING INPUT
-        choice = validateShowInput(3, input);
+        choice = validateMenuInput(3, input);
 
         PdfDisplay pdf = new PdfDisplay(); // PDF object
 
@@ -618,7 +770,7 @@ public class Main {
         System.out.println("Do you want to make a Database?");
         call.showboolMenu("", new String[] { "yes", "no" });
         while (true) {
-            String choice = input.getStrInput();
+            String choice = input.getNormalInput();
 
             if (choice.equals("yes")) {
                 DBmaker data = new DBmaker();
@@ -630,28 +782,35 @@ public class Main {
             }
         }
         ConsoleDisplay show = new ConsoleDisplay();
-
-        // now show main menu
-        call.mainMenu();
-        switch (input.getIntInput()) {
-        case 1: // CLASS
-            ClassDAO room = new ClassDAO(); // ClassDAO object
-            call.handleClassMenu(room, db, show, input);
-            break;
-        case 2: // SUBJECT
-            SubjectDAO subject = new SubjectDAO(); // subjectDAO object
-            call.handleSubjectMenu(subject, db, show, input);
-            break;
-        case 3: // TEACHERS
-            TeacherDAO teacher = new TeacherDAO(); // TeacherDAO object
-            call.handleTeacherMenu(teacher, db, show, input);
-            break;
-        case 4: // STUDENTS
-            StudentDAO student = new StudentDAO(); // StudentDAO object
-            call.handleStudentMenu(student, db, show, input);
-            break;
-        default:
-            break; // stop the switch statement
+        boolean run = true;
+        while (run) {
+            // now show main menu
+            call.mainMenu();
+            int choice = call.validateMenuInput(4, input);
+            switch (choice) {
+            case 0: // stop the loop
+                run = false;
+                System.out.println("Exiting!! Goodbye.");
+            case 1: // CLASS
+                ClassDAO room = new ClassDAO(); // ClassDAO object
+                call.handleClassMenu(room, db, show, input);
+                break;
+            case 2: // SUBJECT
+                SubjectDAO subject = new SubjectDAO(); // subjectDAO object
+                call.handleSubjectMenu(subject, db, show, input);
+                break;
+            case 3: // TEACHERS
+                TeacherDAO teacher = new TeacherDAO(); // TeacherDAO object
+                call.handleTeacherMenu(teacher, db, show, input);
+                break;
+            case 4: // STUDENTS
+                StudentDAO student = new StudentDAO(); // StudentDAO object
+                call.handleStudentMenu(student, db, show, input);
+                break;
+            default:
+                System.out.println("Invalid Choice.");
+                break; // stop the switch statement
+            }
         }
 
     }
