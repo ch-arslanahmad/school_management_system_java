@@ -10,48 +10,16 @@ import database.DAO.StudentDAO;
 import database.DAO.SubjectDAO;
 import database.DAO.TeacherDAO;
 import display.Input;
+import display.LogHandler;
 
 public class DBManager {
+    // variables for LOGGing
     private static final Logger logger = Logger.getLogger(DBManager.class.getName());
-    private static FileHandler fh;
 
     // STATIC block for **LOGGING**
-
     static {
-        //
-        try {
-            // so logging is not shown in console
-            // LogManager.getLogManager().reset();
-            String a = "log/DBManager.txt";
-            File file = new File(a);
-            // if file does not exist, create it
-            if (!(file.exists())) {
-                file.createNewFile();
-            }
-            fh = new FileHandler(a, 1024 * 1024, 1, true); // path, size, n of files, append or not
-            logger.addHandler(fh);
-            fh.setFormatter(new SimpleFormatter());
-            logger.setLevel(Level.FINE);
-
-            // checking if file exists
-            if (file.exists()) {
-                logger.info("Log File is created!");
-            }
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                closeLog();
-            }));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        LogHandler.createLog(logger, "DBManager");
     }
-
-    public static void closeLog() {
-        logger.info("Logger Closed.");
-        fh.flush();
-        fh.close();
-    }
-
-    Connection conn;
 
     // Checking, does DB file exists?
     public boolean DBfileExists() {

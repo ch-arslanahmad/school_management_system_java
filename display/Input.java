@@ -1,10 +1,7 @@
 package display;
 
-import java.io.File;
 import java.util.Scanner;
 import java.util.logging.*;
-
-import database.DBmaker;
 
 public class Input {
 
@@ -12,33 +9,8 @@ public class Input {
     private static FileHandler fh;
 
     // STATIC block for **LOGGING**
-
     static {
-        //
-        try {
-            // so logging is not shown in console
-            // LogManager.getLogManager().reset();
-            String a = "log/Input.txt";
-            File file = new File(a);
-            // if file does not exist, create it
-            if (!(file.exists())) {
-                file.createNewFile();
-            }
-            fh = new FileHandler(a, 1024 * 1024, 1, true); // path, size, n of files, append or not
-            logger.addHandler(fh);
-            fh.setFormatter(new SimpleFormatter());
-            logger.setLevel(Level.FINE);
-
-            // checking if file exists
-            if (file.exists()) {
-                logger.info("Log File is created!");
-            }
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                closeLog();
-            }));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        LogHandler.createLog(logger, "Input");
     }
 
     public static void closeLog() {
