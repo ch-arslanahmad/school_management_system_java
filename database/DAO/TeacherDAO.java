@@ -55,7 +55,7 @@ public class TeacherDAO {
     }
 
     // see if teacher exists
-    private boolean teacherExists(String name) {
+    public boolean teacherExists(String name) {
         String ExistSQL = "SELECT COUNT(*) AS count FROM Teacher WHERE TeacherName = ?";
 
         // prepared statement in try block
