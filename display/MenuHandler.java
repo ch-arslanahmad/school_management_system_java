@@ -26,9 +26,9 @@ public class MenuHandler {
 
     // MAIN MENU
     public void mainMenu() {
-        System.out.print("\n========== School Management System ==========\n" + "1. Class >\n"
-                + "2. Subject (linked to a Class) >\n" + "3. Teacher (linked to a Subject) >\n"
-                + "4. Student (linked to a Class) > \n" + "5. Exit\n"
+        System.out.print("\n========== School Management System ==========\n"
+                + "1. School-Info\n2. Class >\n" + "3. Subject (linked to a Class) >\n"
+                + "4. Teacher (linked to a Subject) >\n" + "5. Student (linked to a Class)\n"
                 + "===============================================\n");
     }
 
@@ -93,7 +93,6 @@ public class MenuHandler {
                 }
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Integer Input is causing error: ");
-                e.printStackTrace();
             }
         }
 
@@ -142,7 +141,6 @@ public class MenuHandler {
                 }
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Integer Input is causing error: ");
-                e.printStackTrace();
             }
 
         }
@@ -192,7 +190,6 @@ public class MenuHandler {
                 }
             } catch (InputMismatchException | NumberFormatException e) {
                 System.out.println("Integer Input is causing error: ");
-                e.printStackTrace();
             }
         }
     }
@@ -240,8 +237,7 @@ public class MenuHandler {
                     break;
                 }
             } catch (InputMismatchException | NumberFormatException e) {
-                System.out.println("Integer Input is causing error: ");
-                e.printStackTrace();
+                System.out.println("Integer Input is causing error.");
             }
         }
     }
