@@ -61,6 +61,26 @@ public class Input {
         return number; // return integer successfully
     }
 
+    // VALIDATION of Show Input
+    public int validateMenuInput(int n, Input input) {
+        int choice;
+        // loop to only stop when valid input given
+        while (true) {
+            try {
+                System.out.print("Enter your choice(0-" + n + "): ");
+                choice = input.getIntInput();
+                if (choice > -1 && choice <= n) {
+                    return choice; // ... returns choice
+                } else {
+                    System.out.print("Try again. Only, (0-" + n + ")\t");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Enter valid Integer value: ");
+                e.printStackTrace();
+            }
+        }
+    }
+
     public void close() {
         scanner.close();
     }
