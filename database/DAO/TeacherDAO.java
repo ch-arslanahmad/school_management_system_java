@@ -115,7 +115,7 @@ public class TeacherDAO {
 
     // insert Teacher
     public boolean insertTeacher(String subjectName, String name) {
-        int subjectID = check.getIDfromSubject(subjectName);
+        int subjectID = check.fetchSubjectID(subjectName);
         // -1 is error-code
         if (subjectID == -1) {
             logger.info("Subjects does not exist.");
@@ -180,7 +180,36 @@ public class TeacherDAO {
 
     }
 
-    // update teacher
+    // update teachername with subject
+    public boolean updateTeacherSubject(String name, String updateName, String subjectName) {
+        SubjectDAO subject = new SubjectDAO();
+        int subjectID = subject.fetchSubjectID(subjectName); // fetch subjectID
+        int teachID = fetchTeacherID(name);
+        String updQuery = "UPDATE Teacher SET TeacherName = ?, SubjectID = ? WHERE TeacherID = ?";
+
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(updQuery)) {
+
+            rm.setString(0, updateName);
+            rm.setInt(1, subjectID);
+            rm.setInt(2, teachID);
+
+            int rs = rm.executeUpdate();
+
+            if (rs > 0) {
+                logger.info("Teacher name updated.");
+                conn.commit(); // commit if true
+                return true;
+            } else {
+                logger.warning("Error updating teacher name.");
+                conn.rollback(); // rollback if error
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "ERROR while updating teacher Name: ", e);
+        }
+        return false;
+    }
+
     public boolean updateTeacher(String name, String updateName) {
         int teachID = fetchTeacherID(name);
         String updQuery = "UPDATE Teacher SET TeacherName = ? WHERE TeacherID = ?";
@@ -194,11 +223,11 @@ public class TeacherDAO {
             int rs = rm.executeUpdate();
 
             if (rs > 0) {
-                logger.info("Teacher name update.");
+                logger.info("Teacher name updated.");
                 conn.commit(); // commit if true
                 return true;
             } else {
-                logger.warning("Error updating.");
+                logger.warning("Error updating teacher name.");
                 conn.rollback(); // rollback if error
             }
         } catch (Exception e) {

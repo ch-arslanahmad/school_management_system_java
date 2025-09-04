@@ -32,7 +32,7 @@ public class SubjectDAO {
     int subjectID;
 
     // method to get ID from Subject
-    public int getIDfromSubject(String name) {
+    public int fetchSubjectID(String name) {
         if (!subjectExists(name)) {
             return -1;
         }
@@ -144,7 +144,7 @@ public class SubjectDAO {
         return false;
     }
 
-    // Insert 1 Subject in DB
+    // Insert a Subject in DB
     public boolean insertSubject(String ClassName, String name, int Marks) {
         int classID = check.getValidClassID(ClassName);
         // STOP if return ERROR code (-1)
@@ -261,6 +261,40 @@ public class SubjectDAO {
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = Database.getConnection().prepareStatement(listSubjectSQL)) {
             // variable to count total rows printed
+            int count = 0;
+            // inner try-block to fetch and display each row
+            try (ResultSet rs = rm.executeQuery()) {
+                // loop to display every row
+                while (rs.next()) {
+                    subjects.add(new Subjects(rs.getString("SubjectName"),
+                            new ClassRoom(rs.getString("ClassName"))));
+                    count++;
+                }
+                logger.log(Level.FINE, count + " Subjects Listed");
+                return subjects; // return the List Array
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error while executing Query to List Subjects: ", e);
+            }
+
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while listing Subjects: ", e);
+        }
+
+        return null;
+
+    }
+
+    // list all subjects in a class
+    // list all subjects
+    public List<Subjects> listClassSubjects(String className) {
+        List<Subjects> subjects = new ArrayList<>();
+        // Query to list all Subjects
+        String listSubjectSQL = "SELECT Subjects.SubjectName, Class.ClassName " + "FROM Subjects "
+                + "LEFT JOIN Class ON Subjects.ClassID = Class.ClassID WHERE ClassName = ?";
+        // try-block
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = Database.getConnection().prepareStatement(listSubjectSQL)) {
+            rm.setString(1, className);
             int count = 0;
             // inner try-block to fetch and display each row
             try (ResultSet rs = rm.executeQuery()) {

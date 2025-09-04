@@ -76,7 +76,6 @@ public class Input {
                 }
             } catch (NumberFormatException e) {
                 System.out.println("Enter valid Integer value: ");
-                e.printStackTrace();
             }
         }
     }

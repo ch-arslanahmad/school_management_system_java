@@ -30,32 +30,31 @@ public class StudentDAO {
         if (!studentExists(name)) {
             logger.warning("Student does not exist. Add Student.");
             return -1;
-        } else {
-            // SQL Query
-            String StudentIDSQL = "SELECT StudentID FROM Student where StudentName= ?";
+        }
+        // SQL Query
+        String StudentIDSQL = "SELECT StudentID FROM Student where StudentName= ?";
 
-            // try-catch block
-            try (PreparedStatement rm = Database.getConnection().prepareStatement(StudentIDSQL)) {
+        // try-catch block
+        try (PreparedStatement rm = Database.getConnection().prepareStatement(StudentIDSQL)) {
 
-                // putting value in query
-                rm.setString(1, name);
+            // putting value in query
+            rm.setString(1, name);
 
-                // executing query
-                try (ResultSet rs = rm.executeQuery()) {
-                    // pointing to column and fetching ClassID
-                    if (rs.next()) {
-                        return rs.getInt("StudentID");
-                    }
-                } catch (Exception e) {
-                    logger.log(Level.WARNING, "Unable to execute fetch StudentID: ", e);
-
+            // executing query
+            try (ResultSet rs = rm.executeQuery()) {
+                // pointing to column and fetching ClassID
+                if (rs.next()) {
+                    return rs.getInt("StudentID");
                 }
-
             } catch (Exception e) {
-                logger.log(Level.WARNING, "Error while fetching Student ID: ", e);
+                logger.log(Level.WARNING, "Unable to execute fetch StudentID: ", e);
+
             }
 
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while fetching Student ID: ", e);
         }
+
         return -1;
     }
 
@@ -152,24 +151,28 @@ public class StudentDAO {
         // -1 is error-code
         if (classID == -1) {
             logger.info("Class does not exist.");
-        } else {
-            String studentSQL = "INSERT INTO Students (StudentName, ClassID) VALUES (?,?)";
+            return false;
+        }
+        String studentSQL = "INSERT INTO Students (StudentName, ClassID) VALUES (?,?)";
 
-            try (PreparedStatement rm = Database.getConnection().prepareStatement(studentSQL)) {
-                rm.setString(1, name);
-                rm.setInt(2, classID);
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(studentSQL)) {
+            rm.setString(1, name);
+            rm.setInt(2, classID);
 
-                int rs = rm.executeUpdate();
-                if (rs > 0) {
-                    logger.info("Added Student.");
-                    return true;
-                } else {
-                    logger.config("Unable to add Student");
-                }
-
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Error while inserting Student.", e);
+            int rs = rm.executeUpdate();
+            if (rs > 0) {
+                logger.info("Added Student.");
+                conn.commit();
+                return true;
+            } else {
+                logger.config("Unable to add Student");
+                conn.rollback();
+                return false;
             }
+
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while inserting Student.", e);
         }
         return false;
 
@@ -181,7 +184,8 @@ public class StudentDAO {
             System.out.println("No Match found");
         } else {
             String deleteClassSQL = "DELETE FROM Student WHERE StudentName = ?";
-            try (PreparedStatement rm = Database.getConnection().prepareStatement(deleteClassSQL)) {
+            try (Connection conn = Database.getConnection();
+                    PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
 
                 // set values in the query
                 rm.setString(1, name);
@@ -192,9 +196,11 @@ public class StudentDAO {
                 if (rs > 0) {
                     // confirmation
                     logger.info("Student Deleted");
+                    conn.commit();
                     return true;
                 } else {
                     logger.config("Student unable to delete.");
+                    conn.rollback();
                     return false;
                 }
             } catch (Exception e) {
@@ -298,6 +304,45 @@ public class StudentDAO {
             return new ArrayList<>();
         }
 
+    }
+
+    // set / update ObtMarks
+    public boolean updateObtMarks(SubjectDAO subject, String studentName, String SubjectName,
+            int ObtMarks) {
+
+        int subID = subject.getClassIdBySubject(SubjectName);
+        int stuID = fetchStudentID(studentName);
+        if (stuID == -1) {
+            logger.warning("Student does not exist.");
+            return false;
+        }
+        if (subID == -1) {
+            logger.warning("Subject does not exist.");
+
+            return false;
+        }
+
+        String uptObt = "UPDATE Grade SET ObtainedMarks = ? WHERE StudentID = ? AND SubjectID = ? ";
+
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(uptObt)) {
+            rm.setInt(1, ObtMarks);
+            rm.setInt(2, stuID);
+            rm.setInt(3, subID);
+
+            int rs = rm.executeUpdate();
+
+            if (rs > 0) {
+                conn.commit(); // commit
+                return true;
+            } else {
+                conn.rollback();
+                return false; // rollback if error
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error setting Grade: ", e);
+        }
+        return false;
     }
 
 }

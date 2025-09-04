@@ -167,9 +167,11 @@ public class ClassDAO {
             rm.setInt(1, stationary);
             rm.setInt(0, exam);
             if (rm.executeUpdate() > 0) {
+                conn.commit(); // commit
                 return true;
             } else {
                 logger.warning("Unable to add Class with Fees.");
+                conn.rollback(); // rollback
                 return false;
             }
         } catch (Exception e) {
@@ -218,20 +220,13 @@ public class ClassDAO {
             return false;
         }
 
-        if (updateName == null || updateName.isEmpty()) {
-            logger.warning("New ClassName cannot be empty.");
-            return false;
-        }
-
         if (Classexists(updateName)) {
-            logger.warning("'" + updateName + "' name already exists.");
+            logger.warning("Updated Name: " + updateName + "' name already exists.");
 
         }
-
         String updateClass = "UPDATE Class SET ClassName = ? WHERE ClassName = ?";
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(updateClass)) {
-            conn.setAutoCommit(false); // start the transaction
             rm.setString(1, updateName);
             rm.setString(2, name);
 
@@ -341,9 +336,11 @@ public class ClassDAO {
             rm.setInt(1, stationary);
             rm.setInt(0, exam);
             if (rm.executeUpdate() > 0) {
+                conn.commit(); // commit if true
                 return true;
             } else {
                 logger.warning("Unable to update Fees of Class.");
+                conn.rollback(); // rollback if error
                 return false;
             }
         } catch (Exception e) {

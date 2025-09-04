@@ -5,7 +5,6 @@ import display.Input;
 import display.LogHandler;
 import school.Actions;
 
-import java.util.ArrayList;
 import java.util.logging.*;
 
 public class DBmaker {
@@ -16,9 +15,11 @@ public class DBmaker {
         LogHandler.createLog(logger, "DBMaker");
     }
 
+    // ? using Boolean wrapper to allow nulls, helpful in finding if user stopped
+    // the method or an error
+
     // METHOD to create whole database
     public void createDB(Input input) {
-        DBManager check = new DBManager();
 
         // all the objects of DB
         SchoolDAO school = new SchoolDAO();
@@ -27,38 +28,27 @@ public class DBmaker {
         SubjectDAO subject = new SubjectDAO();
         TeacherDAO teacher = new TeacherDAO();
 
-        // SCHOOL
-        System.out.println("Ok, First. \nTell me school name: ");
-        String schoolName = input.getStrInput();
-        System.out.println("Tell me School Principle name: ");
-        String principleName = input.getStrInput();
-        System.out.println("Tell me School Location: ");
-        String location = input.getStrInput();
-        // if School-info is not inserted
-        if (!school.insertSchool(schoolName, principleName, location)) {
-            String error = "Database Creation Abort : School-Info";
-            logger.warning(error);
-            System.exit(0);
-        }
+        Actions act = new Actions(); // method for actions
+
+        act.addSchoolInfo(school, input);
 
         // arrayList of classes that were inserted
 
         // CLASSES
-        System.out.println("Ok, NOW. \nLets add a class or multiple classes.\n");
-        ArrayList<String> classes = check.insertClassesDB(room, input);
-        System.out.println("All Classes Inserted.\n");
+        System.out.println("Now Classes.");
+        act.inputClasses(room, input);
 
         // STUDENTS
         System.out.println("Now Students");
-        check.insertStudentsDB(classes, student, input);
+        act.inputStudents(student, input);
 
         // SUBJECTS
         System.out.println("Now Subjects");
-        ArrayList<String> subjects = check.insertSubjectsDB(classes, subject, input);
+        act.inputSubjects(subject, input);
 
         // TEACHERS
         System.out.println("Now Teachers");
-        check.insertTeachersDB(subjects, teacher, input);
+        act.inputTeachers(teacher, input);
 
     }
 
