@@ -3,8 +3,8 @@ package database;
 import database.DAO.*;
 import display.Input;
 import display.LogHandler;
+import school.Actions;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.logging.*;
 
@@ -19,11 +19,6 @@ public class DBmaker {
     // METHOD to create whole database
     public void createDB(Input input) {
         DBManager check = new DBManager();
-
-        System.out.println(
-                "To Use this APP you must create a database. BUT BEFORE That, they may be dummy data beforehand in the DB.\n\n");
-        System.out.println("WARNING: ALL THE DATA WILL BE DELETED.");
-        check.removeAllData(input);
 
         // all the objects of DB
         SchoolDAO school = new SchoolDAO();

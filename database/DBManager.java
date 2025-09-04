@@ -122,26 +122,12 @@ public class DBManager {
         return false;
     }
 
-    public boolean removeAllData(Input input) {
-        while (true) {
-            String deleteDB = input.getNormalInput();
-            if (deleteDB.equals("yes")) {
-                return delDB();
-            } else if (deleteDB.equals("no")) {
-                break;
-            } else {
-                logger.info("Enter either, yes/no");
-            }
-        }
-        return false;
-    }
-
     public ArrayList<String> insertClassesDB(ClassDAO room, Input input) {
         ArrayList<String> classes = new ArrayList<>();
         // loop to get insert classes
         while (true) {
             System.err.println("(Press 0 to stop)\nEnter Class: ");
-            String className = input.getStrInput();
+            String className = input.getNormalInput();
             // condition to stop infinite loop
             if (className.equals("0")) {
                 break;
@@ -167,7 +153,7 @@ public class DBManager {
 
                 System.out
                         .println("(Press 0 to stop)\nEnter Student in Class " + className + " : ");
-                String studentName = input.getStrInput().trim();
+                String studentName = input.getNormalInput().trim();
                 // condition to stop infinite loop
                 if (studentName.equals("0")) {
                     break;
@@ -189,9 +175,9 @@ public class DBManager {
         while (true) {
 
             System.out.println("(Press 0 to stop)\nEnter ClassName: ");
-            String className = input.getStrInput();
+            String className = input.getNormalInput();
             System.out.println("Enter Student Name: ");
-            String name = input.getStrInput();
+            String name = input.getNormalInput();
             // condition to stop infinite loop
             if (name.equals("0") && className.equals("0")) {
                 break;
@@ -217,7 +203,7 @@ public class DBManager {
 
                 System.out
                         .println("(Press 0 to stop)\nEnter Subject in Class " + className + " : ");
-                String subjectName = input.getStrInput();
+                String subjectName = input.getNormalInput();
                 System.out.println("Enter Total Marks of Subject: ");
                 int subjectMarks = input.getIntInput();
                 // condition to stop infinite loop
@@ -243,9 +229,9 @@ public class DBManager {
         // infinite loop to insert subjects in a class
         while (true) {
             System.out.print("(Press 0 to stop)\nEnter ClassName: ");
-            String className = input.getStrInput();
+            String className = input.getNormalInput();
             System.out.print("Enter Subject in Class " + className + " : ");
-            String subjectName = input.getStrInput();
+            String subjectName = input.getNormalInput();
             System.out.print("Enter Total Marks of Subject: ");
             int subjectMarks = input.getIntInput();
             // condition to stop infinite loop
@@ -268,7 +254,7 @@ public class DBManager {
         for (String subjectName : subjects) {
             System.out
                     .println("(Press 0 to stop)\nEnter Teacher in Subject " + subjectName + " : ");
-            String teacherName = input.getStrInput();
+            String teacherName = input.getNormalInput();
             // condition to stop infinite loop
             if (teacherName.equals("0")) {
                 break;
@@ -290,9 +276,9 @@ public class DBManager {
         // infinite loop to insert teacher in subject
         while (true) {
             System.out.print("(Press 0 to stop)\nEnter TeacherName: ");
-            String name = input.getStrInput();
+            String name = input.getNormalInput();
             System.out.print("Enter Subject : ");
-            String subjectName = input.getStrInput();
+            String subjectName = input.getNormalInput();
             // condition to stop infinite loop
             if (name.equals("0") && subjectName.equals("0")) {
                 break;
