@@ -206,4 +206,16 @@ public class ConsoleDisplay implements Display {
             e.printStackTrace();
         }
     }
+
+    public void displaySchoolInfo(SchoolDAO info) {
+        School s = info.getSchoolInfo();
+        if (s == null) {
+            System.out.println("It is returning null;");
+            return;
+        }
+        System.out.println("School Name: " + s.getName());
+        System.out.println("Principal Name: " + s.getPrincipal());
+        System.out.println("Location: " + s.getlocation());
+    }
+
 }
