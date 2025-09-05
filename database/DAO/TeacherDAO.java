@@ -34,7 +34,8 @@ public class TeacherDAO {
             String TeacherIDSQL = "SELECT TeacherID FROM Teacher where TeacherName= ?";
 
             // try-catch block
-            try (PreparedStatement rm = Database.getConnection().prepareStatement(TeacherIDSQL)) {
+            try (Connection conn = Database.getConnection();
+                    PreparedStatement rm = conn.prepareStatement(TeacherIDSQL)) {
 
                 // putting value in query
                 rm.setString(1, name);
@@ -59,7 +60,8 @@ public class TeacherDAO {
         String ExistSQL = "SELECT COUNT(*) AS count FROM Teacher WHERE TeacherName = ?";
 
         // prepared statement in try block
-        try (PreparedStatement rm = Database.getConnection().prepareStatement(ExistSQL)) {
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(ExistSQL)) {
 
             // adding value to query
             rm.setString(1, name);
@@ -92,7 +94,8 @@ public class TeacherDAO {
                 + "JOIN Subjects ON Teacher.SubjectID = Subjects.SubjectID "
                 + "WHERE TeacherName = ?";
 
-        try (PreparedStatement rm = Database.getConnection().prepareStatement(fetchTeacherClass)) {
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(fetchTeacherClass)) {
             rm.setString(1, name);
             try (ResultSet rs = rm.executeQuery()) {
 

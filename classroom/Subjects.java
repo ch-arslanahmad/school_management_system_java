@@ -16,6 +16,13 @@ public class Subjects {
         this.classRoom = classRoom;
     }
 
+    // for method listClassSubjectswithMarks()
+    public Subjects(String subjectName, int marks, ClassRoom classRoom) {
+        this.subjectName = subjectName;
+        this.Obtmarks = marks;
+        this.classRoom = classRoom;
+    }
+
     //
     ClassRoom room;
 
