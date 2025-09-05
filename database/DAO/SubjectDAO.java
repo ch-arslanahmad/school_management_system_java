@@ -38,7 +38,8 @@ public class SubjectDAO {
         }
         String subjectIDSQL = "SELECT SubjectID FROM Subjects where SubjectName = ?;";
         subjectID = -1;
-        try (PreparedStatement rm = Database.getConnection().prepareStatement(subjectIDSQL)) {
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(subjectIDSQL)) {
 
             rm.setString(1, name);
 
@@ -82,7 +83,8 @@ public class SubjectDAO {
             String classIdSQL = "SELECT ClassID FROM Subjects WHERE SubjectName = ?";
 
             // try-catch block
-            try (PreparedStatement rm = Database.getConnection().prepareStatement(classIdSQL)) {
+            try (Connection conn = Database.getConnection();
+                    PreparedStatement rm = conn.prepareStatement(classIdSQL)) {
 
                 // inserting value in Query
                 rm.setString(1, name);
@@ -108,7 +110,8 @@ public class SubjectDAO {
         String ExistSQL = "SELECT COUNT(*) AS count FROM Subjects WHERE SubjectName = ?;";
 
         // prepared statement in try block
-        try (PreparedStatement rm = Database.getConnection().prepareStatement(ExistSQL)) {
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(ExistSQL)) {
 
             // adding value to query
             rm.setString(1, name);
@@ -318,4 +321,50 @@ public class SubjectDAO {
 
     }
 
+    public List<Subjects> listClassSubjectswithMarks(String className) {
+        List<Subjects> subjects = new ArrayList<>();
+        // Query to list all Subjects
+        String listSubjectSQL = "SELECT Subjects.SubjectName, Subjects.Marks, Class.ClassName FROM Subjects LEFT JOIN Class ON Subjects.ClassID = Class.ClassID WHERE ClassName = ?";
+        // try-block
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
+            rm.setString(1, className);
+            int count = 0;
+            // inner try-block to fetch and display each row
+            try (ResultSet rs = rm.executeQuery()) {
+                // loop to display every row
+                while (rs.next()) {
+                    subjects.add(new Subjects(rs.getString("SubjectName"), rs.getInt("Marks"),
+                            new ClassRoom(rs.getString("ClassName"))));
+                    count++;
+                }
+                logger.log(Level.FINE, count + " Subjects Listed");
+                return subjects; // return the List Array
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error while executing Query to List Subjects: ", e);
+            }
+
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while listing Subjects: ", e);
+        }
+
+        return null;
+
+    }
+
+    public int fetchSubjectTotalMarks(String subjectName) {
+        String getMarksSQL = "SELECT Subjects.Marks FROM Subjects WHERE SubjectName = ?";
+
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(getMarksSQL)) {
+            rm.setString(1, subjectName);
+            ResultSet rs = rm.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("Marks");
+            }
+        } catch (Exception e) {
+            System.out.println("Error fetching Subject Marks");
+        }
+        return -1; // error code
+    }
 }
