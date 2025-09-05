@@ -153,7 +153,7 @@ public class StudentDAO {
             logger.info("Class does not exist.");
             return false;
         }
-        String studentSQL = "INSERT INTO Students (StudentName, ClassID) VALUES (?,?)";
+        String studentSQL = "INSERT INTO Student (StudentName, ClassID) VALUES (?,?)";
 
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(studentSQL)) {
@@ -182,33 +182,32 @@ public class StudentDAO {
     public boolean deleteStudent(String name) {
         if (!(studentExists(name))) {
             System.out.println("No Match found");
-        } else {
-            String deleteClassSQL = "DELETE FROM Student WHERE StudentName = ?";
-            try (Connection conn = Database.getConnection();
-                    PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
+            return false;
+        }
+        String deleteClassSQL = "DELETE FROM Student WHERE StudentName = ?";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
 
-                // set values in the query
-                rm.setString(1, name);
+            // set values in the query
+            rm.setString(1, name);
 
-                // execute query
-                int rs = rm.executeUpdate();
+            // execute query
+            int rs = rm.executeUpdate();
 
-                if (rs > 0) {
-                    // confirmation
-                    logger.info("Student Deleted");
-                    conn.commit();
-                    return true;
-                } else {
-                    logger.config("Student unable to delete.");
-                    conn.rollback();
-                    return false;
-                }
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Error while deleting Student: ", e);
+            if (rs > 0) {
+                // confirmation
+                logger.info("Student Deleted");
+                conn.commit();
+                return true;
+            } else {
+                logger.config("Student unable to delete.");
+                conn.rollback();
+                return false;
             }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error while deleting Student: ", e);
         }
         return false;
-
     }
 
     // update studentName
@@ -226,7 +225,10 @@ public class StudentDAO {
 
             int rs = rm.executeUpdate();
             if (rs > 0) {
+                conn.commit();
                 return true;
+            } else {
+                conn.rollback();
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error while updating Student: ", e);
@@ -261,7 +263,7 @@ public class StudentDAO {
                     logger.info("Students are successfully displayed.");
                     return student; // returns student with classes
                 } else {
-                    logger.warning("Student are not displayed.");
+                    logger.warning("Students are not displayed.");
                 }
             } catch (SQLException e) {
                 logger.log(Level.WARNING, "Error while executing Query to List Students: ", e);
