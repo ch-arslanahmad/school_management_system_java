@@ -89,7 +89,7 @@ public class TeacherDAO {
         // this requires a fairly long query, similar explaination is already given in
         // TeacherDAO
         String fetchTeacherClass = "SELECT Subjects.SubjectName " + "FROM Teacher "
-                + "JOIN SUbjects ON Teacher.SubjectID = Subjects.SubjectID "
+                + "JOIN Subjects ON Teacher.SubjectID = Subjects.SubjectID "
                 + "WHERE TeacherName = ?";
 
         try (PreparedStatement rm = Database.getConnection().prepareStatement(fetchTeacherClass)) {
@@ -155,7 +155,7 @@ public class TeacherDAO {
         }
         String delTeachSQL = "DELETE FROM Teacher WHERE TeacherName = ?";
         try (Connection conn = Database.getConnection();
-                PreparedStatement rm = Database.getConnection().prepareStatement(delTeachSQL)) {
+                PreparedStatement rm = conn.prepareStatement(delTeachSQL)) {
 
             // set values in the query
             rm.setString(1, name);
@@ -190,9 +190,9 @@ public class TeacherDAO {
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(updQuery)) {
 
-            rm.setString(0, updateName);
-            rm.setInt(1, subjectID);
-            rm.setInt(2, teachID);
+            rm.setString(1, updateName);
+            rm.setInt(2, subjectID);
+            rm.setInt(3, teachID);
 
             int rs = rm.executeUpdate();
 
@@ -217,8 +217,8 @@ public class TeacherDAO {
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(updQuery)) {
 
-            rm.setString(0, updateName);
-            rm.setInt(1, teachID);
+            rm.setString(1, updateName);
+            rm.setInt(2, teachID);
 
             int rs = rm.executeUpdate();
 

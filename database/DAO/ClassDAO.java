@@ -58,7 +58,7 @@ public class ClassDAO {
     }
 
     // see if class exists
-    public boolean Classexists(String name) {
+    public boolean ClassExists(String name) {
         // SQL query to check
         String check = "SELECT COUNT(*) AS count FROM Class WHERE ClassName = ?;";
 
@@ -111,7 +111,7 @@ public class ClassDAO {
     // method to get Validated ID from Class (-1 Error Code)
     public int getValidClassID(String name) {
         // getID only if class exists
-        if (!Classexists(name)) {
+        if (!ClassExists(name)) {
             logger.info("Class Does Not exist");
             return -1;
         } else {
@@ -155,7 +155,7 @@ public class ClassDAO {
     // to insert a class with fees
     public boolean insertWithClassFees(String className, int tuition, int stationary, int exam) {
 
-        if (Classexists(className)) {
+        if (ClassExists(className)) {
             logger.warning("Class already exists.");
             return false;
         }
@@ -163,9 +163,9 @@ public class ClassDAO {
         String inputFees = "INSERT INTO Class(ClassName, Tuition_Fee,Stationary_Fee,Paper_Fee) VALUES(?,?,?,?)";
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(inputFees)) {
-            rm.setInt(0, tuition);
-            rm.setInt(1, stationary);
-            rm.setInt(0, exam);
+            rm.setInt(1, tuition);
+            rm.setInt(2, stationary);
+            rm.setInt(3, exam);
             if (rm.executeUpdate() > 0) {
                 conn.commit(); // commit
                 return true;
@@ -181,7 +181,7 @@ public class ClassDAO {
     }
 
     public boolean deleteClass(String name) {
-        if (!(Classexists(name))) {
+        if (!(ClassExists(name))) {
             logger.warning("No Match found");
             return false;
         }
@@ -215,12 +215,12 @@ public class ClassDAO {
     // update class row (classname)
     public boolean updateClass(String name, String updateName) {
 
-        if (!Classexists(name)) {
+        if (!ClassExists(name)) {
             logger.warning("Class Doesnt exist.");
             return false;
         }
 
-        if (Classexists(updateName)) {
+        if (ClassExists(updateName)) {
             logger.warning("Updated Name: " + updateName + "' name already exists.");
 
         }
@@ -237,7 +237,7 @@ public class ClassDAO {
                 return true;
             } else {
                 conn.rollback(); // rollback if error
-                logger.info("Committed Successfully");
+                logger.info("Committed Unsuccessfully");
                 return false;
             }
             // for the most part, as autocommit is disabled.
@@ -324,7 +324,7 @@ public class ClassDAO {
 
     public boolean updateClassFees(String className, int tuition, int stationary, int exam) {
 
-        if (!Classexists(className)) {
+        if (!ClassExists(className)) {
             logger.warning("Class does not exist.");
             return false;
         }
@@ -332,9 +332,9 @@ public class ClassDAO {
         String inputFees = "UPDATE Class SET Tuition_Fee = ?, Stationary_Fee = ?, Paper_Fee = ? WHERE ClassName = ?";
         try (Connection conn = Database.getConnection();
                 PreparedStatement rm = conn.prepareStatement(inputFees)) {
-            rm.setInt(0, tuition);
-            rm.setInt(1, stationary);
-            rm.setInt(0, exam);
+            rm.setInt(1, tuition);
+            rm.setInt(2, stationary);
+            rm.setInt(3, exam);
             if (rm.executeUpdate() > 0) {
                 conn.commit(); // commit if true
                 return true;

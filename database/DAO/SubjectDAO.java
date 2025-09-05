@@ -89,9 +89,9 @@ public class SubjectDAO {
 
                 ResultSet rs = rm.executeQuery();
 
-                // fetching SubjectID
+                // fetching ClassID
                 if (rs.next()) {
-                    return rs.getInt("SubjectID");
+                    return rs.getInt("ClassID");
                 }
 
             } catch (Exception e) {
@@ -259,7 +259,7 @@ public class SubjectDAO {
                 + "LEFT JOIN Class ON Subjects.ClassID = Class.ClassID";
         // try-block
         try (Connection conn = Database.getConnection();
-                PreparedStatement rm = Database.getConnection().prepareStatement(listSubjectSQL)) {
+                PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
             // variable to count total rows printed
             int count = 0;
             // inner try-block to fetch and display each row
@@ -293,7 +293,7 @@ public class SubjectDAO {
                 + "LEFT JOIN Class ON Subjects.ClassID = Class.ClassID WHERE ClassName = ?";
         // try-block
         try (Connection conn = Database.getConnection();
-                PreparedStatement rm = Database.getConnection().prepareStatement(listSubjectSQL)) {
+                PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
             rm.setString(1, className);
             int count = 0;
             // inner try-block to fetch and display each row
