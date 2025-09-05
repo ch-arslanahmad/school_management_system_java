@@ -31,7 +31,7 @@ public class SchoolDAO {
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Error fetching School info: ", e);
         }
-        return new School();
+        return null;
     }
 
     // In DB there is a check that doesnt allow more than one row in School info

@@ -35,7 +35,8 @@ public class StudentDAO {
         String StudentIDSQL = "SELECT StudentID FROM Student where StudentName= ?";
 
         // try-catch block
-        try (PreparedStatement rm = Database.getConnection().prepareStatement(StudentIDSQL)) {
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(StudentIDSQL)) {
 
             // putting value in query
             rm.setString(1, name);
@@ -63,7 +64,8 @@ public class StudentDAO {
         String ExistSQL = "SELECT COUNT(*) AS count FROM Student WHERE StudentName = ?";
 
         // prepared statement in try block
-        try (PreparedStatement rm = Database.getConnection().prepareStatement(ExistSQL)) {
+        try (Connection conn = Database.getConnection();
+                PreparedStatement rm = conn.prepareStatement(ExistSQL)) {
 
             // adding value to query
             rm.setString(1, name);
