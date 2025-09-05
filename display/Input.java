@@ -61,6 +61,20 @@ public class Input {
         return number; // return integer successfully
     }
 
+    // get VALIDATED INTEGER
+    public int getNumInput(Input input) {
+        // loop to only stop when valid input given
+        while (true) {
+            try {
+                int number = input.getIntInput();
+
+                return number;
+            } catch (NumberFormatException e) {
+                System.out.println("Enter valid Integer value: ");
+            }
+        }
+    }
+
     // VALIDATION of Show Input
     public int validateMenuInput(int n, Input input) {
         int choice;
