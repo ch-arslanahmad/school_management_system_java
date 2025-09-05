@@ -47,22 +47,24 @@ public class Main {
             call.mainMenu();
             int choice = input.validateMenuInput(5, input);
             switch (choice) {
-            case 0 -> { // stop the loop
-                run = false;
-                System.out.println("Exiting!! Goodbye.");
-            }
-            // handles school INFO
-            case 1 -> act.addSchoolInfo(school, input);
-            // CLASS
-            case 2 -> call.handleClassMenu(room, db, show, input);
-            // SUBJECT
-            case 3 -> call.handleSubjectMenu(subject, db, show, input);
-            // TEACHERS
-            case 4 -> call.handleTeacherMenu(teacher, db, show, input);
-            // STUDENTS
-            case 5 -> call.handleStudentMenu(student, db, show, input);
-            // * default
-            default -> System.out.println("Invalid Choice.");
+                case 0 -> { // ... stop the loop
+                    run = false;
+                    System.out.println("Exiting!! Goodbye.");
+                }
+                // handles school INFO
+                case 1 -> act.addSchoolInfo(school, input);
+                // CLASS
+                case 2 -> call.handleClassMenu(room, db, show, input);
+                // SUBJECT
+                case 3 -> call.handleSubjectMenu(subject, db, show, input);
+                // TEACHERS
+                case 4 -> call.handleTeacherMenu(teacher, db, show, input);
+                // STUDENTS
+                case 5 -> call.handleStudentMenu(student, db, show, input);
+                // handle grades of student
+                case 6 -> call.handleStudentGrades(input, student, subject, act);
+                // ... default
+                default -> System.out.println("Invalid Choice.");
             }
         }
 
