@@ -9,10 +9,11 @@ A console-based application to manage basic school operations like adding, remov
 
 ## Features
 
-- Add, update, and view classes
+- Add, update, and view classes (with fees)
+   - Fee Reciept for Student 
 - Associate subjects with classes, manage subject details
-- Assign teachers to subjects and classes
-- Maintain student records, class enrollment, and academic details (including student reports)
+- Assign teachers to subjects
+- Maintain student records, and academic details (including student reports)
 - **SQLite-based backend** for persistent storage
 - Show/export data in the console or as PDF reports
 - Detailed logging of system activities using Java's Logger
@@ -86,7 +87,8 @@ school_management_system_java/
    java Main
    ```
 
-> [!Note]This is a CLI-based app.
+> [!Note]
+> This is a CLI-based app.
 ---
 
 ## Usage
@@ -154,6 +156,7 @@ It also uses:
 - Java Logger framework for robust logging
 - PDF libraries (iText) for export functionality
 
-> [!NOTE] While these principles guided the structure of the project, some areas may not fully adhere to them, as this is a learning and practical implementation project.
+> [!NOTE]
+> While these principles guided the structure of the project, some areas may not fully adhere to them, as this is a learning and practical implementation project.
 
 ---
