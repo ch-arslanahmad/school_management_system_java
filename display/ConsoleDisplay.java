@@ -60,22 +60,7 @@ public class ConsoleDisplay implements Display {
     // --- ReportCard Table Header ---
     void TableReport(List<Subjects> data) {
         try {
-
-            // Dummy Data
-            /*
-             * String[][] subjects = { { "Mathematics", "100", "95", "95%", "A" }, {
-             * "English", "100", "87", "87%", "B+" }, { "Physics", "100", "92", "92%", "A-"
-             * }, { "Chemistry", "100", "85", "85%", "B" }, { "History", "100", "90", "90%",
-             * "A" }, { "Physical Education", "100", "98", "98%", "A+" }, };
-             */
-
-            /*
-             * for (String[] row : subjects) { for (String col : row) { PdfPCell cell = new
-             * PdfPCell(new Phrase(col, normalFont));
-             * cell.setHorizontalAlignment(Element.ALIGN_CENTER); cell.setPadding(5f);
-             * marksTable.addCell(cell); } }
-             */
-            displayf("Subjects", "Total Marks", "Obtained Marks", "Percentage", "Grade");
+             displayf("Subjects", "Total Marks", "Obtained Marks", "Percentage", "Grade");
             for (Subjects s : data) {
                 displayf(s.getSubjectName(), String.valueOf(s.getMarks()),
                         String.valueOf(s.getObtmarks()), String.valueOf(s.getPercentage()),
@@ -93,7 +78,7 @@ public class ConsoleDisplay implements Display {
     void ReportTotals(int totalMarks, int Obtmarks, double totalPercentage, char Grade) {
         System.out.println("---TOTALS---");
         System.out.println("Total Marks: " + totalMarks);
-        System.out.println("Total Obtained Marks: " + totalMarks);
+        System.out.println("Total Obtained Marks: " + Obtmarks);
         System.out.println("Total Percentage: " + totalPercentage);
         System.out.println("Total Grade: " + Grade);
     }
