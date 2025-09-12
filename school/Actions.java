@@ -332,7 +332,7 @@ public class Actions {
         // print on CONSOLE
         if (choice == 1) {
             // this prints one column on console
-            show.displayf("Subjects");
+            show.displayf("Subjects", "ClassName");
             for (Subjects s : subjects) {
                 show.displayf(s.getSubjectName(), s.getClassName());
             }
@@ -465,7 +465,7 @@ public class Actions {
         // print on CONSOLE
         if (choice == 1) {
             // this prints one column on console
-            show.displayf("Teachers");
+            show.displayf("Teachers", "Subjects");
             for (Teacher t : teachers) {
                 show.displayf(t.getName(), t.getSubjectName());
             }
@@ -572,7 +572,7 @@ public class Actions {
         // Student LIST in 'console'
         if (choice == 1 && ch == 1) {
             // this prints students columns on console
-            show.displayf("Students");
+            show.displayf("Students", "Class");
             for (Student t : students) {
                 show.displayf(t.getName(), t.getClassName());
             }

@@ -23,7 +23,7 @@ public class Main {
         // ... Info Block
 
         System.out.println("================= INFO =================\n"
-                + " At any point, \\033[1m enter [0] to go back or exit \\033[0m \n"
+                + " At any point, enter [0] to go back or exit \n"
                 + " the current menu/input.\n" + "========================================");
 
         // ? handles DB

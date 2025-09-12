@@ -9,8 +9,9 @@ public class LogHandler {
         FileHandler fh;
         try {
             /*
-             * // so logging is not shown in console LogManager.getLogManager().reset();
+             * // so logging is not shown in console
              */
+            LogManager.getLogManager().reset();
             String a = "log/" + path + ".txt";
             File file = new File(a);
             // if file does not exist, create it
