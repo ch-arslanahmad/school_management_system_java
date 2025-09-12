@@ -1,5 +1,10 @@
+// ignore compiled files
 bin/
 *.class
 
 // ignore log files
 *.txt
+*.pdf
+
+ignore .vscode
+/.vscode/
