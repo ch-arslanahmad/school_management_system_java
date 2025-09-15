@@ -1,6 +1,7 @@
 # DATABSE - SQLite
 
-### Basic Info:
+## Basic Info
+
 SQLite is a relational database management system. It operates via SQL language which is in its name.
 
 This mechanism/application/software used for this software is SQLite, hence it is essential to have a base understanding of SQLite.
@@ -19,36 +20,34 @@ This mechanism/application/software used for this software is SQLite, hence it i
 > [!NOTE]
 > SQLite uses **type affinity**, not strict data types. You can store a value of any type in any column; SQLite will attempt to convert it to the column's affinity.
 
-
 If you are familiar with normal SQL, you can easily use it:
 
 - It may just be converted to the SQLite types or affinities that i have explained, as _SQLite is lazy on data types_ (**unlike MySQL or PostgreSQL**).
 
+## What I have learned
 
-## What I have learned:
 - Database Connection & Understanding
 - SQL (CRUD Queries, Joins, View, Trigger)
-
 
 ### Database & Connections
 
 - To work with SQLite in Java, you need its [jar file](/lib/sqlite-jdbc-3.50.3.0.jar).
 - Then after you have a jar file, to do an operation, you need a database connection.
 
-
 So that's how it works:
-
 
 - A connection is made between JDBC & Java.
 - Java passes the queries/commands to JDBC which gets executed.
 - However, you manually need to open and close connections.
 
 To solve this, I made a separate file for Database connections i.e., `Database.java`, and made a static method, `getConnection()` for opening a connection.
+
 - Afterwards rather than creating a separate closing method I put the calling of the method in **try-catch with resources** which automatically closes resources.
 
 Sometimes, you run one query or multiple which causes unexpected or incomplete action, which can cause data corruption, hence why a `rollback()` method/feature is necessary, think of it like an undo button if something goes wrong.
 
 #### Disable auto commit
+
 **What is Auto commit?**
 
 By default, `setAutoCommit()`,is set to `true` by default, which allows it to after executing the query, change the database without any validation, without any rollback(), an undo, which in this case may cause error and leave the database connection loose, which can cause database locks in SQLite or other problems like incorrect/incomplete/corrupted data inserted.
@@ -59,7 +58,7 @@ Hence, you should set the autocommit to `false`, that makes the changes temporar
 - It is only applicable to all CRUD operations aside from read.
 Hence it is recommended to:
 
-```
+```java
 conn.setAutoCommit(false);
 try {
 } catch(Exception e) {
@@ -71,8 +70,10 @@ conn.setAutoCommit(true);
 
 I have put this in the main database connection method `getConnection()`, in the `Database.java` file so every connection made must have autocommit set to `false`.
 
-### SQL Learnings:
+### SQL Learnings
+
 I learned about basic SQL:
+
 - Relational Databases
 - Create, Read, Update, Delete (CRUD)
 - Tables, Columns, Rows
@@ -86,13 +87,14 @@ So, basically, every data has to be in a cell of a table, so these tables make u
 
 Next up what is:
 
-#### Primary Key:
+#### Primary Key
+
 A key that makes a row unique, like how your national ID number is, but In a table.
 Foreign Key:
 
-
 #### Foreign KEY
-A row that links or references to some foreign row which has a unique ID, mostly a primary key but can a unique key simply. 
+
+A row that links or references to some foreign row which has a unique ID, mostly a primary key but can a unique key simply.
 
 It's like your passport which allows you to visit another country, in this case another table.
 
@@ -100,27 +102,33 @@ So for a foreign relation, you need a key of row of the table and the one key fo
 
 In this analogy, country names are primary keys, as names are globally unique.
 
-#### CRUD:
+#### CRUD
+
 I used queries to view, add, remove, update, and delete, values, columns rows or tables.
 
-**View & Triggers**
+##### **View & Trigger**
 
 Another thing that i came across while dealing with DB is
+
 - View
 - Triggers
 
-**View:**
+##### **View**
 
 View is like a set of instructions stored in the database and you can use it to view the result of the query, hence the name, it is best for read only. View is like a query for a shortcut.
-##### *REASON for its USE:*
+
+_**REASON for its USE**_
+
 I need a view solely (for now) for the reason of getting a grade table which has subjects, percentages, character grades with total and obtained marks.
 
-**Triggers:**
+##### **Triggers:**
 
 Trigger is a stored formula in a column that will automatically change/execute based on a formula.
 If you are familiar with excel, it is like in Excel, where formulas are stored in a cell. This is the same with the difference being the scale to a whole column rather than a single cell.
 
-##### *REASON for its USE:*
+_**REASON for its USE:**_
+
 Making a trigger:
+
 - checking class consistency, as only adding marks of a subject of a student that his class has.
 - Checking if the obtained marks given are not larger than the total marks.
