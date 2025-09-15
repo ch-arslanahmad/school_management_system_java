@@ -35,8 +35,7 @@ public class PdfDisplay {
 
     // Fonts
     static final Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
-    static final Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14,
-            Color.DARK_GRAY);
+    static final Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.DARK_GRAY);
     static final Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, Color.BLACK);
     static final Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Color.BLACK);
     static final Font BoldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.BLACK);
@@ -227,8 +226,8 @@ public class PdfDisplay {
      */
 
     // add Student Detail Row - Template
-    private static void addStudentRow(PdfPTable table, String label1, String value1, String label2,
-            String value2, Font labelFont, Font valueFont) {
+    private static void addStudentRow(PdfPTable table, String label1, String value1, String label2, String value2,
+            Font labelFont, Font valueFont) {
 
         // First phrase: label1 + value1
         Phrase phrase1 = new Phrase();
@@ -341,18 +340,15 @@ public class PdfDisplay {
                 marks.setPadding(headSize);
                 marksTable.addCell(marks);
 
-                PdfPCell Obtmarks = new PdfPCell(
-                        new Phrase(String.valueOf(s.getObtmarks()), normalFont));
+                PdfPCell Obtmarks = new PdfPCell(new Phrase(String.valueOf(s.getObtmarks()), normalFont));
                 Obtmarks.setPadding(headSize);
                 marksTable.addCell(Obtmarks);
 
-                PdfPCell percentage = new PdfPCell(
-                        new Phrase(String.valueOf(s.getPercentage()), normalFont));
+                PdfPCell percentage = new PdfPCell(new Phrase(String.valueOf(s.getPercentage()), normalFont));
                 percentage.setPadding(headSize);
                 marksTable.addCell(percentage);
 
-                PdfPCell grade = new PdfPCell(
-                        new Phrase(String.valueOf(s.getGrade(s.getPercentage())), normalFont));
+                PdfPCell grade = new PdfPCell(new Phrase(String.valueOf(s.getGrade(s.getPercentage())), normalFont));
                 grade.setPadding(headSize);
                 marksTable.addCell(grade);
 
@@ -449,8 +445,8 @@ public class PdfDisplay {
 
             addInstitutionHeader("STUDENT REPORT", document);
 
-            studentInfoReport(StudentName, student.fetchStudentClass(StudentName),
-                    student.fetchStudentID(StudentName), document); // Writes
+            studentInfoReport(StudentName, student.fetchStudentClass(StudentName), student.fetchStudentID(StudentName),
+                    document); // Writes
             // Student Info
             int totalMarks = 0;
             int ObtMarks = 0;
@@ -534,8 +530,7 @@ public class PdfDisplay {
     private PdfPCell createInfoCell(String placeholder, String val) {
         Phrase infoPhrase = new Phrase(); // creating a phrase
 
-        Chunk label = new Chunk(placeholder + ": ",
-                FontFactory.getFont(FontFactory.COURIER_BOLD, 11));
+        Chunk label = new Chunk(placeholder + ": ", FontFactory.getFont(FontFactory.COURIER_BOLD, 11));
 
         Chunk name = new Chunk(val, FontFactory.getFont(FontFactory.HELVETICA, 11));
 
@@ -552,8 +547,7 @@ public class PdfDisplay {
     // Rs - phrase
     private Phrase createPhrase(String label, int value) {
         // Combine label + value into one chunk
-        Chunk labelChunk = new Chunk(label + ": ",
-                FontFactory.getFont(FontFactory.COURIER_BOLD, 12));
+        Chunk labelChunk = new Chunk(label + ": ", FontFactory.getFont(FontFactory.COURIER_BOLD, 12));
         Chunk valueChunk = new Chunk(String.valueOf(value) + "Rs", new Font(Font.HELVETICA, 11));
 
         // Wrap inside phrase + paragraph
@@ -575,9 +569,8 @@ public class PdfDisplay {
 
         Phrase policy2 = new Phrase();
 
-        policy2.add(
-                new Chunk("All Fees are non refundable and can be changed without prior notice.\n",
-                        FontFactory.getFont(FontFactory.HELVETICA, 12)));
+        policy2.add(new Chunk("All Fees are non refundable and can be changed without prior notice.\n",
+                FontFactory.getFont(FontFactory.HELVETICA, 12)));
 
         list.add(new ListItem(policy2));
 
@@ -609,7 +602,7 @@ public class PdfDisplay {
         try {
             document = createPDF(studentName + "_Fee.pdf");
 
-            String imagePath = "img/logo.jpeg"; // logo img path
+            String imagePath = "storage/img/logo.jpeg"; // logo img path
 
             // BASIC RECIEPT HEADER
             // *************
@@ -640,11 +633,9 @@ public class PdfDisplay {
 
             PdfPCell Schoolname = new PdfPCell();
             Paragraph p = new Paragraph(info.getName(), Header);
-            Paragraph loc = new Paragraph(info.getlocation(),
-                    FontFactory.getFont(FontFactory.HELVETICA, 9));
+            Paragraph loc = new Paragraph(info.getlocation(), FontFactory.getFont(FontFactory.HELVETICA, 9));
 
-            Paragraph n = new Paragraph("Payment Voucher",
-                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
+            Paragraph n = new Paragraph("Payment Voucher", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
 
             Schoolname.addElement(p);
             Schoolname.addElement(n);
@@ -676,13 +667,10 @@ public class PdfDisplay {
             sline.setSpacingAfter(0f);
             sline.setLeading(0f, 0.2f); // line spacing control document.add(Sline);
             Phrase remarks = new Phrase();
-            Chunk label = new Chunk("Remarks: ",
-                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12));
-            Chunk mark = new Chunk("MONTHLY FEE",
-                    FontFactory.getFont(FontFactory.COURIER, 12, Font.UNDERLINE));
+            Chunk label = new Chunk("Remarks: ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12));
+            Chunk mark = new Chunk("MONTHLY FEE", FontFactory.getFont(FontFactory.COURIER, 12, Font.UNDERLINE));
             Chunk right = new Chunk(new VerticalPositionMark());
-            Chunk payLabel = new Chunk("Payments(¤)",
-                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12));
+            Chunk payLabel = new Chunk("Payments(¤)", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12));
             remarks.add(Chunk.NEWLINE); // Adds a line break
             remarks.add(Chunk.NEWLINE); // Adds a line break
             remarks.add(label);
