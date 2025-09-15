@@ -12,7 +12,7 @@ public class LogHandler {
              * // so logging is not shown in console
              */
             LogManager.getLogManager().reset();
-            String a = "log/" + path + ".txt";
+            String a = "storage/log/" + path + ".txt";
             File file = new File(a);
             // if file does not exist, create it
             if (!(file.exists())) {

@@ -21,9 +21,9 @@ public class Database {
 
     // setupConnection of DB
     public static Connection getConnection() {
-        String path = "database/people.db";
+        String path = "storage/people.db";
         try {
-            File dbFile = new File("database/people.db");
+            File dbFile = new File("storage/people.db");
             if (!dbFile.exists()) {
                 throw new FileNotFoundException("File Not found: "); // stop if file is not found
             }
