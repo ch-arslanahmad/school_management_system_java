@@ -6,24 +6,24 @@ import java.util.logging.*;
 
 import display.LogHandler;
 
-public class DBManager {
+public class DBValidator {
     // variables for LOGGing
-    private static final Logger logger = Logger.getLogger(DBManager.class.getName());
+    private static final Logger logger = Logger.getLogger(DBValidator.class.getName());
 
     // STATIC block for **LOGGING**
     static {
-        LogHandler.createLog(logger, "DBManager");
+        LogHandler.createLog(logger, "DBValidator");
     }
 
     // Checking, does DB file exists?
     public boolean DBfileExists() {
-        File DB = new File("database/people.db");
+        File DB = new File("storage/people.db");
         if (DB.exists()) {
             String checkStructure = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
             try (Connection conn = Database.getConnection();
-                    PreparedStatement rm = conn.prepareStatement(checkStructure)) {
+                    Statement rm = conn.createStatement()) {
 
-                ResultSet rs = rm.executeQuery();
+                ResultSet rs = rm.executeQuery(checkStructure);
                 if (rs.next()) {
                     logger.info("The file exists with a structure.");
                     return true;
@@ -40,9 +40,9 @@ public class DBManager {
     public boolean testTable(String table) {
         String sqlQuery = "SELECT COUNT(*) FROM " + table;
 
-        try (Connection conn = Database.getConnection(); Statement rm = conn.createStatement()) {
-            boolean rs = rm.execute(sqlQuery);
-            if (rs) {
+        try (Connection conn = Database.getConnection(); Statement rm = conn.createStatement();) {
+            ResultSet rs = rm.executeQuery(sqlQuery);
+            if (rs.next()) {
                 logger.info("the table " + table + " exist & is not empty. ");
                 return true;
             }
