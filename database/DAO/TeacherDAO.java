@@ -1,7 +1,6 @@
 package database.DAO;
 
 // package imports
-import database.*;
 import display.ConsoleDisplay;
 import display.LogHandler;
 import people.Teacher;
@@ -25,8 +24,8 @@ public class TeacherDAO {
     }
 
     // fetch teacherID from name
-    public int fetchTeacherID(String name) {
-        if (!teacherExists(name)) {
+    public int fetchTeacherID(Connection conn,String name) {
+        if (!teacherExists(conn, name)) {
             logger.warning("Teacher does not exist. Add Teacher.");
             return -1;
         } else {
@@ -34,7 +33,7 @@ public class TeacherDAO {
             String TeacherIDSQL = "SELECT TeacherID FROM Teacher where TeacherName= ?";
 
             // try-catch block
-            try (Connection conn = Database.getConnection();
+            try (
                     PreparedStatement rm = conn.prepareStatement(TeacherIDSQL)) {
 
                 // putting value in query
@@ -56,11 +55,11 @@ public class TeacherDAO {
     }
 
     // see if teacher exists
-    public boolean teacherExists(String name) {
+    public boolean teacherExists(Connection conn,String name) {
         String ExistSQL = "SELECT COUNT(*) AS count FROM Teacher WHERE TeacherName = ?";
 
         // prepared statement in try block
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(ExistSQL)) {
 
             // adding value to query
@@ -87,14 +86,14 @@ public class TeacherDAO {
     }
 
     // fetch TeacherSubject from TeacherName
-    public String fetchTeacherSubject(String name) {
+    public String fetchTeacherSubject(Connection conn,String name) {
         // this requires a fairly long query, similar explaination is already given in
         // TeacherDAO
         String fetchTeacherClass = "SELECT Subjects.SubjectName " + "FROM Teacher "
                 + "JOIN Subjects ON Teacher.SubjectID = Subjects.SubjectID "
                 + "WHERE TeacherName = ?";
 
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(fetchTeacherClass)) {
             rm.setString(1, name);
             try (ResultSet rs = rm.executeQuery()) {
@@ -117,8 +116,8 @@ public class TeacherDAO {
     SubjectDAO check = new SubjectDAO();
 
     // insert Teacher
-    public boolean insertTeacher(String subjectName, String name) {
-        int subjectID = check.fetchSubjectID(subjectName);
+    public boolean insertTeacher(Connection conn,String subjectName, String name) {
+        int subjectID = check.fetchSubjectID(conn, subjectName);
         // -1 is error-code
         if (subjectID == -1) {
             logger.info("Subjects does not exist.");
@@ -127,7 +126,7 @@ public class TeacherDAO {
 
         String TeacherSQL = "INSERT INTO Teacher (TeacherName, SubjectID) VALUES (?,?)";
 
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(TeacherSQL)) {
             rm.setString(1, name);
             rm.setInt(2, subjectID);
@@ -151,13 +150,13 @@ public class TeacherDAO {
     }
 
     // delete Teacher
-    public boolean deleteTeacher(String name) {
-        if (!(teacherExists(name))) {
+    public boolean deleteTeacher(Connection conn,String name) {
+        if (!(teacherExists(conn, name))) {
             System.out.println("No Match found");
             return false;
         }
         String delTeachSQL = "DELETE FROM Teacher WHERE TeacherName = ?";
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(delTeachSQL)) {
 
             // set values in the query
@@ -184,13 +183,13 @@ public class TeacherDAO {
     }
 
     // update teachername with subject
-    public boolean updateTeacherSubject(String name, String updateName, String subjectName) {
+    public boolean updateTeacherSubject(Connection conn,String name, String updateName, String subjectName) {
         SubjectDAO subject = new SubjectDAO();
-        int subjectID = subject.fetchSubjectID(subjectName); // fetch subjectID
-        int teachID = fetchTeacherID(name);
+        int subjectID = subject.fetchSubjectID(conn, subjectName); // fetch subjectID
+        int teachID = fetchTeacherID(conn, name);
         String updQuery = "UPDATE Teacher SET TeacherName = ?, SubjectID = ? WHERE TeacherID = ?";
 
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(updQuery)) {
 
             rm.setString(1, updateName);
@@ -213,11 +212,11 @@ public class TeacherDAO {
         return false;
     }
 
-    public boolean updateTeacher(String name, String updateName) {
-        int teachID = fetchTeacherID(name);
+    public boolean updateTeacher(Connection conn,String name, String updateName) {
+        int teachID = fetchTeacherID(conn, name);
         String updQuery = "UPDATE Teacher SET TeacherName = ? WHERE TeacherID = ?";
 
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(updQuery)) {
 
             rm.setString(1, updateName);
@@ -248,14 +247,14 @@ public class TeacherDAO {
      */
 
     // list all Teachers
-    public List<Teacher> listTeacher() {
+    public List<Teacher> listTeacher(Connection conn) {
         List<Teacher> teachers = new ArrayList<>();
         // Query to list all Teachers
         String listSubjectSQL = "SELECT Teacher.TeacherName, Subjects.SubjectName "
                 + "FROM Teacher " + "LEFT JOIN Subjects ON Teacher.SubjectID = Subjects.SubjectID";
 
         // try-block
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
 
             // inner try-block to fetch and display each row

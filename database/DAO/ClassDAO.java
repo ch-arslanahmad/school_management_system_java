@@ -2,7 +2,6 @@
 package database.DAO;
 
 // package imports
-import database.*;
 import display.ConsoleDisplay;
 import display.LogHandler;
 import people.Student;
@@ -30,12 +29,11 @@ public class ClassDAO {
     ClassRoom room = new ClassRoom();
 
     // method to get ID from Class (-1 Error Code)
-    public int getIDfromClass(String name) {
+    public int getIDfromClass(Connection conn, String name) {
         String classIDSQL = "SELECT ClassID FROM Class where ClassName = ?;";
         // No reasonable ID will reach this amount, hence the reason of this value
         classID = -1;
-        try (Connection conn = Database.getConnection();
-                PreparedStatement rm = conn.prepareStatement(classIDSQL)) {
+        try (PreparedStatement rm = conn.prepareStatement(classIDSQL)) {
 
             rm.setString(1, name);
 
@@ -58,12 +56,12 @@ public class ClassDAO {
     }
 
     // see if class exists
-    public boolean ClassExists(String name) {
+    public boolean ClassExists(Connection conn, String name) {
         // SQL query to check
         String check = "SELECT COUNT(*) AS count FROM Class WHERE ClassName = ?;";
 
         // prepared statement in try block
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(check)) {
 
             // adding value to query
@@ -109,23 +107,23 @@ public class ClassDAO {
     }
 
     // method to get Validated ID from Class (-1 Error Code)
-    public int getValidClassID(String name) {
+    public int getValidClassID(Connection conn, String name) {
         // getID only if class exists
-        if (!ClassExists(name)) {
+        if (!ClassExists(conn, name)) {
             logger.info("Class Does Not exist");
             return -1;
         } else {
             // return the ID from class
-            return getIDfromClass(name);
+            return getIDfromClass(conn, name);
         }
 
     }
 
     // to insert a class
-    public boolean insertClass(String name) {
+    public boolean insertClass(Connection conn, String name) {
         // SQL query
         String classSQL = "INSERT INTO Class (ClassName) VALUES (?)";
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(classSQL);) {
             // set values in the query
             rm.setString(1, name);
@@ -153,17 +151,16 @@ public class ClassDAO {
     }
 
     // to insert a class with fees
-    public boolean insertWithClassFees(String className, int tuition, int stationary, int exam) {
+    public boolean insertWithClassFees(Connection conn, String className, int tuition, int stationary, int exam) {
 
-        if (ClassExists(className)) {
+        if (ClassExists(conn, className)) {
             logger.warning("Class already exists.");
             return false;
         }
 
         String inputFees = "INSERT INTO Class(ClassName, Tuition_Fee,Stationary_Fee,Paper_Fee) VALUES(?,?,?,?)";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement rm = conn.prepareStatement(inputFees)) {
-            rm.setInt(1, tuition);
+        try (PreparedStatement rm = conn.prepareStatement(inputFees)) {
+            rm.setString(1, className);
             rm.setInt(2, stationary);
             rm.setInt(3, exam);
             if (rm.executeUpdate() > 0) {
@@ -180,13 +177,13 @@ public class ClassDAO {
         return false;
     }
 
-    public boolean deleteClass(String name) {
-        if (!(ClassExists(name))) {
+    public boolean deleteClass(Connection conn, String name) {
+        if (!(ClassExists(conn, name))) {
             logger.warning("No Match found");
             return false;
         }
         String deleteClassSQL = "DELETE FROM Class WHERE ClassName = ?";
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
             // set values in the query
             rm.setString(1, name);
@@ -213,19 +210,19 @@ public class ClassDAO {
     }
 
     // update class row (classname)
-    public boolean updateClass(String name, String updateName) {
+    public boolean updateClass(Connection conn, String name, String updateName) {
 
-        if (!ClassExists(name)) {
+        if (!ClassExists(conn, name)) {
             logger.warning("Class Doesnt exist.");
             return false;
         }
 
-        if (ClassExists(updateName)) {
+        if (ClassExists(conn, updateName)) {
             logger.warning("Updated Name: " + updateName + "' name already exists.");
 
         }
         String updateClass = "UPDATE Class SET ClassName = ? WHERE ClassName = ?";
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(updateClass)) {
             rm.setString(1, updateName);
             rm.setString(2, name);
@@ -254,7 +251,7 @@ public class ClassDAO {
     // - list all classes
     // - list all subjects of the classes
     // - list all students of the class
-    public List<ClassRoom> listAll() {
+    public List<ClassRoom> listAll(Connection conn) {
         List<ClassRoom> rooms = new ArrayList<>();
 
         // Query to list all Class
@@ -262,7 +259,7 @@ public class ClassDAO {
                 + "FROM Class " + "LEFT JOIN Student ON Student.ClassID = Class.ClassID "
                 + "LEFT JOIN Subjects ON Subjects.ClassID = Class.ClassID";
         // try-block
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(listAllSQL)) {
 
             // variable to count total rows printed
@@ -296,10 +293,10 @@ public class ClassDAO {
     }
 
     // list All Classes
-    public List<ClassRoom> listClass() {
+    public List<ClassRoom> listClass(Connection conn) {
         List<ClassRoom> classroom = new ArrayList<>();
         String listClassSQL = "SELECT ClassName FROM Class";
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(listClassSQL)) {
             try (ResultSet rs = rm.executeQuery()) {
                 if (!rs.isBeforeFirst()) {
@@ -322,15 +319,15 @@ public class ClassDAO {
         return new ArrayList<>();
     }
 
-    public boolean updateClassFees(String className, int tuition, int stationary, int exam) {
+    public boolean updateClassFees(Connection conn, String className, int tuition, int stationary, int exam) {
 
-        if (!ClassExists(className)) {
+        if (!ClassExists(conn, className)) {
             logger.warning("Class does not exist.");
             return false;
         }
 
         String inputFees = "UPDATE Class SET Tuition_Fee = ?, Stationary_Fee = ?, Paper_Fee = ? WHERE ClassName = ?";
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(inputFees)) {
             rm.setInt(1, tuition);
             rm.setInt(2, stationary);
@@ -350,9 +347,9 @@ public class ClassDAO {
     }
 
     // GET FEE OF A CLASS
-    public ClassRoom getClassFees(String Class) {
+    public ClassRoom getClassFees(Connection conn, String Class) {
         String feeSQL = "SELECT Tuition_Fee, Stationary_Fee, Paper_Fee FROM Class WHERE ClassName = ?";
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(feeSQL)) {
             rm.setString(1, Class);
             try (ResultSet rs = rm.executeQuery()) {

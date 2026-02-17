@@ -6,7 +6,6 @@ import school.School;
 import java.sql.*;
 import java.util.logging.*;
 
-import database.Database;
 import display.LogHandler;
 
 public class SchoolDAO {
@@ -18,9 +17,9 @@ public class SchoolDAO {
         LogHandler.createLog(logger, "SchoolDAO");
     }
 
-    public School getSchoolInfo() {
+    public School getSchoolInfo(Connection conn) {
         String sql = "SELECT * FROM School";
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(sql)) {
             ResultSet rs = rm.executeQuery();
 
@@ -38,9 +37,9 @@ public class SchoolDAO {
     // table, hence why updating is the best option, rather than adding, deleting
     // rows, simply updating would be the best option
 
-    public boolean updateSchool(String name, String principal, String location) {
+    public boolean updateSchool(Connection conn, String name, String principal, String location) {
         String sql = "UPDATE School SET Name = ?, Principal = ?, location = ? WHERE id = 1";
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(sql)) {
 
             rm.setString(1, name);

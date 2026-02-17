@@ -23,7 +23,7 @@ public class Database {
     public static Connection getConnection() {
         String path = "storage/people.db";
         try {
-            File dbFile = new File("storage/people.db");
+            File dbFile = new File(path);
             if (!dbFile.exists()) {
                 throw new FileNotFoundException("File Not found: "); // stop if file is not found
             }

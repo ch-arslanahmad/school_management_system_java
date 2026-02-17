@@ -5,6 +5,7 @@ import display.Input;
 import display.LogHandler;
 import school.Actions;
 
+import java.sql.*;
 import java.util.logging.*;
 
 public class DBmaker {
@@ -20,36 +21,40 @@ public class DBmaker {
 
     // METHOD to create whole database
     public void createDB(Input input) {
+        try (Connection conn = Database.getConnection()) {
+            // all the objects of DB
+            SchoolDAO school = new SchoolDAO();
+            ClassDAO room = new ClassDAO();
+            StudentDAO student = new StudentDAO();
+            SubjectDAO subject = new SubjectDAO();
+            TeacherDAO teacher = new TeacherDAO();
 
-        // all the objects of DB
-        SchoolDAO school = new SchoolDAO();
-        ClassDAO room = new ClassDAO();
-        StudentDAO student = new StudentDAO();
-        SubjectDAO subject = new SubjectDAO();
-        TeacherDAO teacher = new TeacherDAO();
+            Actions act = new Actions(); // method for actions
 
-        Actions act = new Actions(); // method for actions
+            act.addSchoolInfo(school, input);
 
-        act.addSchoolInfo(school, input);
+            // arrayList of classes that were inserted
 
-        // arrayList of classes that were inserted
+            // CLASSES
+            System.out.println("Now Classes.");
+            act.inputClasses(conn, room, input);
 
-        // CLASSES
-        System.out.println("Now Classes.");
-        act.inputClasses(room, input);
+            // STUDENTS
+            System.out.println("Now Students");
+            act.inputStudents(conn, student, input);
 
-        // STUDENTS
-        System.out.println("Now Students");
-        act.inputStudents(student, input);
+            // SUBJECTS
+            System.out.println("Now Subjects");
+            act.inputSubjects(conn, subject, input);
 
-        // SUBJECTS
-        System.out.println("Now Subjects");
-        act.inputSubjects(subject, input);
+            // TEACHERS
+            System.out.println("Now Teachers");
+            act.inputTeachers(conn, teacher, input);
+        } catch (
 
-        // TEACHERS
-        System.out.println("Now Teachers");
-        act.inputTeachers(teacher, input);
-
+        SQLException e) {
+            logger.log(Level.SEVERE, "Database connection error: ", e);
+        }
     }
 
 }
