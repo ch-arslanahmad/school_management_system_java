@@ -32,7 +32,7 @@ public class editDB {
             Class.forName("org.sqlite.JDBC");
 
             // Connect to your database file
-            conn = DriverManager.getConnection("jdbc:sqlite:database/people.db");
+            conn = DriverManager.getConnection("jdbc:sqlite:storage/people.db");
 
             // Step 4: Prepare SQL Insert Query
             String sql = "INSERT INTO Students (StudentName, ClassID) VALUES (?, ?)";

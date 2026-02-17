@@ -2,6 +2,7 @@ package display;
 
 import java.util.List;
 import java.util.logging.*;
+import java.sql.*;
 
 import classroom.ClassRoom;
 import classroom.Subjects;
@@ -47,11 +48,9 @@ public class ConsoleDisplay implements Display {
     // --- Student Info ---
     void studentInfoReport(String name, String className, int ID) {
         try {
-
             System.out.println("Name: " + name);
             System.out.println("ID: " + ID);
             System.out.println("ClassName: " + className);
-
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error printing Student Info: ", e);
         }
@@ -60,16 +59,13 @@ public class ConsoleDisplay implements Display {
     // --- ReportCard Table Header ---
     void TableReport(List<Subjects> data) {
         try {
-             displayf("Subjects", "Total Marks", "Obtained Marks", "Percentage", "Grade");
+            displayf("Subjects", "Total Marks", "Obtained Marks", "Percentage", "Grade");
             for (Subjects s : data) {
                 displayf(s.getSubjectName(), String.valueOf(s.getMarks()),
                         String.valueOf(s.getObtmarks()), String.valueOf(s.getPercentage()),
                         String.valueOf(s.getGrade(s.getPercentage())));
             }
-
-        } catch (
-
-        Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -85,10 +81,14 @@ public class ConsoleDisplay implements Display {
 
     // --- Footer - Signatories ---
     void sign() {
-        try {
+        try (Connection conn = database.Database.getConnection()) {
             SchoolDAO method = new SchoolDAO();
-            School school = method.getSchoolInfo();
-            System.out.println(school.getPrincipal() + "\n(Signature)");
+            School school = method.getSchoolInfo(conn);
+            if (school != null) {
+                System.out.println(school.getPrincipal() + "\n(Signature)");
+            } else {
+                System.out.println("Principal information not available.");
+            }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error printing principal name: ", e);
         }
@@ -96,21 +96,20 @@ public class ConsoleDisplay implements Display {
 
     // handle the FULL creation of whole Student Report
     public void handleStudentReport(String StudentName) {
-        try {
+        try (Connection conn = database.Database.getConnection()) {
             StudentDAO student = new StudentDAO();
-            if (!student.studentExists(StudentName)) {
+            if (!student.studentExists(conn, StudentName)) {
                 System.out.println("Student does not exist.");
                 return;
             }
 
-            List<Subjects> data = student.fetchStudentReport(new Student(StudentName));
+            List<Subjects> data = student.fetchStudentReport(conn, new Student(StudentName));
             // fetching data from database
 
             System.out.println("STUDENT REPORT");
 
-            studentInfoReport(StudentName, student.fetchStudentClass(StudentName),
-                    student.fetchStudentID(StudentName)); // Writes
-            // Student Info
+            studentInfoReport(StudentName, student.fetchStudentClass(conn, StudentName),
+                    student.fetchStudentID(conn, StudentName)); // Writes Student Info
             int totalMarks = 0;
             int ObtMarks = 0;
             double totalPercentage = 0;
@@ -119,7 +118,9 @@ public class ConsoleDisplay implements Display {
                 totalMarks += d.getMarks();
                 ObtMarks += d.getObtmarks();
             }
-            totalPercentage = (ObtMarks * 100) / totalMarks;
+            if (totalMarks > 0) {
+                totalPercentage = (ObtMarks * 100.0) / totalMarks;
+            }
             Subjects s = new Subjects();
             char finalGrade = s.getGrade(totalPercentage);
             TableReport(data); // create report table
@@ -129,6 +130,8 @@ public class ConsoleDisplay implements Display {
             System.out.println(""); // line break
             sign(); // footer of signatories
 
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database connection error in handleStudentReport: ", e);
         } catch (Exception e) {
             System.err.println("Error making Student Report PDF.");
             e.printStackTrace();
@@ -136,16 +139,16 @@ public class ConsoleDisplay implements Display {
     }
 
     public void handleFeeReciept(String StudentName) {
-        try {
+        try (Connection conn = database.Database.getConnection()) {
             StudentDAO student = new StudentDAO();
-            if (!student.studentExists(StudentName)) {
+            if (!student.studentExists(conn, StudentName)) {
                 System.out.println("Student does not exist.");
                 return;
             }
-            Student std = student.getStudentInfo(StudentName);
+            Student std = student.getStudentInfo(conn, StudentName);
             SchoolDAO school = new SchoolDAO();
 
-            School info = school.getSchoolInfo();
+            School info = school.getSchoolInfo(conn);
 
             System.out.println(info.getName());
             System.out.println("PAYMENT VOUCHER");
@@ -162,7 +165,7 @@ public class ConsoleDisplay implements Display {
 
             System.out.println("Remarks: MONTHLY FEE");
             ClassDAO fee = new ClassDAO();
-            ClassRoom room = fee.getClassFees(std.getClassName());
+            ClassRoom room = fee.getClassFees(conn, std.getClassName());
 
             int tuition = room.getTuition();
             int stationary = room.getStationary();
@@ -193,14 +196,19 @@ public class ConsoleDisplay implements Display {
     }
 
     public void displaySchoolInfo(SchoolDAO info) {
-        School s = info.getSchoolInfo();
-        if (s == null) {
-            System.out.println("It is returning null;");
-            return;
+        try (Connection conn = database.Database.getConnection()) {
+            School s = info.getSchoolInfo(conn);
+            if (s == null) {
+                System.out.println("School information not available.");
+                return;
+            }
+            System.out.println("School Name: " + s.getName());
+            System.out.println("Principal Name: " + s.getPrincipal());
+            System.out.println("Location: " + s.getlocation());
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database connection error in displaySchoolInfo: ", e);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error displaying school info: ", e);
         }
-        System.out.println("School Name: " + s.getName());
-        System.out.println("Principal Name: " + s.getPrincipal());
-        System.out.println("Location: " + s.getlocation());
     }
-
 }

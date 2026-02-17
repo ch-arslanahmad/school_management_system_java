@@ -1,4 +1,4 @@
-import database.DBManager;
+import database.DBValidator;
 import database.DAO.ClassDAO;
 import database.DAO.SchoolDAO;
 import database.DAO.StudentDAO;
@@ -17,7 +17,7 @@ public class Main {
         MenuHandler call = new MenuHandler(); // for menus
         Actions act = new Actions(); // for seperate actions
         Input input = new Input(); // for input
-        DBManager db = new DBManager();
+        DBValidator db = new DBValidator();
         ConsoleDisplay show = new ConsoleDisplay();
 
         // ... Info Block

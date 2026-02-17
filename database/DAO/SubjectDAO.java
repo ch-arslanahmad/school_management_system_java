@@ -1,7 +1,6 @@
 package database.DAO;
 
 // package imports
-import database.*;
 import display.LogHandler;
 
 // imports
@@ -32,13 +31,13 @@ public class SubjectDAO {
     int subjectID;
 
     // method to get ID from Subject
-    public int fetchSubjectID(String name) {
-        if (!subjectExists(name)) {
+    public int fetchSubjectID(Connection conn, String name) {
+        if (!subjectExists(conn, name)) {
             return -1;
         }
         String subjectIDSQL = "SELECT SubjectID FROM Subjects where SubjectName = ?;";
         subjectID = -1;
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(subjectIDSQL)) {
 
             rm.setString(1, name);
@@ -63,27 +62,27 @@ public class SubjectDAO {
 
     // method to get Valid SubjectID
 
-    public int getValidSubjectID(String name) {
-        if (!subjectExists(name)) {
+    public int getValidSubjectID(Connection conn, String name) {
+        if (!subjectExists(conn, name)) {
             logger.warning("Subject doesnt exist.");
             return -1;
         } else {
             logger.warning("Status of Fetched ID: ");
-            return getClassIdBySubject(name);
+            return getClassIdBySubject(conn, name);
         }
     }
 
     // method to get ClassID of Subject
 
-    public int getClassIdBySubject(String name) {
-        if (!subjectExists(name)) {
+    public int getClassIdBySubject(Connection conn,String name) {
+        if (!subjectExists(conn, name)) {
             logger.info("Subject does not exist.");
         } else {
             // SQL Query
             String classIdSQL = "SELECT ClassID FROM Subjects WHERE SubjectName = ?";
 
             // try-catch block
-            try (Connection conn = Database.getConnection();
+            try (
                     PreparedStatement rm = conn.prepareStatement(classIdSQL)) {
 
                 // inserting value in Query
@@ -105,12 +104,12 @@ public class SubjectDAO {
     }
 
     // see if subject exists
-    public boolean subjectExists(String name) {
+    public boolean subjectExists(Connection conn, String name) {
         // SQL query to check
         String ExistSQL = "SELECT COUNT(*) AS count FROM Subjects WHERE SubjectName = ?;";
 
         // prepared statement in try block
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(ExistSQL)) {
 
             // adding value to query
@@ -148,8 +147,8 @@ public class SubjectDAO {
     }
 
     // Insert a Subject in DB
-    public boolean insertSubject(String ClassName, String name, int Marks) {
-        int classID = check.getValidClassID(ClassName);
+    public boolean insertSubject(Connection conn,String ClassName, String name, int Marks) {
+        int classID = check.getValidClassID(conn, ClassName);
         // STOP if return ERROR code (-1)
         if (classID == -1) {
             logger.info("Incorrect ID");
@@ -158,7 +157,7 @@ public class SubjectDAO {
 
         // SQL Query
         String subjectSQL = "INSERT INTO Subjects (SubjectName, ClassID, Marks) VALUES (?,?,?)";
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(subjectSQL)) {
             // set values in the query
             rm.setString(1, name);
@@ -186,22 +185,22 @@ public class SubjectDAO {
         return false;
     }
 
-    public boolean updateSubject(String ClassName, String name, String updateName) {
-        if (check.getValidClassID(ClassName) == -1) {
+    public boolean updateSubject(Connection conn, String ClassName, String name, String updateName) {
+        if (check.getValidClassID(conn, ClassName) == -1) {
             logger.config("Class doesn't exist.");
             return false;
         }
-        if (!subjectExists(name)) {
+        if (!subjectExists(conn,name)) {
             logger.config("Subject doesn't exist.");
             return false;
         }
         // Query to update Subject
         String updateSubjSQL = "UPDATE Subjects SET SubjectName = ? WHERE SubjectName = ? AND ClassID = ?";
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(updateSubjSQL)) {
             rm.setString(1, updateName);
             rm.setString(2, name);
-            rm.setInt(3, check.getValidClassID(ClassName));
+            rm.setInt(3, check.getValidClassID(conn, ClassName));
 
             int rs = rm.executeUpdate();
             if (rs > 0) {
@@ -221,19 +220,19 @@ public class SubjectDAO {
 
     }
 
-    public boolean deleteSubject(String ClassName, String name) {
-        if (!(subjectExists(name))) {
+    public boolean deleteSubject(Connection conn,String ClassName, String name) {
+        if (!(subjectExists(conn, name))) {
             System.out.println("No Match found");
             return false;
         }
 
         String delSubjectSQL = "DELETE FROM Subjects WHERE SubjectName = ? AND ClassID = ?";
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(delSubjectSQL)) {
 
             // set values in the query
             rm.setString(1, name);
-            rm.setInt(2, getClassIdBySubject(name));
+            rm.setInt(2, getClassIdBySubject(conn, name));
 
             // execute query
             int rs = rm.executeUpdate();
@@ -255,13 +254,13 @@ public class SubjectDAO {
     }
 
     // list all subjects
-    public List<Subjects> listSubjects() {
+    public List<Subjects> listSubjects(Connection conn) {
         List<Subjects> subjects = new ArrayList<>();
         // Query to list all Subjects
         String listSubjectSQL = "SELECT Subjects.SubjectName, Class.ClassName " + "FROM Subjects "
                 + "LEFT JOIN Class ON Subjects.ClassID = Class.ClassID";
         // try-block
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
             // variable to count total rows printed
             int count = 0;
@@ -289,13 +288,13 @@ public class SubjectDAO {
 
     // list all subjects in a class
     // list all subjects
-    public List<Subjects> listClassSubjects(String className) {
+    public List<Subjects> listClassSubjects(Connection conn,String className) {
         List<Subjects> subjects = new ArrayList<>();
         // Query to list all Subjects
         String listSubjectSQL = "SELECT Subjects.SubjectName, Class.ClassName " + "FROM Subjects "
                 + "LEFT JOIN Class ON Subjects.ClassID = Class.ClassID WHERE ClassName = ?";
         // try-block
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
             rm.setString(1, className);
             int count = 0;
@@ -321,12 +320,12 @@ public class SubjectDAO {
 
     }
 
-    public List<Subjects> listClassSubjectswithMarks(String className) {
+    public List<Subjects> listClassSubjectswithMarks(Connection conn,String className) {
         List<Subjects> subjects = new ArrayList<>();
         // Query to list all Subjects
         String listSubjectSQL = "SELECT Subjects.SubjectName, Subjects.Marks, Class.ClassName FROM Subjects LEFT JOIN Class ON Subjects.ClassID = Class.ClassID WHERE ClassName = ?";
         // try-block
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
             rm.setString(1, className);
             int count = 0;
@@ -352,10 +351,10 @@ public class SubjectDAO {
 
     }
 
-    public int fetchSubjectTotalMarks(String subjectName) {
+    public int fetchSubjectTotalMarks(Connection conn,String subjectName) {
         String getMarksSQL = "SELECT Subjects.Marks FROM Subjects WHERE SubjectName = ?";
 
-        try (Connection conn = Database.getConnection();
+        try (
                 PreparedStatement rm = conn.prepareStatement(getMarksSQL)) {
             rm.setString(1, subjectName);
             ResultSet rs = rm.executeQuery();
