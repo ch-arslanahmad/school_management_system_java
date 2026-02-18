@@ -8,8 +8,10 @@ public class Subjects {
     ClassRoom classRoom; // className
 
     // Grades
-    int marks;
-    int Obtmarks;
+    int marks = 100; // default total marks for each subject
+    int obtMarks;
+    double percentage;
+    String grade;
 
     public Subjects(String subjectName, ClassRoom classRoom) {
         this.subjectName = subjectName;
@@ -17,13 +19,12 @@ public class Subjects {
     }
 
     // for method listClassSubjectswithMarks()
-    public Subjects(String subjectName, int marks, ClassRoom classRoom) {
+    public Subjects(String subjectName, int obtMarks, ClassRoom classRoom) {
         this.subjectName = subjectName;
-        this.Obtmarks = marks;
+        setObtMarks(obtMarks); // sets obtMarks, percentage and grade
         this.classRoom = classRoom;
     }
 
-    //
     ClassRoom room;
 
     public Subjects(ClassRoom room, String subjectName, int marks) {
@@ -32,15 +33,19 @@ public class Subjects {
         this.marks = marks;
     }
 
-    public void setObtmarks(int obtmarks) {
-        this.Obtmarks = obtmarks;
+    public void setObtMarks(int obtMarks) {
+        this.obtMarks = obtMarks;
+        this.percentage = findPercentage(this.marks, this.obtMarks);
+        this.grade = findGrade(this.percentage);
     }
 
     // constructor for studentReport - row by row
-    public Subjects(String subjectName, int marks, int Obtmarks) {
+    public Subjects(String subjectName, int marks, int obtMarks) {
         this.subjectName = subjectName;
         this.marks = marks;
-        this.Obtmarks = Obtmarks;
+        this.obtMarks = obtMarks;
+        this.percentage = findPercentage(marks, obtMarks);
+        this.grade = findGrade(this.percentage);
     }
 
     // name only
@@ -49,9 +54,9 @@ public class Subjects {
     }
 
     // marks
-    public Subjects(int marks, int Obtmarks) {
+    public Subjects(int marks, int obtMarks) {
         this.marks = marks;
-        this.Obtmarks = Obtmarks;
+        this.obtMarks = obtMarks;
     }
 
     // individual - BASIC
@@ -59,48 +64,31 @@ public class Subjects {
         return marks;
     }
 
-    public int getObtmarks() {
-        return Obtmarks;
+    public int getObtMarks() {
+        return obtMarks;
     }
 
-    // percentage in this subject
     public double getPercentage() {
-        return (Obtmarks * 100) / marks;
+        return percentage;
     }
 
     // generic percentage finder
-    public double getPercentage(int marks, int Obtmarks) {
-        return (Obtmarks * 100) / marks;
-    }
-
-    // grade in this subject
-    public char getGrade() {
-        double percentage = getPercentage();
-        if (percentage >= 90) {
-            return 'A';
-        } else if (percentage >= 80) {
-            return 'B';
-        } else if (percentage >= 70) {
-            return 'C';
-        } else if (percentage >= 60) {
-            return 'D';
-        } else {
-            return 'F';
-        }
+    private double findPercentage(int marks, int obtMarks) {
+        return (obtMarks * 100.0) / marks;
     }
 
     // generic grade finder
-    public char getGrade(double percentage) {
+    public static String findGrade(double percentage) {
         if (percentage >= 90) {
-            return 'A';
+            return "A";
         } else if (percentage >= 80) {
-            return 'B';
+            return "B";
         } else if (percentage >= 70) {
-            return 'C';
+            return "C";
         } else if (percentage >= 60) {
-            return 'D';
+            return "D";
         } else {
-            return 'F';
+            return "F";
         }
     }
 
