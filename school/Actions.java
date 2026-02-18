@@ -504,7 +504,7 @@ public class Actions {
             if (name.equals("0")) {
                 return null;
             }
-            if (student.insertStudent(conn, className, name)) {
+            if (student.insertStudent(className, name)) {
                 return true;
             }
         }
