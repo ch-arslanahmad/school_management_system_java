@@ -1,5 +1,7 @@
 package database.DAO;
 
+import database.DBUtils;
+
 // package imports
 import display.ConsoleDisplay;
 import display.LogHandler;
@@ -9,6 +11,8 @@ import people.Student;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.*;
+
+import com.lowagie.text.xml.xmp.DublinCoreSchema;
 
 import classroom.ClassRoom;
 import classroom.Subjects;
@@ -146,37 +150,25 @@ public class StudentDAO {
     }
 
     // insert Student
-    public boolean insertStudent(Connection conn, String ClassName, String name) {
-        ClassDAO check = new ClassDAO();
-        int classID = check.getIDfromClass(conn, ClassName);
-        // -1 is error-code
-        if (classID == -1) {
-            logger.info("Class does not exist.");
-            return false;
-        }
-        String studentSQL = "INSERT INTO Student (StudentName, ClassID) VALUES (?,?)";
-
-        try (
-                PreparedStatement rm = conn.prepareStatement(studentSQL)) {
-            rm.setString(1, name);
-            rm.setInt(2, classID);
-
-            int rs = rm.executeUpdate();
-            if (rs > 0) {
-                logger.info("Added Student.");
-                conn.commit();
-                return true;
-            } else {
-                logger.config("Unable to add Student");
-                conn.rollback();
+    public boolean insertStudent(String ClassName, String name) {
+        return DBUtils.runInTransaction(con -> {
+            ClassDAO check = new ClassDAO();
+            int classID = check.getIDfromClass(con, ClassName);
+            // -1 is error-code
+            if (classID == -1) {
+                logger.info("Class does not exist.");
                 return false;
             }
 
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while inserting Student.", e);
-        }
-        return false;
+            String studentSQL = "INSERT INTO Student (StudentName, ClassID) VALUES (?,?)";
 
+            try (PreparedStatement rm = con.prepareStatement(studentSQL)) {
+                rm.setString(1, name);
+                rm.setInt(2, classID);
+                int rs = rm.executeUpdate();
+                return rs > 0;
+            }
+        });
     }
 
     // delete Student
