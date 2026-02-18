@@ -17,7 +17,7 @@ public class SchoolDAO {
         LogHandler.createLog(logger, "SchoolDAO");
     }
 
-    public School getSchoolInfo(Connection conn) {
+    public School fetchSchoolInfo(Connection conn) {
         String sql = "SELECT * FROM School";
         try (
                 PreparedStatement rm = conn.prepareStatement(sql)) {

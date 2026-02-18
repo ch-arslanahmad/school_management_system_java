@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Year;
 import java.util.List;
 import java.util.logging.*;
 
@@ -235,7 +236,7 @@ public class PdfDisplay {
         try (Connection conn = database.Database.getConnection()) {
             try {
                 SchoolDAO method = new SchoolDAO();
-                School school = method.getSchoolInfo(conn);
+                School school = method.fetchSchoolInfo(conn);
                 Paragraph schoolName = new Paragraph(school.getName(), titleFont);
                 schoolName.setAlignment(Element.ALIGN_CENTER);
                 document.add(schoolName);
@@ -257,7 +258,7 @@ public class PdfDisplay {
     public void addInstitutionHeader(String title, Document document, java.sql.Connection conn) {
         try {
             SchoolDAO method = new SchoolDAO();
-            School school = method.getSchoolInfo(conn);
+            School school = method.fetchSchoolInfo(conn);
             if (school != null) {
                 Paragraph schoolName = new Paragraph(school.getName(), titleFont);
                 schoolName.setAlignment(Element.ALIGN_CENTER);
@@ -328,7 +329,9 @@ public class PdfDisplay {
             // Name Row
             addStudentRow(table, "Name", name, "Class", className, BoldFont, normalFont);
 
-            addStudentRow(table, "ID", String.valueOf(ID), "Year", "2025", BoldFont, normalFont);
+            String currentYear = String.valueOf(Year.now().getValue());
+
+            addStudentRow(table, "ID", String.valueOf(ID), "Year", currentYear, BoldFont, normalFont);
 
             document.add(table);
 
@@ -392,7 +395,7 @@ public class PdfDisplay {
                     marks.setPadding(headSize);
                     marksTable.addCell(marks);
 
-                    PdfPCell Obtmarks = new PdfPCell(new Phrase(String.valueOf(s.getObtmarks()), normalFont));
+                    PdfPCell Obtmarks = new PdfPCell(new Phrase(String.valueOf(s.getObtMarks()), normalFont));
                     Obtmarks.setPadding(headSize);
                     marksTable.addCell(Obtmarks);
 
@@ -401,7 +404,7 @@ public class PdfDisplay {
                     marksTable.addCell(percentage);
 
                     PdfPCell grade = new PdfPCell(
-                            new Phrase(String.valueOf(s.getGrade(s.getPercentage())), normalFont));
+                            new Phrase(Subjects.findGrade(s.getPercentage()), normalFont));
                     grade.setPadding(headSize);
                     marksTable.addCell(grade);
                 } catch (Exception ex) {
@@ -419,7 +422,7 @@ public class PdfDisplay {
     }
 
     // --- Totals of Report---
-    private void totalsTable(int totalmarks, int totalObtmarks, double percentage, char Grade, Document document) {
+    private void totalsTable(int totalmarks, int totalObtmarks, double percentage, String Grade, Document document) {
         try {
             // marks
             Phrase mark = new Phrase();
@@ -459,7 +462,7 @@ public class PdfDisplay {
     private void sign(Connection conn, Document document) {
         try {
             SchoolDAO method = new SchoolDAO();
-            School school = method.getSchoolInfo(conn);
+            School school = method.fetchSchoolInfo(conn);
 
             PdfPTable signTable = new PdfPTable(1);
             signTable.setWidthPercentage(95);
@@ -492,30 +495,30 @@ public class PdfDisplay {
             setHeading("Student Report", document);
 
             StudentDAO student = new StudentDAO();
-            if (!student.studentExists(conn, StudentName)) {
-                System.out.println("Student does not exist.");
-                return;
-            }
 
-            List<Subjects> data = student.fetchStudentReport(conn, new Student(StudentName));
+            Student std = student.fetchStudent(conn, StudentName);
+
+            List<Subjects> data = student.fetchStudentReport(conn, StudentName);
+
             addInstitutionHeader("STUDENT REPORT", document, conn);
 
-            studentInfoReport(StudentName, student.fetchStudentClass(conn, StudentName),
-                    student.fetchStudentID(conn, StudentName), document);
+            studentInfoReport(StudentName, std.getClassName(),
+                    std.getID(), document);
 
             int totalMarks = 0;
             int ObtMarks = 0;
-            double totalPercentage = 0;
+            double totalPercentage = 0.0;
 
             for (Subjects d : data) {
                 totalMarks += d.getMarks();
-                ObtMarks += d.getObtmarks();
+                ObtMarks += d.getObtMarks();
             }
             if (totalMarks > 0) {
                 totalPercentage = (ObtMarks * 100.0) / totalMarks;
             }
-            Subjects s = new Subjects();
-            char finalGrade = s.getGrade(totalPercentage);
+
+            String finalGrade = Subjects.findGrade(totalPercentage);
+
             tableReport(data, document);
             totalsTable(totalMarks, ObtMarks, totalPercentage, finalGrade, document);
 
@@ -653,9 +656,9 @@ public class PdfDisplay {
                 return;
             }
 
-            Student std = student.getStudentInfo(conn, studentName);
+            Student std = student.fetchStudent(conn, studentName);
             SchoolDAO school = new SchoolDAO();
-            School info = school.getSchoolInfo(conn);
+            School info = school.fetchSchoolInfo(conn);
 
             try {
                 document = createPDF(studentName + "_Fee.pdf");

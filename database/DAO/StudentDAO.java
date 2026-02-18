@@ -122,7 +122,7 @@ public class StudentDAO {
 
     }
 
-    public Student getStudentInfo(Connection conn, String studentName) {
+    public Student fetchStudent(Connection conn, String studentName) {
         String infoSQL = "SELECT Student.StudentName, Student.StudentID, Class.ClassName FROM Student JOIN Class ON Student.ClassID = Class.ClassID WHERE Student.StudentName = ?";
         try (
                 PreparedStatement rm = conn.prepareStatement(infoSQL)) {
@@ -279,7 +279,7 @@ public class StudentDAO {
     }
 
     // method to return StudentReport Data
-    public List<Subjects> fetchStudentReport(Connection conn, Student student) {
+    public List<Subjects> fetchStudentReport(Connection conn, String name) {
         List<Subjects> subjectsList = new ArrayList<>();
 
         // i created a view for this named 'getGrades'
@@ -291,7 +291,7 @@ public class StudentDAO {
         try (
                 PreparedStatement rm = conn.prepareStatement(fetchStudentReport)) {
 
-            rm.setString(1, student.getName());
+            rm.setString(1, name);
 
             ResultSet rs = rm.executeQuery();
 
@@ -314,7 +314,7 @@ public class StudentDAO {
             SubjectDAO subject, String studentName, String SubjectName,
             int ObtMarks) {
 
-        int subID = subject.getClassIdBySubject(conn,SubjectName);
+        int subID = subject.getClassIdBySubject(conn, SubjectName);
         int stuID = fetchStudentID(conn, studentName);
         if (stuID == -1) {
             logger.warning("Student does not exist.");

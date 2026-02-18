@@ -15,7 +15,7 @@ class DatabaseUtils {
                 T result = action.apply(conn); // execute the lambda with the connection
                 conn.commit();
                 return result;
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 conn.rollback();
                 throw e;
             }

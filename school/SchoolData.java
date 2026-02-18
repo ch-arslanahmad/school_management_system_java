@@ -56,17 +56,17 @@ public class SchoolData {
         return subject.getMarks();
     }
 
-    public int getObtmarks() {
-        return subject.getObtmarks();
+    public int getObtMarks() {
+        return subject.getObtMarks();
     }
 
-    public double getPercentage(int totalMarks, int ObtMarks) {
-        return subject.getPercentage(totalMarks, ObtMarks);
+    public double getPercentage() {
+        return subject.getPercentage();
     }
 
     // returns grades
-    public char getGrade(double percentage) {
-        return subject.getGrade(percentage);
+    public String getGrade(double percentage) {
+        return Subjects.findGrade(percentage);
     }
 
     // SOLVED the listing problem, they were returning initilized empty lists of

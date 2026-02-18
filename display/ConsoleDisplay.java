@@ -62,8 +62,8 @@ public class ConsoleDisplay implements Display {
             displayf("Subjects", "Total Marks", "Obtained Marks", "Percentage", "Grade");
             for (Subjects s : data) {
                 displayf(s.getSubjectName(), String.valueOf(s.getMarks()),
-                        String.valueOf(s.getObtmarks()), String.valueOf(s.getPercentage()),
-                        String.valueOf(s.getGrade(s.getPercentage())));
+                        String.valueOf(s.getObtMarks()), String.valueOf(s.getPercentage()),
+                        String.valueOf(Subjects.findGrade(s.getPercentage())));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -71,7 +71,7 @@ public class ConsoleDisplay implements Display {
     }
 
     // --- Report Totals ---
-    void ReportTotals(int totalMarks, int Obtmarks, double totalPercentage, char Grade) {
+    void ReportTotals(int totalMarks, int Obtmarks, double totalPercentage, String Grade) {
         System.out.println("---TOTALS---");
         System.out.println("Total Marks: " + totalMarks);
         System.out.println("Total Obtained Marks: " + Obtmarks);
@@ -83,7 +83,7 @@ public class ConsoleDisplay implements Display {
     void sign() {
         try (Connection conn = database.Database.getConnection()) {
             SchoolDAO method = new SchoolDAO();
-            School school = method.getSchoolInfo(conn);
+            School school = method.fetchSchoolInfo(conn);
             if (school != null) {
                 System.out.println(school.getPrincipal() + "\n(Signature)");
             } else {
@@ -103,7 +103,7 @@ public class ConsoleDisplay implements Display {
                 return;
             }
 
-            List<Subjects> data = student.fetchStudentReport(conn, new Student(StudentName));
+            List<Subjects> data = student.fetchStudentReport(conn, StudentName);
             // fetching data from database
 
             System.out.println("STUDENT REPORT");
@@ -116,13 +116,12 @@ public class ConsoleDisplay implements Display {
 
             for (Subjects d : data) {
                 totalMarks += d.getMarks();
-                ObtMarks += d.getObtmarks();
+                ObtMarks += d.getObtMarks();
             }
             if (totalMarks > 0) {
                 totalPercentage = (ObtMarks * 100.0) / totalMarks;
             }
-            Subjects s = new Subjects();
-            char finalGrade = s.getGrade(totalPercentage);
+            String finalGrade = Subjects.findGrade(totalPercentage);
             TableReport(data); // create report table
 
             ReportTotals(totalMarks, ObtMarks, totalPercentage, finalGrade); // report totals
@@ -145,10 +144,10 @@ public class ConsoleDisplay implements Display {
                 System.out.println("Student does not exist.");
                 return;
             }
-            Student std = student.getStudentInfo(conn, StudentName);
+            Student std = student.fetchStudent(conn, StudentName);
             SchoolDAO school = new SchoolDAO();
 
-            School info = school.getSchoolInfo(conn);
+            School info = school.fetchSchoolInfo(conn);
 
             System.out.println(info.getName());
             System.out.println("PAYMENT VOUCHER");
@@ -197,7 +196,7 @@ public class ConsoleDisplay implements Display {
 
     public void displaySchoolInfo(SchoolDAO info) {
         try (Connection conn = database.Database.getConnection()) {
-            School s = info.getSchoolInfo(conn);
+            School s = info.fetchSchoolInfo(conn);
             if (s == null) {
                 System.out.println("School information not available.");
                 return;
