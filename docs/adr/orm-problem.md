@@ -40,14 +40,27 @@ This is the problem of Object Relational Mapping (ORM) where we need to map the 
 
 We solve this problem by using ORMs (Object Relational Mappers) which provide a way to map the relational data to objects in a way that is efficient and does not lead to redundant data.
 
+## Benefits of ORMs
+
+- Single Source of Truth: The database is the single source of truth for the data, and the ORM provides a way to access and manipulate that data in an object-oriented way.
+
+
+- Safe CRUD operations
+
+- Better Performance: fewer objects in memory, less redundant data, and optimized queries.
+
+- Scalable for Future: as database & application grows, ORMs can handle the complexity and provide a way to manage the relationships between objects and tables.
+
 ## ORM Problem Solutions
 
 Common Solutions to the ORM Problem (In General)
 
-1. Manual Mapping (Data Mapper Pattern)
+1. **Manual Mapping (Data Mapper Pattern)** - *My Approach*
 2. Active Record Pattern
 3. Full ORM Frameworks
 4. Lightweight SQL Mappers
+
+
 
 ### 3. ORMs Built-in Java
 
@@ -60,3 +73,23 @@ Frameworks like:
 They exist because doing this manually becomes painful as your model grows.
 
 Like mapping over 100 tables and their relationships manually would be a nightmare.
+
+## Core Techniques
+
+- Identity Map
+
+Each Object -> Unique Identifier (Primary Key)
+
+- Unit of Work
+
+Track all modified objects in a transaction.
+
+- Lazy Loading
+Load related objects on demand (when accessed).
+
+- Eager Loading
+Load related objects immediately with the main object.
+
+- Repository Pattern
+
+Abstract database access behind interfaces
