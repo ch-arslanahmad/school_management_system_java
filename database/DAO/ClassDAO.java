@@ -61,7 +61,7 @@ public class ClassDAO {
         String check = "SELECT COUNT(*) AS count FROM Class WHERE ClassName = ?;";
 
         // prepared statement in try block
-        try (PreparedStatement rm = conn.prepareStatement(check); ResultSet rs = rm.executeQuery()) {
+        try (PreparedStatement rm = conn.prepareStatement(check);) {
 
             // adding value to query
             rm.setString(1, name);
@@ -83,14 +83,16 @@ public class ClassDAO {
              * which can be iterated to access the retrieved values.
              */
 
-            if (rs.next()) {
-                int count = rs.getInt("count");
-                if (count > 0) {
-                    logger.info("Match found, Class Exists.");
-                    return true;
-                } else {
-                    logger.warning("No match found, Class Does Not Exist.");
-                    return false;
+            try (ResultSet rs = rm.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt("count");
+                    if (count > 0) {
+                        logger.info("Match found, Class Exists.");
+                        return true;
+                    } else {
+                        logger.warning("No match found, Class Does Not Exist.");
+                        return false;
+                    }
                 }
             }
         }
@@ -118,6 +120,11 @@ public class ClassDAO {
     public boolean insertClass(String name) {
 
         DBUtils.runInTransaction(conn -> {
+
+            if (ClassExists(conn, name)) {
+                logger.warning("Class already exists.");
+                return false;
+            }
 
             String classSQL = "INSERT INTO Class (ClassName) VALUES (?)";
             try (PreparedStatement rm = conn.prepareStatement(classSQL);) {
@@ -216,37 +223,27 @@ public class ClassDAO {
                 + "FROM Class " + "LEFT JOIN Student ON Student.ClassID = Class.ClassID "
                 + "LEFT JOIN Subjects ON Subjects.ClassID = Class.ClassID";
         // try-block
-        try (
-                PreparedStatement rm = conn.prepareStatement(listAllSQL)) {
+        try (PreparedStatement rm = conn.prepareStatement(listAllSQL); ResultSet rs = rm.executeQuery()) {
 
             // variable to count total rows printed
             // inner try-block to fetch and display each row
-            try (ResultSet rs = rm.executeQuery()) {
-                // System.out.printf("%-20s | %-20s | %-20s\n", "Class", "Subject", "Student");
+            // System.out.printf("%-20s | %-20s | %-20s\n", "Class", "Subject", "Student");
 
-                // loop to display every row
-                while (rs.next()) {
-                    ClassRoom room = new ClassRoom(rs.getString("ClassName"),
-                            new Subjects(rs.getString("SubjectName")),
-                            new Student(rs.getString("StudentName")));
-                    rooms.add(room);
-                    // display each row
-                    // display.displayf(rs.getString("ClassName"), rs.getString("SubjectName"),
-                    // rs.getString("StudentName"));
-                }
-                return rooms;
-            } catch (SQLException e) {
-                logger.log(Level.WARNING,
-                        "Error while executing Query to List classes with details: ", e);
+            // loop to display every row
+            while (rs.next()) {
+                ClassRoom room = new ClassRoom(rs.getString("ClassName"),
+                        new Subjects(rs.getString("SubjectName")),
+                        new Student(rs.getString("StudentName")));
+                rooms.add(room);
+                // display each row
+                // display.displayf(rs.getString("ClassName"), rs.getString("SubjectName"),
+                // rs.getString("StudentName"));
             }
-
+            return rooms;
         } catch (SQLException e) {
-
             logger.log(Level.WARNING, "Error while listing Classes: ", e);
         }
-
         return new ArrayList<>();
-
     }
 
     // list All Classes
@@ -274,33 +271,36 @@ public class ClassDAO {
         return new ArrayList<>();
     }
 
-    public boolean updateClassFees(Connection conn, String className, int tuition, int stationary, int exam) {
+    public boolean updateClassFees(String className, int tuition, int stationary, int exam) {
 
-        if (!ClassExists(conn, className)) {
-            logger.warning("Class does not exist.");
-            return false;
-        }
+        DBUtils.runInTransaction(conn -> {
+            if (!ClassExists(conn, className)) {
+                logger.warning("Class does not exist.");
+                return false;
+            }
 
-        String inputFees = "UPDATE Class SET Tuition_Fee = ?, Stationary_Fee = ?, Paper_Fee = ? WHERE ClassName = ?";
-        try (PreparedStatement rm = conn.prepareStatement(inputFees)) {
-            rm.setInt(1, tuition);
-            rm.setInt(2, stationary);
-            rm.setInt(3, exam);
-            rm.setString(4, className);
+            String inputFees = "UPDATE Class SET Tuition_Fee = ?, Stationary_Fee = ?, Paper_Fee = ? WHERE ClassName = ?";
+            try (PreparedStatement rm = conn.prepareStatement(inputFees)) {
+                rm.setInt(1, tuition);
+                rm.setInt(2, stationary);
+                rm.setInt(3, exam);
+                rm.setString(4, className);
 
-            /**
-             * <p>
-             * The executeUpdate() method is used for SQL statements that modify the
-             * database (like INSERT, UPDATE, DELETE).
-             * </p>
-             */
+                /**
+                 * <p>
+                 * The executeUpdate() method is used for SQL statements that modify the
+                 * database (like INSERT, UPDATE, DELETE).
+                 * </p>
+                 */
 
-            int rs = rm.executeUpdate();
-            return rs > 0 || rs == 1; // true, if atleast 1 row is affected, otherwise false
+                int rs = rm.executeUpdate();
+                return rs > 0 || rs == 1; // true, if atleast 1 row is affected, otherwise false
 
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error updating Class fees: ", e);
-        }
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Error updating Class fees: ", e);
+                return false;
+            }
+        });
         return false;
     }
 
@@ -318,10 +318,7 @@ public class ClassDAO {
                     return new ClassRoom(rs.getInt("Tuition_Fee"), rs.getInt("Stationary_Fee"),
                             rs.getInt("Paper_Fee"));
                 }
-            } catch (SQLException e) {
-                logger.log(Level.WARNING, "Error while returning Fees of a Class: ", e);
             }
-
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Error while get Fees of a Class: ", e);
         }
