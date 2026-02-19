@@ -339,11 +339,8 @@ public class MenuHandler {
                             return;
                         }
 
-                        int totalMarks = subject.fetchSubjectTotalMarks(conn, subjectName);
-                        if (totalMarks == -1) {
-                            System.out.println("Error fetching subject total Marks");
-                            break;
-                        }
+                        int totalMarks = 100; // hardcode, standard // (todo: change)
+
                         System.out.print("Enter Total marks of " + subjectName + ": " + totalMarks + "\n");
                         System.out.print("Enter Obtained marks of " + subjectName + ": "); // get obt marks
                         int ObtMarks = input.getIntInput();

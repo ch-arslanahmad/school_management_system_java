@@ -45,7 +45,7 @@ public class DBUtils {
                 throw e;
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Database error", e);
+            throw new RuntimeException("Transaction error: ", e);
         }
     }
 

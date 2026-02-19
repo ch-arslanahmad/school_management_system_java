@@ -41,7 +41,7 @@ public class Actions {
                 System.out.print("Enter Updated School Location: ");
                 String location = input.getNormalInput();
                 // if School-info is not inserted
-                if (!school.updateSchool(conn, schoolName, principleName, location)) {
+                if (!school.updateSchool(schoolName, principleName, location)) {
                     String error = "Database Creation Abort : School-Info";
                     logger.warning(error);
                 } else {
@@ -78,7 +78,7 @@ public class Actions {
                         System.out.println("Class Already exists.");
                         return false;
                     }
-                    return room.insertClass(conn, className);
+                    return room.insertClass(className);
                 }
                 case 2: {
                     System.out.print("Enter ClassName: ");
@@ -93,7 +93,7 @@ public class Actions {
                     int stationary = input.getIntInput();
                     System.out.print("Enter Exam/Paper Fee: ");
                     int exam = input.getIntInput();
-                    return room.insertWithClassFees(conn, className, tuition, stationary, exam);
+                    return room.insertWithClassFees(className, tuition, stationary, exam);
                 }
                 default:
                     System.out.println("Invalid choice.");
@@ -125,7 +125,7 @@ public class Actions {
                 System.out.println("Class does not exist.");
                 return false;
             }
-            if (room.deleteClass(conn, className)) {
+            if (room.deleteClass(className)) {
                 return true;
             }
         }
@@ -149,7 +149,7 @@ public class Actions {
                     }
                     System.out.print("Enter updated ClassName: ");
                     String updateClass = input.getNormalInput();
-                    if (room.updateClass(conn, className, updateClass)) {
+                    if (room.updateClass(className, updateClass)) {
                         return true;
                     }
                 }
@@ -162,7 +162,7 @@ public class Actions {
                     }
                     System.out.print("Enter updated ClassName: ");
                     String updateClass = input.getNormalInput();
-                    if (!room.updateClass(conn, className, updateClass)) {
+                    if (!room.updateClass(className, updateClass)) {
                         return false;
                     }
                     // ENTER FEES
@@ -264,7 +264,7 @@ public class Actions {
             System.out.print("Enter the Subject Total Marks: ");
             int marks = input.getIntInput();
 
-            if (subject.insertSubject(conn, className, subjectName, marks)) {
+            if (subject.insertSubject(className, subjectName, marks)) {
                 return true;
             }
         }
@@ -294,7 +294,7 @@ public class Actions {
         if (!subject.subjectExists(conn, subjectName)) { // * stop if subject doesn't exist
             System.out.println("Subject does not exist.");
         }
-        if (subject.deleteSubject(conn, className, subjectName)) {
+        if (subject.deleteSubject(className, subjectName)) {
             return true;
         }
         return false;
@@ -316,7 +316,7 @@ public class Actions {
         System.out.print("Enter the Updated Name: ");
         String uptName = input.getNormalInput();
 
-        if (subject.updateSubject(conn, className, subjectName, uptName)) {
+        if (subject.updateSubject(className, subjectName, uptName)) {
             return true;
         }
         return false;
@@ -374,7 +374,7 @@ public class Actions {
             } else if (name.equals("0")) {
                 return null;
             }
-            if (teacher.insertTeacher(conn, subjectName, name)) {
+            if (teacher.insertTeacher(subjectName, name)) {
                 return true;
             }
         }
@@ -399,7 +399,7 @@ public class Actions {
             System.out.println("Teacher does not exist.");
             return false;
         }
-        if (teacher.deleteTeacher(conn, name)) {
+        if (teacher.deleteTeacher(name)) {
             return true;
         }
         return false;
@@ -423,7 +423,7 @@ public class Actions {
                     }
                     System.out.print("Enter the Updated Name: ");
                     String uptName = input.getNormalInput();
-                    if (teacher.updateTeacher(conn, name, uptName)) {
+                    if (teacher.updateTeacher(name, uptName)) {
                         return true;
                     }
                     return false;
@@ -443,7 +443,7 @@ public class Actions {
                     System.out.print("Enter the Updated SubjectName: ");
                     String updateSubject = input.getNormalInput();
 
-                    if (teacher.updateTeacherSubject(conn, name, uptName, updateSubject)) {
+                    if (teacher.updateTeacherSubject(name, uptName, updateSubject)) {
                         return true;
                     }
                     return false;
@@ -528,7 +528,7 @@ public class Actions {
             System.out.println("Student does not exist.");
             return false;
         }
-        if (student.deleteStudent(conn, name)) {
+        if (student.deleteStudent(name)) {
             return true;
         }
         return false;
@@ -543,7 +543,7 @@ public class Actions {
         }
         System.out.print("Enter the Updated Name: ");
         String uptName = input.getNormalInput();
-        if (student.updateStudent(conn, name, uptName)) {
+        if (student.updateStudent(name, uptName)) {
             return true;
         }
         return false;
@@ -634,7 +634,7 @@ public class Actions {
 
     public boolean addSubjectObtMarks(Connection conn, String studentName, String SubjectName, int ObtMarks,
             StudentDAO student, SubjectDAO subject) {
-        if (student.updateObtMarks(conn, subject, studentName, SubjectName, ObtMarks)) {
+        if (student.updateStudentObtMarks(subject, studentName, SubjectName, ObtMarks)) {
             return true;
         }
         return false;

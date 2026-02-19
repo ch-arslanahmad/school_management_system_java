@@ -1,7 +1,6 @@
 package database.DAO;
 
 // package imports
-import display.ConsoleDisplay;
 import display.LogHandler;
 import people.Teacher;
 
@@ -11,6 +10,7 @@ import java.util.List;
 import java.util.logging.*;
 
 import classroom.Subjects;
+import database.DBUtils;
 
 import java.sql.*;
 
@@ -24,7 +24,7 @@ public class TeacherDAO {
     }
 
     // fetch teacherID from name
-    public int fetchTeacherID(Connection conn,String name) {
+    public int fetchTeacherID(Connection conn, String name) {
         if (!teacherExists(conn, name)) {
             logger.warning("Teacher does not exist. Add Teacher.");
             return -1;
@@ -55,18 +55,14 @@ public class TeacherDAO {
     }
 
     // see if teacher exists
-    public boolean teacherExists(Connection conn,String name) {
+    public boolean teacherExists(Connection conn, String name) {
         String ExistSQL = "SELECT COUNT(*) AS count FROM Teacher WHERE TeacherName = ?";
 
         // prepared statement in try block
-        try (
-                PreparedStatement rm = conn.prepareStatement(ExistSQL)) {
+        try (PreparedStatement rm = conn.prepareStatement(ExistSQL); ResultSet rs = rm.executeQuery();) {
 
             // adding value to query
             rm.setString(1, name);
-
-            // storing in a variable
-            ResultSet rs = rm.executeQuery();
 
             if (rs.next()) {
                 int count = rs.getInt("count");
@@ -86,15 +82,14 @@ public class TeacherDAO {
     }
 
     // fetch TeacherSubject from TeacherName
-    public String fetchTeacherSubject(Connection conn,String name) {
+    public String fetchTeacherSubject(Connection conn, String name) {
         // this requires a fairly long query, similar explaination is already given in
         // TeacherDAO
         String fetchTeacherClass = "SELECT Subjects.SubjectName " + "FROM Teacher "
                 + "JOIN Subjects ON Teacher.SubjectID = Subjects.SubjectID "
                 + "WHERE TeacherName = ?";
 
-        try (
-                PreparedStatement rm = conn.prepareStatement(fetchTeacherClass)) {
+        try (PreparedStatement rm = conn.prepareStatement(fetchTeacherClass)) {
             rm.setString(1, name);
             try (ResultSet rs = rm.executeQuery()) {
 
@@ -102,8 +97,6 @@ public class TeacherDAO {
                     return rs.getString("SubjectName");
                 }
 
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Error while fetching SubjectName of Teacher");
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error while fetching SubjectName of Teacher.");
@@ -113,132 +106,103 @@ public class TeacherDAO {
 
     }
 
-    SubjectDAO check = new SubjectDAO();
-
     // insert Teacher
-    public boolean insertTeacher(Connection conn,String subjectName, String name) {
-        int subjectID = check.fetchSubjectID(conn, subjectName);
-        // -1 is error-code
-        if (subjectID == -1) {
-            logger.info("Subjects does not exist.");
-            return false;
-        }
+    public boolean insertTeacher(String subjectName, String name) {
+        SubjectDAO check = new SubjectDAO();
 
-        String TeacherSQL = "INSERT INTO Teacher (TeacherName, SubjectID) VALUES (?,?)";
-
-        try (
-                PreparedStatement rm = conn.prepareStatement(TeacherSQL)) {
-            rm.setString(1, name);
-            rm.setInt(2, subjectID);
-
-            int rs = rm.executeUpdate();
-            if (rs > 0) {
-                logger.info("Added Subject.");
-                conn.commit(); // commit if true
-                return true;
-            } else {
-                logger.config("Unable to add Subject");
-                conn.rollback(); // rollback if error
+        DBUtils.runInTransaction(conn -> {
+            int subjectID = check.fetchSubjectID(conn, subjectName);
+            // -1 is error-code
+            if (subjectID == -1) {
+                logger.info("Subjects does not exist.");
+                return false;
             }
 
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while inserting Subject.", e);
-        }
+            String TeacherSQL = "INSERT INTO Teacher (TeacherName, SubjectID) VALUES (?,?)";
 
+            try (PreparedStatement rm = conn.prepareStatement(TeacherSQL)) {
+                rm.setString(1, name);
+                rm.setInt(2, subjectID);
+
+                int rs = rm.executeUpdate();
+                return rs > 0 || rs == 1;
+            }
+
+        });
         return false;
 
     }
 
     // delete Teacher
-    public boolean deleteTeacher(Connection conn,String name) {
-        if (!(teacherExists(conn, name))) {
-            System.out.println("No Match found");
-            return false;
-        }
-        String delTeachSQL = "DELETE FROM Teacher WHERE TeacherName = ?";
-        try (
-                PreparedStatement rm = conn.prepareStatement(delTeachSQL)) {
+    public boolean deleteTeacher(String name) {
 
-            // set values in the query
-            rm.setString(1, name);
-
-            // execute query
-            int rs = rm.executeUpdate();
-
-            if (rs > 0) {
-                // confirmation
-                logger.info("Teacher Deleted");
-                conn.commit(); // commit if true;
-                return true;
-            } else {
-                logger.config("Teacher unable to delete.");
-                conn.rollback(); // rollback if error
+        return DBUtils.runInTransaction(conn -> {
+            if (!(teacherExists(conn, name))) {
+                System.out.println("No Match found");
                 return false;
             }
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while deleting Teacher: ", e);
-        }
-        return false;
+            String delTeachSQL = "DELETE FROM Teacher WHERE TeacherName = ?";
+            try (PreparedStatement rm = conn.prepareStatement(delTeachSQL)) {
+
+                // set values in the query
+                rm.setString(1, name);
+
+                // execute query
+                int rs = rm.executeUpdate();
+
+                return (rs > 0) || rs == 1;
+            }
+        });
 
     }
 
     // update teachername with subject
-    public boolean updateTeacherSubject(Connection conn,String name, String updateName, String subjectName) {
-        SubjectDAO subject = new SubjectDAO();
-        int subjectID = subject.fetchSubjectID(conn, subjectName); // fetch subjectID
-        int teachID = fetchTeacherID(conn, name);
-        String updQuery = "UPDATE Teacher SET TeacherName = ?, SubjectID = ? WHERE TeacherID = ?";
+    public boolean updateTeacherSubject(String name, String updateName, String subjectName) {
+        return DBUtils.runInTransaction(conn -> {
+            SubjectDAO subject = new SubjectDAO();
+            int subjectID = subject.fetchSubjectID(conn, subjectName); // fetch subjectID
+            int teachID = fetchTeacherID(conn, name);
+            String updQuery = "UPDATE Teacher SET TeacherName = ?, SubjectID = ? WHERE TeacherID = ?";
 
-        try (
-                PreparedStatement rm = conn.prepareStatement(updQuery)) {
+            try (PreparedStatement rm = conn.prepareStatement(updQuery)) {
+                rm.setString(1, updateName);
+                rm.setInt(2, subjectID);
+                rm.setInt(3, teachID);
 
-            rm.setString(1, updateName);
-            rm.setInt(2, subjectID);
-            rm.setInt(3, teachID);
+                int rs = rm.executeUpdate();
 
-            int rs = rm.executeUpdate();
-
-            if (rs > 0) {
-                logger.info("Teacher name updated.");
-                conn.commit(); // commit if true
-                return true;
-            } else {
-                logger.warning("Error updating teacher name.");
-                conn.rollback(); // rollback if error
+                return rs > 0 || rs == 1;
             }
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "ERROR while updating teacher Name: ", e);
-        }
-        return false;
+        });
     }
 
-    public boolean updateTeacher(Connection conn,String name, String updateName) {
-        int teachID = fetchTeacherID(conn, name);
-        String updQuery = "UPDATE Teacher SET TeacherName = ? WHERE TeacherID = ?";
+    // update teacher name only
+    public boolean updateTeacher(String name, String updateName) {
+        return DBUtils.runInTransaction(conn -> {
+            int teachID = fetchTeacherID(conn, name);
+            String updQuery = "UPDATE Teacher SET TeacherName = ? WHERE TeacherID = ?";
 
-        try (
-                PreparedStatement rm = conn.prepareStatement(updQuery)) {
+            try (PreparedStatement rm = conn.prepareStatement(updQuery)) {
+                rm.setString(1, updateName);
+                rm.setInt(2, teachID);
 
-            rm.setString(1, updateName);
-            rm.setInt(2, teachID);
+                int rs = rm.executeUpdate();
 
-            int rs = rm.executeUpdate();
-
-            if (rs > 0) {
-                logger.info("Teacher name updated.");
-                conn.commit(); // commit if true
-                return true;
-            } else {
-                logger.warning("Error updating teacher name.");
-                conn.rollback(); // rollback if error
+                if (rs > 0) {
+                    logger.info("Teacher name updated.");
+                    return true;
+                } else {
+                    logger.warning("Error updating teacher name.");
+                    return false;
+                }
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "ERROR while updating teacher Name: ", e);
             }
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "ERROR while updating teacher Name: ", e);
-        }
-        return false;
+            return false;
+        });
     }
 
-    ConsoleDisplay display = new ConsoleDisplay();
+    
 
     /*
      * LEFT JOIN is better for this method as it will list all the columns of the
