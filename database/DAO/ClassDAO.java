@@ -10,7 +10,9 @@ import database.DBUtils;
 // imports
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.*;
 
 // public class
@@ -120,19 +122,42 @@ public class ClassDAO {
     public boolean insertClass(String name) {
 
         DBUtils.runInTransaction(conn -> {
-
+            ClassRoom classroom = new ClassRoom(name);
             if (ClassExists(conn, name)) {
                 logger.warning("Class already exists.");
                 return false;
             }
 
+            /**
+             * <p>
+             * preparedStatement(query, Statement.RETURN_GENERATED_KEYS) is used to execute
+             * parameterized SQL queries, which helps
+             * prevent SQL injection attacks and allows for efficient query execution.
+             * 
+             * Here ``Statement.RETURN_GENERATED_KEYS`` is used to indicate that we want to
+             * retrieve any auto-generated keys (like an auto-incremented ID) that result
+             * from executing the query. This is particularly useful when inserting new
+             * records into a database, as it allows us to easily obtain the unique
+             * identifier of the newly inserted record without needing to execute a separate
+             * query.
+             * 
+             */
+
             String classSQL = "INSERT INTO Class (ClassName) VALUES (?)";
-            try (PreparedStatement rm = conn.prepareStatement(classSQL);) {
+            try (PreparedStatement rm = conn.prepareStatement(classSQL, Statement.RETURN_GENERATED_KEYS);) {
                 // set values in the query
                 rm.setString(1, name);
 
                 // execute query
                 int rs = rm.executeUpdate();
+
+                ResultSet ID = rm.getGeneratedKeys();
+
+                if (ID.next()) {
+                    int genID = ID.getInt(1);
+                    logger.info("Inserted Class with ID: " + genID);
+                    classroom.setClassID(genID);
+                }
 
                 return rs > 0; // return true if at least one row is affected, otherwise false
             }
@@ -248,20 +273,35 @@ public class ClassDAO {
 
     // list All Classes
     public List<ClassRoom> listClass(Connection conn) {
+
+        Map<Integer, ClassRoom> classMap = new HashMap<>();
+
         List<ClassRoom> classroom = new ArrayList<>();
-        String listClassSQL = "SELECT ClassName FROM Class";
-        try (
-                PreparedStatement rm = conn.prepareStatement(listClassSQL);
+        String listClassSQL = "SELECT ClassID, ClassName FROM Class";
+        try (PreparedStatement rm = conn.prepareStatement(listClassSQL);
                 ResultSet rs = rm.executeQuery()) {
+
             if (!rs.isBeforeFirst()) {
                 System.out.println("No Data is available.");
                 return new ArrayList<>();
-            } else {
-                while (rs.next()) {
-                    classroom.add(new ClassRoom(rs.getString("ClassName")));
-                }
-                return classroom;
             }
+
+            while (rs.next()) {
+
+                int classID = rs.getInt("ClassID");
+
+                ClassRoom classRoom = classMap.get(classID); // check if already exists
+
+                if (classRoom == null) {
+                    classRoom = new ClassRoom(rs.getString("ClassName"));
+                    classMap.put(classID, classRoom);
+                }
+
+                classroom.add(new ClassRoom(rs.getString("ClassName")));
+                classMap.put(rs.getInt("ClassID"), new ClassRoom(rs.getString("ClassName")));
+            }
+            return classroom;
+
         }
 
         catch (SQLException e) {
