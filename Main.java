@@ -27,7 +27,6 @@ public class Main {
                 + " the current menu/input.\n" + "========================================");
 
         // ? handles DB
-        call.handleDatabase(db, input);
 
         // ... DAO Objects
         ClassDAO room = new ClassDAO(); // ClassDAO object
@@ -45,26 +44,30 @@ public class Main {
         while (run) {
             // now show main menu
             call.mainMenu();
-            int choice = input.validateMenuInput(6, input);
+            int choice = input.validateMenuInput(7, input);
             switch (choice) {
-            case 0 -> { // ... stop the loop
-                run = false;
-                System.out.println("Exiting!! Goodbye.");
-            }
-            // handles school INFO
-            case 1 -> call.handleSchoolMenu(input, school, act);
-            // CLASS
-            case 2 -> call.handleClassMenu(room, db, show, input);
-            // SUBJECT
-            case 3 -> call.handleSubjectMenu(subject, db, show, input);
-            // TEACHERS
-            case 4 -> call.handleTeacherMenu(teacher, db, show, input);
-            // STUDENTS
-            case 5 -> call.handleStudentMenu(student, db, show, input);
-            // handle grades of student
-            case 6 -> call.handleStudentGrades(input, student, subject, act);
-            // ... default
-            default -> System.out.println("Invalid Choice.");
+                case 0 -> { // ... stop the loop
+                    System.out.println("Exiting Program.");
+                    run = false;
+                }
+                // handles school INFO
+                case 1 -> call.handleSchoolMenu(input, school, act);
+                // CLASS
+                case 2 -> call.handleClassMenu(room, db, show, input);
+                // SUBJECT
+                case 3 -> call.handleSubjectMenu(subject, db, show, input);
+                // TEACHERS
+                case 4 -> call.handleTeacherMenu(teacher, db, show, input);
+                // STUDENTS
+                case 5 -> call.handleStudentMenu(student, db, show, input);
+                // handle grades of student
+                case 6 -> call.handleStudentGrades(input, student, subject, act);
+                case 7 -> {
+                    run = call.handleDatabase(db, input);
+                    System.out.println("Exiting Setup.");
+                }
+                // ... default
+                default -> System.out.println("Invalid Choice.");
             }
         }
 

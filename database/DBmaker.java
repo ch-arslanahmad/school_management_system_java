@@ -37,23 +37,21 @@ public class DBmaker {
 
             // CLASSES
             System.out.println("Now Classes.");
-            act.inputClasses(conn, room, input);
+            act.inputClasses(room, input);
 
             // STUDENTS
             System.out.println("Now Students");
-            act.inputStudents(conn, student, input);
+            act.inputStudents(student, input);
 
             // SUBJECTS
             System.out.println("Now Subjects");
-            act.inputSubjects(conn, subject, input);
+            act.inputSubjects(subject, input);
 
             // TEACHERS
             System.out.println("Now Teachers");
-            act.inputTeachers(conn, teacher, input);
-        } catch (
-
-        SQLException e) {
-            logger.log(Level.SEVERE, "Database connection error: ", e);
+            act.inputTeachers(teacher, input);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database creation error: ", e);
         }
     }
 
