@@ -6,6 +6,7 @@ import school.School;
 import java.sql.*;
 import java.util.logging.*;
 
+import database.DBUtils;
 import display.LogHandler;
 
 public class SchoolDAO {
@@ -18,49 +19,39 @@ public class SchoolDAO {
     }
 
     public School fetchSchoolInfo(Connection conn) {
+        School school = new School();
         String sql = "SELECT * FROM School";
-        try (
-                PreparedStatement rm = conn.prepareStatement(sql)) {
-            ResultSet rs = rm.executeQuery();
+        try (PreparedStatement rm = conn.prepareStatement(sql); ResultSet rs = rm.executeQuery();) {
 
             if (rs.next()) {
-                return new School(rs.getString("Name"), rs.getString("Principal"),
+                school = new School(rs.getString("Name"), rs.getString("Principal"),
                         rs.getString("location"));
             }
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Error fetching School info: ", e);
         }
-        return null;
+        return school;
     }
 
     // In DB there is a check that doesnt allow more than one row in School info
     // table, hence why updating is the best option, rather than adding, deleting
     // rows, simply updating would be the best option
 
-    public boolean updateSchool(Connection conn, String name, String principal, String location) {
-        String sql = "UPDATE School SET Name = ?, Principal = ?, location = ? WHERE id = 1";
-        try (
-                PreparedStatement rm = conn.prepareStatement(sql)) {
+    public boolean updateSchool(String name, String principal, String location) {
 
-            rm.setString(1, name);
-            rm.setString(2, principal);
-            rm.setString(3, location);
+        return DBUtils.runInTransaction(conn -> {
+            String sql = "UPDATE School SET Name = ?, Principal = ?, location = ? WHERE id = 1";
+            try (PreparedStatement rm = conn.prepareStatement(sql)) {
 
-            int rs = rm.executeUpdate();
-            if (rs > 0) {
-                logger.info("Updated Successful.");
-                conn.commit();
-                return true;
-            } else {
-                logger.info("School-Info Updated Unsuccessful.");
-                conn.rollback();
-                return false;
+                rm.setString(1, name);
+                rm.setString(2, principal);
+                rm.setString(3, location);
+
+                int rs = rm.executeUpdate();
+                return rs > 0 || rs == 1;
+
             }
-
-        } catch (SQLException e) {
-            logger.log(Level.WARNING, "Error while updating School Info: ", e);
-        }
-        return false;
+        });
     }
 
 }

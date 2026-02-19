@@ -1,9 +1,7 @@
 package database.DAO;
 
 import database.DBUtils;
-
 // package imports
-import display.ConsoleDisplay;
 import display.LogHandler;
 import people.Student;
 
@@ -11,8 +9,6 @@ import people.Student;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.*;
-
-import com.lowagie.text.xml.xmp.DublinCoreSchema;
 
 import classroom.ClassRoom;
 import classroom.Subjects;
@@ -172,64 +168,78 @@ public class StudentDAO {
     }
 
     // delete Student
-    public boolean deleteStudent(Connection conn, String name) {
-        if (!(studentExists(conn, name))) {
-            logger.warning("No Match found");
-            return false;
-        }
-        String deleteClassSQL = "DELETE FROM Student WHERE StudentName = ?";
-        try (
-                PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
+    public boolean deleteStudent(String name) {
 
-            // set values in the query
-            rm.setString(1, name);
+        return DBUtils.runInTransaction(con -> {
 
-            // execute query
-            int rs = rm.executeUpdate();
-
-            if (rs > 0) {
-                // confirmation
-                logger.info("Student Deleted");
-                conn.commit();
-                return true;
-            } else {
-                logger.config("Student unable to delete.");
-                conn.rollback();
+            if (!(studentExists(con, name))) {
+                logger.warning("No Match found");
                 return false;
             }
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while deleting Student: ", e);
-        }
-        return false;
+            String deleteClassSQL = "DELETE FROM Student WHERE StudentName = ?";
+            try (PreparedStatement rm = con.prepareStatement(deleteClassSQL)) {
+
+                // set values in the query
+                rm.setString(1, name);
+
+                // execute query
+                int rs = rm.executeUpdate();
+
+                return rs > 0;
+            }
+        });
     }
 
     // update studentName
-    public boolean updateStudent(Connection conn, String name, String updateName) {
+    public boolean updateStudent(String name, String updateName) {
 
-        if (!studentExists(conn, name)) {
-            return false;
-        }
-        String updateStudent = "UPDATE Student SET StudentName = ? WHERE StudentName = ?";
-        try (
-                PreparedStatement rm = conn.prepareStatement(updateStudent)) {
+        return DBUtils.runInTransaction(con -> {
 
-            rm.setString(1, updateName);
-            rm.setString(2, name);
-
-            int rs = rm.executeUpdate();
-            if (rs > 0) {
-                conn.commit();
-                return true;
-            } else {
-                conn.rollback();
+            if (!studentExists(con, name)) {
+                return false;
             }
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while updating Student: ", e);
-        }
-        return false;
+            String updateStudent = "UPDATE Student SET StudentName = ? WHERE StudentName = ?";
+            try (PreparedStatement rm = con.prepareStatement(updateStudent)) {
+
+                rm.setString(1, updateName);
+                rm.setString(2, name);
+
+                int rs = rm.executeUpdate();
+                return rs > 0;
+            }
+        });
     }
 
-    ConsoleDisplay display = new ConsoleDisplay();
+    // set, update ObtMarks
+    public boolean updateStudentObtMarks(SubjectDAO subject, String studentName, String subjectName, int ObtMarks) {
+
+        return DBUtils.runInTransaction(conn -> {
+
+            int subID = subject.fetchSubjectID(conn, subjectName);
+            int stuID = fetchStudentID(conn, studentName);
+            if (stuID == -1) {
+                logger.warning("Student does not exist.");
+                return false;
+            }
+            if (subID == -1) {
+                logger.warning("Subject does not exist.");
+
+                return false;
+            }
+
+            String uptObt = "UPDATE Grade SET ObtainedMarks = ? WHERE StudentID = ? AND SubjectID = ? ";
+
+            try (PreparedStatement rm = conn.prepareStatement(uptObt)) {
+                rm.setInt(1, ObtMarks);
+                rm.setInt(2, stuID);
+                rm.setInt(3, subID);
+
+                int rs = rm.executeUpdate();
+
+                return rs > 0;
+            }
+        });
+    }
 
     // list all students with class
     public List<Student> listStudent(Connection conn) {
@@ -237,37 +247,19 @@ public class StudentDAO {
         // Query to list all students
         String listStudentSQL = "SELECT Student.StudentName, Class.ClassName " + "FROM Student "
                 + "LEFT JOIN Class ON Student.ClassID = Class.ClassID";
-        // try-block
-        // added the initilization of connnection so its automatically closed by the
-        // try-catch block
-        try (
-                PreparedStatement rm = conn.prepareStatement(listStudentSQL)) {
-            // variable to count total rows printed
-            // inner try-block to fetch and display each row
-            try (ResultSet rs = rm.executeQuery()) {
-                // loop to display every row
-                while (rs.next()) {
-                    // display each row
-                    student.add(new Student(rs.getString("StudentName"),
-                            new ClassRoom(rs.getString("ClassName"))));
-                }
-                // return true if Students are displayed
-                if (student.size() > 0) {
-                    logger.info("Students are successfully displayed.");
-                    return student; // returns student with classes
-                } else {
-                    logger.warning("Students are not displayed.");
-                }
-            } catch (SQLException e) {
-                logger.log(Level.WARNING, "Error while executing Query to List Students: ", e);
+
+        try (PreparedStatement rm = conn.prepareStatement(listStudentSQL); ResultSet rs = rm.executeQuery()) {
+            // loop to display every row
+            while (rs.next()) {
+                // display each row
+                student.add(new Student(rs.getString("StudentName"),
+                        new ClassRoom(rs.getString("ClassName"))));
             }
 
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Error while listing Students: ", e);
         }
-
-        return new ArrayList<>();
-
+        return student; // if no student. will return empty list
     }
 
     // method to return StudentReport Data
@@ -280,12 +272,10 @@ public class StudentDAO {
         // times
         String fetchStudentReport = "SELECT SubjectName, Marks, ObtainedMarks, Percentage, Grade FROM getGrades WHERE StudentName = ?";
 
-        try (
-                PreparedStatement rm = conn.prepareStatement(fetchStudentReport)) {
+        try (PreparedStatement rm = conn.prepareStatement(fetchStudentReport);
+                ResultSet rs = rm.executeQuery();) {
 
             rm.setString(1, name);
-
-            ResultSet rs = rm.executeQuery();
 
             while (rs.next()) {
                 Subjects subject = new Subjects(rs.getString("SubjectName"), rs.getInt("Marks"),
@@ -295,50 +285,10 @@ public class StudentDAO {
             return subjectsList;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.WARNING, "Error while fetching Student Report: ", e);
             return new ArrayList<>();
         }
 
-    }
-
-    // set / update ObtMarks
-    public boolean updateObtMarks(Connection conn,
-            SubjectDAO subject, String studentName, String SubjectName,
-            int ObtMarks) {
-
-        int subID = subject.getClassIdBySubject(conn, SubjectName);
-        int stuID = fetchStudentID(conn, studentName);
-        if (stuID == -1) {
-            logger.warning("Student does not exist.");
-            return false;
-        }
-        if (subID == -1) {
-            logger.warning("Subject does not exist.");
-
-            return false;
-        }
-
-        String uptObt = "UPDATE Grade SET ObtainedMarks = ? WHERE StudentID = ? AND SubjectID = ? ";
-
-        try (
-                PreparedStatement rm = conn.prepareStatement(uptObt)) {
-            rm.setInt(1, ObtMarks);
-            rm.setInt(2, stuID);
-            rm.setInt(3, subID);
-
-            int rs = rm.executeUpdate();
-
-            if (rs > 0) {
-                conn.commit(); // commit
-                return true;
-            } else {
-                conn.rollback();
-                return false; // rollback if error
-            }
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error setting Grade: ", e);
-        }
-        return false;
     }
 
 }

@@ -11,6 +11,7 @@ public class ClassRoom {
     List<Subjects> subjects;
     Subjects subject;
     Student student;
+    List<Student> students;
 
     public ClassRoom(String className) {
         this.className = className;
