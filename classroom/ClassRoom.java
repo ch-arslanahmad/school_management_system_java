@@ -29,8 +29,20 @@ public class ClassRoom {
         this.paper = paper;
     }
 
+    public ClassRoom(Integer classID, String className, Integer tuition, Integer stationary, Integer paper) {
+        this.classID = classID;
+        this.className = className;
+        this.tuition = tuition;
+        this.stationary = stationary;
+        this.paper = paper;
+    }
+
     public ClassRoom() {
 
+    }
+
+    public boolean isEmpty() {
+        return className == null;
     }
 
     // getters
