@@ -3,7 +3,7 @@ package people;
 import classroom.Subjects;
 
 public class Teacher extends Person {
-    Subjects subject;
+    private Subjects subject;
 
     public Teacher(String name, Subjects subject) {
         this.name = name;
@@ -15,14 +15,20 @@ public class Teacher extends Person {
     }
 
     public Teacher() {
-
     }
 
     public String getSubjectName() {
-        return subject.getSubjectName();
+        return subject != null ? subject.getSubjectName() : null;
     }
 
-    // Override Methods
+    public Subjects getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Subjects subject) {
+        this.subject = subject;
+    }
+
     @Override
     public int getID() {
         return id;
@@ -36,6 +42,14 @@ public class Teacher extends Person {
     @Override
     public String toString() {
         return "Name: " + name + "\nID: " + id;
+    }
+
+    public void setName(String string) {
+        this.name = string;
+    }
+
+    public void setID(int int1) {
+        this.id = int1;
     }
 
 }

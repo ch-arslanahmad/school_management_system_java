@@ -27,16 +27,13 @@ public class ClassDAO {
 
     ClassRoom room = new ClassRoom();
 
-    // method to get ID from Class (-1 Error Code)
     public ClassRoom fetchClass(Connection conn, String name) {
         ClassRoom cls = new ClassRoom(name);
-
-        // FIX: Select all columns with *
         String classIDSQL = "SELECT * FROM Class WHERE ClassName = ?;";
 
         try {
 
-            if (!ClassExists(conn, cls, false)) {
+            if (!ClassExists(conn, cls.getName())) {
                 logger.warning("Class NOT found.");
                 return new ClassRoom();
             }
@@ -64,48 +61,81 @@ public class ClassDAO {
 
     }
 
-    // see if class exists
-    public boolean ClassExists(Connection conn, ClassRoom cls, boolean CheckByID) throws SQLException {
-        // SQL query to check
-        String check = CheckByID ? "SELECT 1 FROM Class WHERE ClassID = ?;"
-                : "SELECT 1 FROM Class WHERE ClassName = ?;";
+    public ClassRoom fetchClass(Connection conn, int id) {
+        ClassRoom cls = new ClassRoom();
+        cls.setID(id);
+        String sql = "SELECT * FROM Class WHERE ClassID = ?;";
 
-        // prepared statement in try block
-        try (PreparedStatement rm = conn.prepareStatement(check)) {
+        try {
 
-            if (CheckByID) {
-                rm.setObject(1, cls.getID(), Types.INTEGER);
-            } else {
-                rm.setString(1, cls.getName());
+            if (!ClassExists(conn, cls.getID())) {
+                logger.warning("Class NOT found.");
+                return new ClassRoom();
             }
 
-            /**
-             * Explains the choice between executeUpdate() and executeQuery() for JDBC
-             * operations:
-             * 
-             * 1. We use {@link java.sql.Statement#executeUpdate(String)} when we are
-             * modifying
-             * the database (inserting, updating, deleting), or when we want to execute a
-             * query that does not return a ResultSet. It returns the number of affected
-             * rows.
-             * 
-             * 2. We use {@link java.sql.Statement#executeQuery(String)} when we want to
-             * retrieve
-             * data from the database. It returns the result in a
-             * {@link java.sql.ResultSet},
-             * which can be iterated to access the retrieved values.
-             */
+            try (PreparedStatement rm = conn.prepareStatement(sql)) {
+                rm.setInt(1, id);
+
+                try (ResultSet rs = rm.executeQuery()) {
+                    if (rs.next()) {
+                        cls.setName(rs.getString("ClassName"));
+                        cls.setTuitionFee(rs.getInt("Tuition_Fee"));
+                        cls.setStationaryFee(rs.getInt("Stationary_Fee"));
+                        cls.setPaperFee(rs.getInt("Paper_Fee"));
+                    } else {
+                        logger.warning("Unable to get Class.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error while fetching Class by ID.", e);
+        }
+
+        return cls;
+
+    }
+
+    // see if class exists by name
+    public boolean ClassExists(Connection conn, String name) {
+        String check = "SELECT 1 FROM Class WHERE ClassName = ?;";
+
+        try (PreparedStatement rm = conn.prepareStatement(check)) {
+            rm.setString(1, name);
 
             try (ResultSet rs = rm.executeQuery()) {
                 if (rs.next()) {
                     // If rs.next() returns true, a row exists - meaning class exists
                     logger.info("Match found, Class Exists.");
                     return true;
-                } else {
-                    logger.warning("No match found, Class Does Not Exist.");
-                    return false;
                 }
+                logger.warning("No match found, Class Does Not Exist.");
+                return false;
             }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error checking Class existence.", e);
+            return false;
+        }
+    }
+
+    // see if class exists by ID
+    public boolean ClassExists(Connection conn, int id) {
+        String check = "SELECT 1 FROM Class WHERE ClassID = ?;";
+
+        try (PreparedStatement rm = conn.prepareStatement(check)) {
+            rm.setObject(1, id, Types.INTEGER);
+
+            try (ResultSet rs = rm.executeQuery()) {
+                if (rs.next()) {
+                    // If rs.next() returns true, a row exists - meaning class exists
+                    logger.info("Match found, Class Exists.");
+                    return true;
+                }
+                logger.warning("No match found, Class Does Not Exist.");
+                return false;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error checking Class existence.", e);
+            return false;
         }
     }
 
@@ -113,7 +143,7 @@ public class ClassDAO {
     public boolean insertClass(ClassRoom cls) {
 
         return DBUtils.runInTransaction(conn -> {
-            if (ClassExists(conn, cls, true)) {
+            if (ClassExists(conn, cls.getName())) {
                 logger.warning("Class already exists.");
                 return false;
             }
@@ -184,12 +214,12 @@ public class ClassDAO {
          */
 
         return DBUtils.runInTransaction(conn -> {
-            if (!ClassExists(conn, oldClass, true)) {
+            if (!ClassExists(conn, oldClass.getID())) {
                 logger.warning("Class Doesnt exist.");
                 return false;
             }
 
-            if (ClassExists(conn, newClass, false)) {
+            if (ClassExists(conn, newClass.getName())) {
                 logger.warning("Updated Name: " + newClass.getName() + "' name already exists.");
                 return false;
             }
@@ -221,6 +251,7 @@ public class ClassDAO {
                 for (int i = 0; i < parameters.size(); i++) {
                     rm.setObject(i + 1, parameters.get(i));
                 }
+                rm.setObject(parameters.size() + 1, oldClass.getID(), Types.INTEGER);
 
                 int rs = rm.executeUpdate();
                 return rs > 0; // return true if 1 row is affected.
@@ -253,6 +284,10 @@ public class ClassDAO {
             logger.log(Level.WARNING, "Unable to list all Classes", e);
         }
         return new ArrayList<>();
+    }
+
+    public ClassRoom getClassFees(Connection conn, String className) {
+        return fetchClass(conn, className) ;
     }
 
 }
