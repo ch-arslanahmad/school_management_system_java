@@ -1,291 +1,295 @@
+// BETA VERSION FINALIZED - SubjectDAO
 package database.DAO;
 
 // package imports
 import display.LogHandler;
+import classroom.*;
+import database.DBUtils;
 
 // imports
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.*;
 
-import classroom.ClassRoom;
-import classroom.Subjects;
-import database.DBUtils;
-
-import java.sql.*;
-
 public class SubjectDAO {
-    // variables for LOGGing
+
     private static final Logger logger = Logger.getLogger(SubjectDAO.class.getName());
 
-    // STATIC block for **LOGGING**
     static {
         LogHandler.createLog(logger, "SubjectDAO");
     }
 
-    // NOTE for future reference: accept the method only if valid ClassName is
-    // provided
+    public Subjects fetchSubject(Connection conn, String name) {
+        Subjects subj = new Subjects(name);
 
-    // method to get ID from Subject
-    public int fetchSubjectID(Connection conn, String name) {
-        int subjectID;
-        if (!subjectExists(conn, name)) {
-            return -1;
-        }
-        String subjectIDSQL = "SELECT SubjectID FROM Subjects where SubjectName = ?;";
-        subjectID = -1;
-        try (PreparedStatement rm = conn.prepareStatement(subjectIDSQL)) {
+        String subjectSQL = "SELECT * FROM Subjects WHERE SubjectName = ?;";
 
-            rm.setString(1, name);
-
-            ResultSet rs = rm.executeQuery();
-
-            if (rs.next()) {
-                // fetches and stores the SubjectID in a variable from the matched row
-                subjectID = rs.getInt("SubjectID");
-                logger.info(name + " ID is: " + subjectID);
-            } else {
-                logger.info("Unable to get SubjectID.");
-            }
-
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while fetching SubjectID.", e);
-        }
-
-        return subjectID;
-    }
-
-    // method to get Valid SubjectID
-
-    public int getValidSubjectID(Connection conn, String name) {
-        if (!subjectExists(conn, name)) {
-            logger.warning("Subject doesnt exist.");
-            return -1;
-        } else {
-            logger.warning("Status of Fetched ID: ");
-            return getClassIdBySubject(conn, name);
-        }
-    }
-
-    // method to get ClassID of Subject
-
-    public int getClassIdBySubject(Connection conn, String name) {
-
-        // SQL Query
-        String classIdSQL = "SELECT ClassID FROM Subjects WHERE SubjectName = ?";
-
-        // try-catch block
-        try (PreparedStatement rm = conn.prepareStatement(classIdSQL)) {
+        try {
             if (!subjectExists(conn, name)) {
-                logger.info("Subject does not exist.");
-                return -1;
-            }
-            // inserting value in Query
-            rm.setString(1, name);
-
-            ResultSet rs = rm.executeQuery();
-
-            // fetching ClassID
-            if (rs.next()) {
-                return rs.getInt("ClassID");
+                logger.warning("Subject NOT found.");
+                return new Subjects();
             }
 
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while fetching ClassID of subject", e);
+            try (PreparedStatement rm = conn.prepareStatement(subjectSQL)) {
+                rm.setString(1, name);
+
+                try (ResultSet rs = rm.executeQuery()) {
+                    if (rs.next()) {
+                        subj.setID(rs.getInt("SubjectID"));
+                        subj.setName(rs.getString("SubjectName"));
+                        ClassDAO dao = new ClassDAO();
+                        ClassRoom cls = dao.fetchClass(conn, rs.getInt("ClassID"));
+                        subj.setClassName(cls.getName());
+                        subj.setMarks(rs.getInt("Marks"));
+
+                    } else {
+                        logger.warning("Unable to get Subject.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error while fetching Subject.", e);
         }
-        // automated error code
-        return -1;
 
+        return subj;
     }
 
-    // see if subject exists
     public boolean subjectExists(Connection conn, String name) {
-        // SQL query to check
-        String ExistSQL = "SELECT COUNT(*) AS count FROM Subjects WHERE SubjectName = ?;";
+        String check = "SELECT 1 FROM Subjects WHERE SubjectName = ?;";
 
-        // prepared statement in try block
-        try (PreparedStatement rm = conn.prepareStatement(ExistSQL)) {
-
-            // adding value to query
+        try (PreparedStatement rm = conn.prepareStatement(check)) {
             rm.setString(1, name);
 
-            /*
-             * 1. We use executeUpdate() because we are not adding, removing anything we are
-             * simply executing the query. 2. executeQuery returns value in ResultSet Object
-             * hence that value is also stored ResultSet variable, 'rs'.
-             */
-
-            ResultSet rs = rm.executeQuery();
-
-            /*
-             * ResultSet (rs) returns a table with one row. It does not automatically point
-             * to the matched column. To do that you do rs.next(). - res.next() returns row.
-             * - true if more than 1 - false if 0
-             */
-
-            if (rs.next()) {
-                int count = rs.getInt("count");
-                if (count > 0) {
-                    logger.info("Match found");
+            try (ResultSet rs = rm.executeQuery()) {
+                if (rs.next()) {
+                    logger.info("Match found, Subject Exists.");
                     return true;
                 } else {
-                    logger.warning("No match found");
+                    logger.warning("No match found, Subject Does Not Exist.");
                     return false;
                 }
             }
-
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error finding Subject Existance: ", e);
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error checking Subject existence.", e);
         }
         return false;
     }
 
-    // Insert a Subject in DB
-    public boolean insertSubject(String ClassName, String name, int Marks) {
-        ClassDAO check = new ClassDAO();
+    public int fetchSubjectID(Connection conn, String name) {
+        if (!subjectExists(conn, name)) {
+            logger.warning("Subject does not exist.");
+            return -1;
+        }
 
+        String sql = "SELECT SubjectID FROM Subjects WHERE SubjectName = ?";
+        try (PreparedStatement rm = conn.prepareStatement(sql)) {
+            rm.setString(1, name);
+            try (ResultSet rs = rm.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("SubjectID");
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error fetching Subject ID.", e);
+        }
+        return -1;
+    }
+
+    public boolean insertSubject(Subjects subj) {
         return DBUtils.runInTransaction(conn -> {
-
-            int classID = check.getValidClassID(conn, ClassName);
-            // STOP if return ERROR code (-1)
-            if (classID == -1) {
-                logger.info("Incorrect ID");
+            if (subjectExists(conn, subj.getName())) {
+                logger.warning("Subject already exists.");
                 return false;
             }
 
-            // SQL Query
             String subjectSQL = "INSERT INTO Subjects (SubjectName, ClassID, Marks) VALUES (?,?,?)";
-            try (
-                    PreparedStatement rm = conn.prepareStatement(subjectSQL)) {
-                // set values in the query
-                rm.setString(1, name);
-                rm.setInt(2, classID);
-                rm.setInt(3, Marks);
+            try (PreparedStatement rm = conn.prepareStatement(subjectSQL, Statement.RETURN_GENERATED_KEYS)) {
+                rm.setString(1, subj.getName());
+                if (subj.getClassRoom() != null) {
+                    rm.setInt(2, subj.getClassRoom().getID());
+                } else {
+                    rm.setNull(2, Types.INTEGER);
+                }
+                rm.setInt(3, subj.getMarks() != null ? subj.getMarks() : 100);
 
-                // execute query
                 int rs = rm.executeUpdate();
+
+                ResultSet ID = rm.getGeneratedKeys();
+                if (ID.next()) {
+                    int genID = ID.getInt(1);
+                    logger.info("Inserted Subject with ID: " + genID);
+                    subj.setID(genID);
+                }
 
                 return rs > 0;
             }
         });
-
     }
 
-    public boolean updateSubject(String ClassName, String name, String updateName) {
-        ClassDAO check = new ClassDAO();
-
+    public boolean insertSubject(String className, String subjectName, int marks) {
         return DBUtils.runInTransaction(conn -> {
-            if (check.getValidClassID(conn, ClassName) == -1) {
-                logger.config("Class doesn't exist.");
+            if (subjectExists(conn, subjectName)) {
+                logger.warning("Subject already exists.");
                 return false;
             }
-            if (!subjectExists(conn, name)) {
-                logger.config("Subject doesn't exist.");
+
+            ClassDAO classDAO = new ClassDAO();
+            ClassRoom cls = classDAO.fetchClass(conn, className);
+            if (cls.isEmpty()) {
+                logger.warning("Class does not exist.");
                 return false;
             }
-            // Query to update Subject
-            String updateSubjSQL = "UPDATE Subjects SET SubjectName = ? WHERE SubjectName = ? AND ClassID = ?";
-            try (PreparedStatement rm = conn.prepareStatement(updateSubjSQL)) {
-                rm.setString(1, updateName);
-                rm.setString(2, name);
-                rm.setInt(3, check.getValidClassID(conn, ClassName));
+
+            String subjectSQL = "INSERT INTO Subjects (SubjectName, ClassID, Marks) VALUES (?,?,?)";
+            try (PreparedStatement rm = conn.prepareStatement(subjectSQL, Statement.RETURN_GENERATED_KEYS)) {
+                rm.setString(1, subjectName);
+                rm.setInt(2, cls.getID());
+                rm.setInt(3, marks);
 
                 int rs = rm.executeUpdate();
-                return rs > 0 || rs == 1; // return true if 1 row is affected.
-            }
-        });
-
-    }
-
-    public boolean deleteSubject(String ClassName, String name) {
-        return DBUtils.runInTransaction(conn -> {
-            if (!(subjectExists(conn, name))) {
-                logger.warning("No Match found, Subject does not exist.");
-                return false;
-            }
-
-            String delSubjectSQL = "DELETE FROM Subjects WHERE SubjectName = ? AND ClassID = ?";
-            try (PreparedStatement rm = conn.prepareStatement(delSubjectSQL)) {
-
-                // set values in the query
-                rm.setString(1, name);
-                rm.setInt(2, getClassIdBySubject(conn, name));
-
-                // execute query
-                int rs = rm.executeUpdate();
-
-                return rs > 0 || rs == 1; // return true if 1 row is affected.
+                return rs > 0;
             }
         });
     }
 
-    // list all subjects
+    public boolean deleteSubject(Subjects subj) {
+        return DBUtils.runInTransaction(conn -> {
+            String deleteSubjectSQL = "DELETE FROM Subjects WHERE SubjectID = ?";
+            try (PreparedStatement rm = conn.prepareStatement(deleteSubjectSQL)) {
+                rm.setObject(1, subj.getID(), Types.INTEGER);
+
+                int rs = rm.executeUpdate();
+                return rs > 0;
+            }
+        });
+    }
+
+    public boolean deleteSubject(String className, String subjectName) {
+        return DBUtils.runInTransaction(conn -> {
+            ClassDAO classDAO = new ClassDAO();
+            ClassRoom cls = classDAO.fetchClass(conn, className);
+            if (cls.isEmpty()) {
+                logger.warning("Class does not exist.");
+                return false;
+            }
+
+            String deleteSubjectSQL = "DELETE FROM Subjects WHERE SubjectName = ? AND ClassID = ?";
+            try (PreparedStatement rm = conn.prepareStatement(deleteSubjectSQL)) {
+                rm.setString(1, subjectName);
+                rm.setInt(2, cls.getID());
+
+                int rs = rm.executeUpdate();
+                return rs > 0;
+            }
+        });
+    }
+
+    public boolean updateSubject(Subjects oldSubject, Subjects newSubject) {
+        return DBUtils.runInTransaction(conn -> {
+            if (!subjectExists(conn, oldSubject.getName())) {
+                logger.warning("Subject Doesnt exist.");
+                return false;
+            }
+
+            StringBuilder sql = new StringBuilder("UPDATE Subjects SET ");
+
+            List<Object> parameters = new ArrayList<>();
+
+            if (newSubject.getName() != null) {
+                sql.append("SubjectName = ?,");
+                parameters.add(newSubject.getName());
+            }
+            if (newSubject.getObtainedMarks() != null) {
+                sql.append(" Marks = ?,");
+                parameters.add(newSubject.getObtainedMarks());
+            }
+
+            sql.append(" WHERE SubjectName = ?");
+
+            try (PreparedStatement rm = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < parameters.size(); i++) {
+                    rm.setObject(i + 1, parameters.get(i));
+                }
+
+                int rs = rm.executeUpdate();
+                return rs > 0;
+            }
+        });
+    }
+
+    public boolean updateSubject(String oldName, String newName) {
+        return DBUtils.runInTransaction(conn -> {
+            if (!subjectExists(conn, oldName)) {
+                logger.warning("Subject Doesnt exist.");
+                return false;
+            }
+
+            String sql = "UPDATE Subjects SET SubjectName = ? WHERE SubjectName = ?";
+            try (PreparedStatement rm = conn.prepareStatement(sql)) {
+                rm.setString(1, newName);
+                rm.setString(2, oldName);
+
+                int rs = rm.executeUpdate();
+                return rs > 0;
+            }
+        });
+    }
+
     public List<Subjects> listSubjects(Connection conn) {
         List<Subjects> subjects = new ArrayList<>();
+        String listSubjectSQL = "SELECT * FROM Subjects";
 
-        String listSubjectSQL = "SELECT Subjects.SubjectName, Class.ClassName " + "FROM Subjects "
-                + "LEFT JOIN Class ON Subjects.ClassID = Class.ClassID";
+        try (PreparedStatement rm = conn.prepareStatement(listSubjectSQL);
+                ResultSet rs = rm.executeQuery()) {
 
-        try (PreparedStatement rm = conn.prepareStatement(listSubjectSQL); ResultSet rs = rm.executeQuery()) {
-
-            int count = 0;
-
-            // loop to display every row
-            while (rs.next()) {
-                subjects.add(new Subjects(rs.getString("SubjectName"),
-                        new ClassRoom(rs.getString("ClassName"))));
-                count++;
+            if (!rs.isBeforeFirst()) {
+                System.out.println("No Data is available.");
+                return new ArrayList<>();
             }
-            logger.log(Level.FINE, count + " Subjects Listed");
-        } catch (SQLException e) {
-            logger.log(Level.WARNING, "Error while listing Subjects: ", e);
-        }
-        return subjects; // return empty list
-    }
 
-    // list all subjects in a class
-    public List<Subjects> listClassSubjects(Connection conn, String className) {
-        List<Subjects> subjects = new ArrayList<>();
-        String listSubjectSQL = "SELECT Subjects.SubjectName, Class.ClassName " + "FROM Subjects "
-                + "LEFT JOIN Class ON Subjects.ClassID = Class.ClassID WHERE ClassName = ?";
-
-        try (PreparedStatement rm = conn.prepareStatement(listSubjectSQL); ResultSet rs = rm.executeQuery()) {
-            rm.setString(1, className);
-            int count = 0;
-            // inner try-block to fetch and display each row
-            // loop to display every row
-            while (rs.next()) {
-                subjects.add(new Subjects(rs.getString("SubjectName"),
-                        new ClassRoom(rs.getString("ClassName"))));
-                count++;
+                while (rs.next()) {
+                Subjects subj = new Subjects();
+                subj.setID(rs.getInt("SubjectID"));
+                subj.setName(rs.getString("SubjectName"));
+                subj.setMarks(rs.getInt("Marks"));
+                ClassDAO classDAO = new ClassDAO();
+                ClassRoom cls = classDAO.fetchClass(conn, rs.getInt("ClassID"));
+                subj.setClassName(cls.getName());
+                subjects.add(subj);
             }
-            logger.log(Level.FINE, count + " Subjects Listed");
+            return subjects;
+
         } catch (SQLException e) {
-            logger.log(Level.WARNING, "Error while listing Subjects: ", e);
+            logger.log(Level.WARNING, "Unable to list all Subjects", e);
         }
-        return subjects;
+        return new ArrayList<>();
     }
 
     public List<Subjects> listClassSubjectswithMarks(Connection conn, String className) {
         List<Subjects> subjects = new ArrayList<>();
+        ClassDAO classDAO = new ClassDAO();
+        ClassRoom cls = classDAO.fetchClass(conn, className);
+        if (cls.isEmpty()) {
+            logger.warning("Class does not exist.");
+            return new ArrayList<>();
+        }
 
-        String listSubjectSQL = "SELECT Subjects.SubjectName, Subjects.Marks, Class.ClassName FROM Subjects LEFT JOIN Class ON Subjects.ClassID = Class.ClassID WHERE ClassName = ?";
-        // try-block
-        try (
-                PreparedStatement rm = conn.prepareStatement(listSubjectSQL);
-                ResultSet rs = rm.executeQuery()) {
-            rm.setString(1, className);
-            int count = 0;
-
-            // loop to display every row
-            while (rs.next()) {
-                subjects.add(new Subjects(rs.getString("SubjectName"), rs.getInt("Marks"),
-                        new ClassRoom(rs.getString("ClassName"))));
-                count++;
+        String sql = "SELECT * FROM Subjects WHERE ClassID = ?";
+        try (PreparedStatement rm = conn.prepareStatement(sql)) {
+            rm.setInt(1, cls.getID());
+            try (ResultSet rs = rm.executeQuery()) {
+                while (rs.next()) {
+                    Subjects subj = new Subjects();
+                    subj.setID(rs.getInt("SubjectID"));
+                    subj.setName(rs.getString("SubjectName"));
+                    subj.setMarks(rs.getInt("Marks"));
+                    subj.setClassName(className);
+                    subjects.add(subj);
+                }
             }
-            logger.log(Level.FINE, count + " Subjects Listed");
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while listing Subjects: ", e);
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Unable to list subjects for class", e);
         }
         return subjects;
     }

@@ -30,7 +30,7 @@ public class Student extends Person {
         return room.getName();
     }
 
-    // Override Methods
+    // getter
     @Override
     public int getID() {
         return id;
@@ -39,6 +39,23 @@ public class Student extends Person {
     @Override
     public String getName() {
         return name;
+    }
+
+    public ClassRoom getClassRoom() {
+        return room;
+    }
+
+    // setter
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setID(int id) {
+        this.id = id;
+    }
+
+    public void setClassRoom(ClassRoom room) {
+        this.room = room;
     }
 
     @Override
