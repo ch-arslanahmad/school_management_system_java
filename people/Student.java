@@ -27,7 +27,7 @@ public class Student extends Person {
     }
 
     public String getClassName() {
-        return room.getClassName();
+        return room.getName();
     }
 
     // Override Methods

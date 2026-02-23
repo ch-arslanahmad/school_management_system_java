@@ -7,22 +7,22 @@ import people.Student;
 
 public class ClassRoom {
 
-    private int classID;
+    private Integer classID;
     private String className;
     List<Subjects> subjects = new ArrayList<>();
     List<Student> students = new ArrayList<>();
 
     // FEES OF CLASS
 
-    int tuition;
-    int stationary;
-    int paper;
+    Integer tuition; // can be null, if not set.
+    Integer stationary;
+    Integer paper;
 
     public ClassRoom(String className) {
         this.className = className;
     }
 
-    public ClassRoom(String className, int tuition, int stationary, int paper) {
+    public ClassRoom(String className, Integer tuition, Integer stationary, Integer paper) {
         this.className = className;
         this.tuition = tuition;
         this.stationary = stationary;
@@ -33,52 +33,55 @@ public class ClassRoom {
 
     }
 
-    public int getClassID() {
+    // getters
+
+    public Integer getID() {
         return classID;
     }
 
-    public String getClassName() {
+    public String getName() {
         return className;
     }
 
     // GET FEES
 
-    public int getTuition() {
+    public Integer getTuitionFee() {
         return tuition;
     }
 
-    public int getStationary() {
+    public Integer getStationaryFee() {
         return stationary;
     }
 
-    public int getPaper() {
+    public Integer getPaperFee() {
         return paper;
     }
 
     // Setters
 
-    public void setClassName(String className) {
+    public void setName(String className) {
         this.className = className;
     }
 
-    public void setClassID(int classID) {
+    public void setID(Integer classID) {
         this.classID = classID;
     }
 
-    public void setTuition(int tuition) {
+    public void setTuitionFee(Integer tuition) {
         this.tuition = tuition;
     }
 
-    public void setStationary(int stationary) {
+    public void setStationaryFee(Integer stationary) {
         this.stationary = stationary;
     }
 
-    public void setPaper(int paper) {
+    public void setPaperFee(Integer paper) {
         this.paper = paper;
     }
 
     public String toString() {
-        return className + " ID is " + classID + ".";
+        return "Class: " + className + "\nID: " + classID + "." + "\nTuition Fee: " + tuition + "\nStationary Fee: "
+                + stationary + "\nPaper Fee: " + paper;
     }
 
 }
