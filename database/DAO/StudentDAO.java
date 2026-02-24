@@ -5,6 +5,7 @@ package database.DAO;
 import display.LogHandler;
 import people.Student;
 import classroom.ClassRoom;
+import classroom.Subjects;
 import database.DBUtils;
 
 // imports
@@ -53,6 +54,32 @@ public class StudentDAO {
         return student;
     }
 
+    public Student fetchStudentWithMarks(Connection conn, String studentName) {
+        Student student = fetchStudent(conn, studentName);
+
+        if (student.getID() == null) {
+            logger.warning("Student ID is null.");
+            return student;
+        }
+
+        String marksSQL = "SELECT * FROM StudentMarks WHERE StudentID = ?;";
+        try (PreparedStatement rm = conn.prepareStatement(marksSQL)) {
+            rm.setInt(1, student.getID());
+
+            try (ResultSet rs = rm.executeQuery()) {
+                while (rs.next()) {
+                    Subjects subject = new Subjects();
+                    subject.setID(rs.getInt("SubjectID"));
+                    subject.setObtMarks(rs.getInt("ObtainedMarks"));
+                    student.addSubject(subject);
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error while fetching Student Marks.", e);
+        }
+        return student;
+    }
+
     public boolean studentExists(Connection conn, String name) {
         String check = "SELECT 1 FROM Student WHERE StudentName = ?;";
 
@@ -81,7 +108,8 @@ public class StudentDAO {
                 return false;
             }
 
-            if (student.getClassRoom() == null || student.getClassRoom().getID() == null || student.getClassRoom().getID() == 0) {
+            if (student.getClassRoom() == null || student.getClassRoom().getID() == null
+                    || student.getClassRoom().getID() == 0) {
                 logger.warning("Class not set for Student.");
                 return false;
             }
@@ -100,6 +128,45 @@ public class StudentDAO {
                     student.setID(genID);
                 }
 
+                return rs > 0;
+            }
+        });
+    }
+
+    /*
+     * INSERT OR REPLACE INTO StudentMarks (StudentID, SubjectID, ObtainedMarks)
+     * VALUES (1, 1, 85); SQLITE specific syntax for upsert.
+     * MySQL uses ON DUPLICATE KEY UPDATE, SQL Server uses MERGE statement.
+     */
+
+    public boolean insertOrUpdateMarks(Student student, Subjects subject) {
+
+        return DBUtils.runInTransaction(conn -> {
+            String upsertSQL = "INSERT INTO StudentMarks (StudentID, SubjectID, ObtainedMarks) VALUES (?, ?, ?) "
+                    + "ON DUPLICATE KEY UPDATE ObtainedMarks = VALUES(ObtainedMarks)";
+
+            if (student.getID() == null) {
+                logger.warning("Student Doesnt exist.");
+                return false;
+            }
+
+            if (subject.getID() == null) {
+                logger.warning("Subject ID is not set.");
+                return false;
+            }
+
+            if (subject.getObtMarks() == null || subject.getObtMarks() < 0
+                    || subject.getObtMarks() > subject.getTotalMarks()) {
+                logger.warning("Obtained Marks is not set or is negative or exceeds total marks.");
+                return false;
+            }
+
+            try (PreparedStatement rm = conn.prepareStatement(upsertSQL)) {
+                rm.setInt(1, student.getID());
+                rm.setInt(2, subject.getID());
+                rm.setInt(3, subject.getObtMarks());
+
+                int rs = rm.executeUpdate();
                 return rs > 0;
             }
         });
@@ -137,7 +204,8 @@ public class StudentDAO {
                 sql.append("StudentName = ?,");
                 parameters.add(newStudent.getName());
             }
-            if (newStudent.getClassRoom() != null && newStudent.getClassRoom().getID() != null && newStudent.getClassRoom().getID() != 0) {
+            if (newStudent.getClassRoom() != null && newStudent.getClassRoom().getID() != null
+                    && newStudent.getClassRoom().getID() != 0) {
                 sql.append(" ClassID = ?,");
                 parameters.add(newStudent.getClassRoom().getID());
             }
