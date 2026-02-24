@@ -4,76 +4,81 @@ public class Subjects {
 
     private Integer subjectID;
     private String subjectName;
-    private ClassRoom room;
+    private Integer classID;
+    private String className;
     private int totalMarks = 100;
-    private Integer Marks;
+    private Integer obtainedMarks;
     private Double percentage;
     private String grade;
 
     public Subjects() {
     }
 
-    public Subjects(ClassRoom room, String subjectName) {
+    public Subjects(Integer classID, String subjectName) {
+        this.classID = classID;
         this.subjectName = subjectName;
-        this.room = room;
     }
 
-    public Subjects(ClassRoom room, String subjectName, Integer Marks) {
-        this.room = room;
+    public Subjects(Integer classID, String subjectName, Integer obtainedMarks) {
+        this.classID = classID;
         this.subjectName = subjectName;
-        this.Marks = Marks;
+        this.obtainedMarks = obtainedMarks;
     }
 
     public Subjects(String subjectName) {
         this.subjectName = subjectName;
     }
 
-    public Subjects(String subjectName, int Marks) {
+    public Subjects(String subjectName, int obtainedMarks) {
         this.subjectName = subjectName;
-        this.Marks = Marks;
-        this.percentage = findPercentage(totalMarks, Marks);
+        this.obtainedMarks = obtainedMarks;
+        this.percentage = findPercentage(totalMarks, obtainedMarks);
         this.grade = findGrade(this.percentage);
     }
 
-    public Subjects(String subjectName, int Marks, int obtainedMarks) {
+    public Subjects(String subjectName, int totalMarks, int obtainedMarks) {
         this.subjectName = subjectName;
-        this.Marks = obtainedMarks;
-        this.percentage = findPercentage(Marks, obtainedMarks);
+        this.totalMarks = totalMarks;
+        this.obtainedMarks = obtainedMarks;
+        this.percentage = findPercentage(totalMarks, obtainedMarks);
         this.grade = findGrade(this.percentage);
     }
 
-    public Subjects(int Marks) {
-        this.Marks = Marks;
-        this.percentage = findPercentage(totalMarks, Marks);
+    public Subjects(int obtainedMarks) {
+        this.obtainedMarks = obtainedMarks;
+        this.percentage = findPercentage(totalMarks, obtainedMarks);
         this.grade = findGrade(this.percentage);
     }
 
     private Double findPercentage(int marks, int obtMarks) {
-        if (marks == 0) return 0.0;
+        if (marks == 0)
+            return 0.0;
         return (obtMarks * 100.0) / marks;
     }
 
     public static String findGrade(double percentage) {
-        if (percentage >= 90) return "A";
-        else if (percentage >= 80) return "B";
-        else if (percentage >= 70) return "C";
-        else if (percentage >= 60) return "D";
-        else return "F";
+        if (percentage >= 90)
+            return "A";
+        else if (percentage >= 80)
+            return "B";
+        else if (percentage >= 70)
+            return "C";
+        else if (percentage >= 60)
+            return "D";
+        else
+            return "F";
     }
 
-    public void setObtMarks(int Marks) {
-        this.Marks = Marks;
-        this.percentage = findPercentage(totalMarks, Marks);
+    public void setObtMarks(int obtainedMarks) {
+        this.obtainedMarks = obtainedMarks;
+        this.percentage = findPercentage(totalMarks, obtainedMarks);
         this.grade = findGrade(this.percentage);
     }
 
     // getters
-    public Integer getObtainedMarks() {
-        return Marks;
-    }
 
     public Integer getObtMarks() {
-        return Marks;
+        return obtainedMarks;
     }
 
     public int getTotalMarks() {
@@ -84,57 +89,59 @@ public class Subjects {
         return percentage;
     }
 
-    public String getClassName() {
-        return room != null ? room.getName() : null;
+    public String getGrade() {
+        return grade;
     }
 
     public Integer getID() {
         return subjectID;
     }
 
-    public String getName() {
-        return subjectName;
-    }
-
     public String getSubjectName() {
         return subjectName;
     }
 
-    public Integer getMarks() {
-        return Marks;
+    public Integer getClassID() {
+        return classID;
+    }
+
+    public String getClassName() {
+        return className;
     }
 
     public ClassRoom getClassRoom() {
+        if (classID == null)
+            return null;
+        ClassRoom room = new ClassRoom();
+        room.setID(classID);
         return room;
     }
 
     // setters
+
     public void setID(int subjectID) {
         this.subjectID = subjectID;
-    }
-
-    public void setName(String subjectName) {
-        this.subjectName = subjectName;
     }
 
     public void setSubjectName(String subjectName) {
         this.subjectName = subjectName;
     }
 
+    public void setClassID(Integer classID) {
+        this.classID = classID;
+    }
+
     public void setClassName(String className) {
-        if (this.room == null) {
-            this.room = new ClassRoom();
-        }
-        this.room.setName(className);
+        this.className = className;
     }
 
     public void setClassRoom(ClassRoom room) {
-        this.room = room;
+        this.classID = room != null ? room.getID() : null;
     }
 
-    public void setObtainedMarks(Integer Marks) {
-        this.Marks = Marks;
-        this.percentage = findPercentage(totalMarks, Marks);
+    public void setObtainedMarks(Integer obtainedMarks) {
+        this.obtainedMarks = obtainedMarks;
+        this.percentage = findPercentage(totalMarks, obtainedMarks);
         this.grade = findGrade(this.percentage);
     }
 
@@ -142,12 +149,7 @@ public class Subjects {
         this.totalMarks = totalMarks;
     }
 
-    public void setMarks(Integer Marks) {
-        this.Marks = Marks;
-    }
-
     public String toString() {
         return subjectName + " ID is " + subjectID;
     }
-
 }
