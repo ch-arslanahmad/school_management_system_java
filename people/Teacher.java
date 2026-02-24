@@ -30,7 +30,7 @@ public class Teacher extends Person {
     }
 
     @Override
-    public int getID() {
+    public Integer getID() {
         return id;
     }
 
@@ -48,7 +48,7 @@ public class Teacher extends Person {
         this.name = string;
     }
 
-    public void setID(int int1) {
+    public void setID(Integer int1) {
         this.id = int1;
     }
 

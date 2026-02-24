@@ -1,22 +1,12 @@
 package classroom;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import people.Student;
-
 public class ClassRoom {
 
     private Integer classID;
     private String className;
-    List<Subjects> subjects = new ArrayList<>();
-    List<Student> students = new ArrayList<>();
-
-    // FEES OF CLASS
-
-    Integer tuition; // can be null, if not set.
-    Integer stationary;
-    Integer paper;
+    private Integer tuition;
+    private Integer stationary;
+    private Integer paper;
 
     public ClassRoom(String className) {
         this.className = className;
@@ -38,14 +28,11 @@ public class ClassRoom {
     }
 
     public ClassRoom() {
-
     }
 
     public boolean isEmpty() {
         return className == null;
     }
-
-    // getters
 
     public Integer getID() {
         return classID;
@@ -54,8 +41,6 @@ public class ClassRoom {
     public String getName() {
         return className;
     }
-
-    // GET FEES
 
     public Integer getTuitionFee() {
         return tuition;
@@ -68,8 +53,6 @@ public class ClassRoom {
     public Integer getPaperFee() {
         return paper;
     }
-
-    // Setters
 
     public void setName(String className) {
         this.className = className;
@@ -92,8 +75,7 @@ public class ClassRoom {
     }
 
     public String toString() {
-        return "Class: " + className + "\nID: " + classID + "." + "\nTuition Fee: " + tuition + "\nStationary Fee: "
+        return "Class: " + className + "\nID: " + classID + ".\nTuition Fee: " + tuition + "\nStationary Fee: "
                 + stationary + "\nPaper Fee: " + paper;
     }
-
 }
