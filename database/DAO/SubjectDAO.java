@@ -37,11 +37,9 @@ public class SubjectDAO {
                 try (ResultSet rs = rm.executeQuery()) {
                     if (rs.next()) {
                         subj.setID(rs.getInt("SubjectID"));
-                        subj.setName(rs.getString("SubjectName"));
-                        ClassDAO dao = new ClassDAO();
-                        ClassRoom cls = dao.fetchClass(conn, rs.getInt("ClassID"));
-                        subj.setClassName(cls.getName());
-                        subj.setMarks(rs.getInt("Marks"));
+                        subj.setSubjectName(rs.getString("SubjectName"));
+                        subj.setClassID(rs.getInt("ClassID"));
+                        subj.setTotalMarks(rs.getInt("Marks"));
 
                     } else {
                         logger.warning("Unable to get Subject.");
@@ -98,20 +96,20 @@ public class SubjectDAO {
 
     public boolean insertSubject(Subjects subj) {
         return DBUtils.runInTransaction(conn -> {
-            if (subjectExists(conn, subj.getName())) {
+            if (subjectExists(conn, subj.getSubjectName())) {
                 logger.warning("Subject already exists.");
                 return false;
             }
 
             String subjectSQL = "INSERT INTO Subjects (SubjectName, ClassID, Marks) VALUES (?,?,?)";
             try (PreparedStatement rm = conn.prepareStatement(subjectSQL, Statement.RETURN_GENERATED_KEYS)) {
-                rm.setString(1, subj.getName());
-                if (subj.getClassRoom() != null) {
-                    rm.setInt(2, subj.getClassRoom().getID());
+                rm.setString(1, subj.getSubjectName());
+                if (subj.getClassID() != null) {
+                    rm.setInt(2, subj.getClassID());
                 } else {
                     rm.setNull(2, Types.INTEGER);
                 }
-                rm.setInt(3, subj.getMarks() != null ? subj.getMarks() : 100);
+                rm.setInt(3, subj.getTotalMarks());
 
                 int rs = rm.executeUpdate();
 
@@ -187,7 +185,7 @@ public class SubjectDAO {
 
     public boolean updateSubject(Subjects oldSubject, Subjects newSubject) {
         return DBUtils.runInTransaction(conn -> {
-            if (!subjectExists(conn, oldSubject.getName())) {
+            if (!subjectExists(conn, oldSubject.getSubjectName())) {
                 logger.warning("Subject Doesnt exist.");
                 return false;
             }
@@ -196,13 +194,15 @@ public class SubjectDAO {
 
             List<Object> parameters = new ArrayList<>();
 
-            if (newSubject.getName() != null) {
+            if (newSubject.getSubjectName() != null) {
                 sql.append("SubjectName = ?,");
-                parameters.add(newSubject.getName());
+                parameters.add(newSubject.getSubjectName());
             }
-            if (newSubject.getObtainedMarks() != null) {
+
+            // only has option of obtained marks, total are fixed at 100
+            if (newSubject.getObtMarks() != null) {
                 sql.append(" Marks = ?,");
-                parameters.add(newSubject.getObtainedMarks());
+                parameters.add(newSubject.getObtMarks());
             }
 
             sql.append(" WHERE SubjectName = ?");
@@ -248,14 +248,12 @@ public class SubjectDAO {
                 return new ArrayList<>();
             }
 
-                while (rs.next()) {
+            while (rs.next()) {
                 Subjects subj = new Subjects();
                 subj.setID(rs.getInt("SubjectID"));
-                subj.setName(rs.getString("SubjectName"));
-                subj.setMarks(rs.getInt("Marks"));
-                ClassDAO classDAO = new ClassDAO();
-                ClassRoom cls = classDAO.fetchClass(conn, rs.getInt("ClassID"));
-                subj.setClassName(cls.getName());
+                subj.setSubjectName(rs.getString("SubjectName"));
+                subj.setTotalMarks(rs.getInt("Marks"));
+                subj.setClassID(rs.getInt("ClassID"));
                 subjects.add(subj);
             }
             return subjects;
@@ -282,9 +280,9 @@ public class SubjectDAO {
                 while (rs.next()) {
                     Subjects subj = new Subjects();
                     subj.setID(rs.getInt("SubjectID"));
-                    subj.setName(rs.getString("SubjectName"));
-                    subj.setMarks(rs.getInt("Marks"));
-                    subj.setClassName(className);
+                    subj.setSubjectName(rs.getString("SubjectName"));
+                    subj.setTotalMarks(rs.getInt("Marks"));
+                    subj.setClassID(cls.getID());
                     subjects.add(subj);
                 }
             }

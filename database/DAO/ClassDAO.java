@@ -23,10 +23,6 @@ public class ClassDAO {
         LogHandler.createLog(logger, "ClassDAO");
     }
 
-    String classNameDAO;
-
-    ClassRoom room = new ClassRoom();
-
     public ClassRoom fetchClass(Connection conn, String name) {
         ClassRoom cls = new ClassRoom(name);
         String classIDSQL = "SELECT * FROM Class WHERE ClassName = ?;";
@@ -287,7 +283,7 @@ public class ClassDAO {
     }
 
     public ClassRoom getClassFees(Connection conn, String className) {
-        return fetchClass(conn, className) ;
+        return fetchClass(conn, className);
     }
 
 }
