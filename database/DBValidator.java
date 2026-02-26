@@ -55,7 +55,7 @@ public class DBValidator {
     // validate Database with Data
     public boolean DBvalidate() {
         if (DBfileExists()) {
-            String[] tables = { "School", "Class", "Subjects", "Student", "Teacher", "Grade" };
+            String[] tables = { "School", "Class", "Subjects", "Student", "Teacher", "StudentMarks" };
             for (String t : tables) {
                 if (!testTable(t)) {
                     return false;
@@ -88,7 +88,7 @@ public class DBValidator {
         if (!DBvalidate()) {
             return false;
         }
-        String[] tables = { "Grade", "Student", "Teacher", "Subjects", "Class", "School",
+        String[] tables = { "StudentMarks", "Student", "Teacher", "Subjects", "Class", "School",
                 "sqlite_sequence" };
 
         try (Connection conn = Database.getConnection()) {

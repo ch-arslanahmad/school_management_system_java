@@ -97,7 +97,7 @@ public class Subjects {
         return subjectID;
     }
 
-    public String getSubjectName() {
+    public String getName() {
         return subjectName;
     }
 
@@ -123,7 +123,7 @@ public class Subjects {
         this.subjectID = subjectID;
     }
 
-    public void setSubjectName(String subjectName) {
+    public void setName(String subjectName) {
         this.subjectName = subjectName;
     }
 
@@ -139,15 +139,12 @@ public class Subjects {
         this.classID = room != null ? room.getID() : null;
     }
 
-    public void setObtainedMarks(Integer obtainedMarks) {
+    public void setObtMarks(Integer obtainedMarks) {
         this.obtainedMarks = obtainedMarks;
         this.percentage = findPercentage(totalMarks, obtainedMarks);
         this.grade = findGrade(this.percentage);
     }
 
-    public void setTotalMarks(int totalMarks) {
-        this.totalMarks = totalMarks;
-    }
 
     public String toString() {
         return subjectName + " ID is " + subjectID;

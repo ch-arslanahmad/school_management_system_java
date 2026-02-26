@@ -170,7 +170,6 @@ public class TeacherDAO {
     public boolean updateTeacher(Teacher oldTeacher, Teacher newTeacher) {
         return DBUtils.runInTransaction(conn -> {
 
-
             Teacher fetchedOldTeacher = fetchTeacher(conn, oldTeacher.getID());
             if (fetchedOldTeacher.getID() == 0) {
                 logger.warning("Teacher Doesnt exist.");
@@ -234,6 +233,37 @@ public class TeacherDAO {
 
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Unable to list all Teachers", e);
+        }
+        return new ArrayList<>();
+    }
+
+    List<Subjects> listWithSubjects(Connection conn) {
+        List<Subjects> subjects = new ArrayList<>();
+        String listTeacherSQL = "SELECT t.TeacherID, t.TeacherName, s.SubjectID, s.SubjectName FROM Subjects s JOIN Teacher t ON s.SubjectID = t.SubjectID";
+
+        try (PreparedStatement rm = conn.prepareStatement(listTeacherSQL);
+                ResultSet rs = rm.executeQuery()) {
+
+            if (!rs.isBeforeFirst()) {
+                System.out.println("No Data is available.");
+                return new ArrayList<>();
+            }
+
+            while (rs.next()) {
+                // TeacherName, TeacherID, SubjectID
+                Teacher teacher = new Teacher();
+                Subjects subj = new Subjects();
+                teacher.setID(rs.getInt("TeacherID"));
+                teacher.setName(rs.getString("TeacherName"));
+                subj.setID(rs.getInt("SubjectID"));
+                subj.setName(rs.getString("SubjectName"));
+                teacher.setSubject(subj);
+                subjects.add(subj);
+            }
+            return subjects;
+
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Unable to list all Teachers with Subjects", e);
         }
         return new ArrayList<>();
     }

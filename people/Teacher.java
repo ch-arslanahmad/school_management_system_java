@@ -18,7 +18,7 @@ public class Teacher extends Person {
     }
 
     public String getSubjectName() {
-        return subject != null ? subject.getSubjectName() : null;
+        return subject != null ? subject.getName() : null;
     }
 
     public Subjects getSubject() {
