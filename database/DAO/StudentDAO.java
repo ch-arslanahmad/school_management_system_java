@@ -184,6 +184,20 @@ public class StudentDAO {
         });
     }
 
+    // Delete marks of students in a specific subject.
+    public boolean deleteMarks(Student student, Subjects subject) {
+        return DBUtils.runInTransaction(conn -> {
+            String deleteMarksSQL = "DELETE FROM StudentMarks WHERE StudentID = ? AND SubjectID = ?";
+            try (PreparedStatement rm = conn.prepareStatement(deleteMarksSQL)) {
+                rm.setInt(1, student.getID());
+                rm.setInt(2, subject.getID());
+
+                int rs = rm.executeUpdate();
+                return rs > 0;
+            }
+        });
+    }
+
     public boolean updateStudent(Student oldStudent, Student newStudent) {
         return DBUtils.runInTransaction(conn -> {
             if (!studentExists(conn, oldStudent.getName())) {
@@ -224,7 +238,7 @@ public class StudentDAO {
         });
     }
 
-    public List<Student> listStudent(Connection conn) {
+    public List<Student> listStudents(Connection conn) {
         List<Student> students = new ArrayList<>();
         String listStudentSQL = "SELECT * FROM Student";
 
@@ -252,5 +266,59 @@ public class StudentDAO {
         }
         return new ArrayList<>();
     }
+
+    // list students by class
+    public List<Student> listStudents(Connection conn, int classID) {
+        List<Student> students = new ArrayList<>();
+        String listStudentSQL = "SELECT * FROM Student WHERE ClassID = ?";
+
+        try (PreparedStatement rm = conn.prepareStatement(listStudentSQL)) {
+            rm.setInt(1, classID);
+            try (ResultSet rs = rm.executeQuery()) {
+                while (rs.next()) {
+                    Student student = new Student();
+                    student.setID(rs.getInt("StudentID"));
+                    student.setName(rs.getString("StudentName"));
+                    ClassRoom room = new ClassRoom();
+                    room.setID(rs.getInt("ClassID"));
+                    student.setClassRoom(room);
+                    students.add(student);
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Unable to list Students by Class", e);
+        }
+        return students;
+    }
+
+    public List<Subjects> fetchStudentReport(Connection conn, String studentName) {
+        List<Subjects> subjects = new ArrayList<>();
+        String sql = "SELECT * FROM getGrades WHERE StudentName = ?";
+
+        try (PreparedStatement rm = conn.prepareStatement(sql)) {
+            rm.setString(1, studentName);
+
+            try (ResultSet rs = rm.executeQuery()) {
+                while (rs.next()) {
+                    Subjects subject = new Subjects();
+                    subject.setName(rs.getString("SubjectName"));
+                    subject.setObtMarks(rs.getInt("ObtainedMarks"));
+
+                    String percentageStr = rs.getString("Percentage");
+                    if (percentageStr != null && percentageStr.contains("%")) {
+                        subject.setObtMarks(rs.getInt("ObtainedMarks"));
+                    }
+
+                    subject.setClassName(rs.getString("ClassName"));
+                    subjects.add(subject);
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error while fetching student report", e);
+        }
+        return subjects;
+    }
+
+
 
 }

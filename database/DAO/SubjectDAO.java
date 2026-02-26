@@ -37,9 +37,8 @@ public class SubjectDAO {
                 try (ResultSet rs = rm.executeQuery()) {
                     if (rs.next()) {
                         subj.setID(rs.getInt("SubjectID"));
-                        subj.setSubjectName(rs.getString("SubjectName"));
+                        subj.setName(rs.getString("SubjectName"));
                         subj.setClassID(rs.getInt("ClassID"));
-                        subj.setTotalMarks(rs.getInt("Marks"));
 
                     } else {
                         logger.warning("Unable to get Subject.");
@@ -96,20 +95,19 @@ public class SubjectDAO {
 
     public boolean insertSubject(Subjects subj) {
         return DBUtils.runInTransaction(conn -> {
-            if (subjectExists(conn, subj.getSubjectName())) {
+            if (subjectExists(conn, subj.getName())) {
                 logger.warning("Subject already exists.");
                 return false;
             }
 
-            String subjectSQL = "INSERT INTO Subjects (SubjectName, ClassID, Marks) VALUES (?,?,?)";
+            String subjectSQL = "INSERT INTO Subjects (SubjectName, ClassID) VALUES (?,?)";
             try (PreparedStatement rm = conn.prepareStatement(subjectSQL, Statement.RETURN_GENERATED_KEYS)) {
-                rm.setString(1, subj.getSubjectName());
+                rm.setString(1, subj.getName());
                 if (subj.getClassID() != null) {
                     rm.setInt(2, subj.getClassID());
                 } else {
                     rm.setNull(2, Types.INTEGER);
                 }
-                rm.setInt(3, subj.getTotalMarks());
 
                 int rs = rm.executeUpdate();
 
@@ -125,7 +123,7 @@ public class SubjectDAO {
         });
     }
 
-    public boolean insertSubject(String className, String subjectName, int marks) {
+    public boolean insertSubject(String className, String subjectName) {
         return DBUtils.runInTransaction(conn -> {
             if (subjectExists(conn, subjectName)) {
                 logger.warning("Subject already exists.");
@@ -139,11 +137,10 @@ public class SubjectDAO {
                 return false;
             }
 
-            String subjectSQL = "INSERT INTO Subjects (SubjectName, ClassID, Marks) VALUES (?,?,?)";
+            String subjectSQL = "INSERT INTO Subjects (SubjectName, ClassID) VALUES (?,?)";
             try (PreparedStatement rm = conn.prepareStatement(subjectSQL, Statement.RETURN_GENERATED_KEYS)) {
                 rm.setString(1, subjectName);
                 rm.setInt(2, cls.getID());
-                rm.setInt(3, marks);
 
                 int rs = rm.executeUpdate();
                 return rs > 0;
@@ -185,7 +182,7 @@ public class SubjectDAO {
 
     public boolean updateSubject(Subjects oldSubject, Subjects newSubject) {
         return DBUtils.runInTransaction(conn -> {
-            if (!subjectExists(conn, oldSubject.getSubjectName())) {
+            if (!subjectExists(conn, oldSubject.getName())) {
                 logger.warning("Subject Doesnt exist.");
                 return false;
             }
@@ -194,17 +191,17 @@ public class SubjectDAO {
 
             List<Object> parameters = new ArrayList<>();
 
-            if (newSubject.getSubjectName() != null) {
+            if (newSubject.getName() != null && !newSubject.getName().isEmpty()) {
                 sql.append("SubjectName = ?,");
-                parameters.add(newSubject.getSubjectName());
+                parameters.add(newSubject.getName());
             }
 
-            // only has option of obtained marks, total are fixed at 100
-            if (newSubject.getObtMarks() != null) {
-                sql.append(" Marks = ?,");
-                parameters.add(newSubject.getObtMarks());
+            if (parameters.isEmpty()) {
+                logger.warning("No fields to update.");
+                return false;
             }
 
+            sql.setLength(sql.length() - 1); // remove trailing comma
             sql.append(" WHERE SubjectName = ?");
 
             try (PreparedStatement rm = conn.prepareStatement(sql.toString())) {
@@ -251,8 +248,7 @@ public class SubjectDAO {
             while (rs.next()) {
                 Subjects subj = new Subjects();
                 subj.setID(rs.getInt("SubjectID"));
-                subj.setSubjectName(rs.getString("SubjectName"));
-                subj.setTotalMarks(rs.getInt("Marks"));
+                subj.setName(rs.getString("SubjectName"));
                 subj.setClassID(rs.getInt("ClassID"));
                 subjects.add(subj);
             }
@@ -264,32 +260,35 @@ public class SubjectDAO {
         return new ArrayList<>();
     }
 
-    public List<Subjects> listClassSubjectswithMarks(Connection conn, String className) {
-        List<Subjects> subjects = new ArrayList<>();
-        ClassDAO classDAO = new ClassDAO();
-        ClassRoom cls = classDAO.fetchClass(conn, className);
-        if (cls.isEmpty()) {
-            logger.warning("Class does not exist.");
-            return new ArrayList<>();
-        }
+    // list subjects by class name
+    public List<Subjects> listSubjects(Connection conn, String className) {
 
-        String sql = "SELECT * FROM Subjects WHERE ClassID = ?";
-        try (PreparedStatement rm = conn.prepareStatement(sql)) {
-            rm.setInt(1, cls.getID());
+        List<Subjects> subjects = new ArrayList<>();
+        String listSubjectSQL = "SELECT * FROM Subjects WHERE ClassID = (SELECT ClassID FROM Class WHERE ClassName = ?);";
+
+        try (PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
+            rm.setString(1, className);
+
             try (ResultSet rs = rm.executeQuery()) {
+
+                if (!rs.isBeforeFirst()) {
+                    System.out.println("No Data is available.");
+                    return new ArrayList<>();
+                }
+
                 while (rs.next()) {
                     Subjects subj = new Subjects();
                     subj.setID(rs.getInt("SubjectID"));
-                    subj.setSubjectName(rs.getString("SubjectName"));
-                    subj.setTotalMarks(rs.getInt("Marks"));
-                    subj.setClassID(cls.getID());
+                    subj.setName(rs.getString("SubjectName"));
+                    subj.setClassID(rs.getInt("ClassID"));
                     subjects.add(subj);
                 }
+                return subjects;
+
             }
         } catch (SQLException e) {
-            logger.log(Level.WARNING, "Unable to list subjects for class", e);
+            logger.log(Level.WARNING, "Unable to list all Subjects", e);
         }
         return subjects;
     }
-
 }
