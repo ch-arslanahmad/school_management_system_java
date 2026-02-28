@@ -13,11 +13,12 @@ This document describes the database schema for the School Management System.
 ### 1. School
 | Column | Type | Constraints |
 |--------|------|-------------|
-| SchoolID | INTEGER | PRIMARY KEY AUTOINCREMENT |
-| SchoolName | TEXT | NOT NULL |
-| Address | TEXT | |
-| Phone | TEXT | |
-| Email | TEXT | |
+| id | INTEGER | PRIMARY KEY CHECK (id = 1) |
+| Name | TEXT | |
+| Principal | TEXT | |
+| location | TEXT | DEFAULT 'Unknown' |
+
+**Note:** Only one row allowed (CHECK id = 1).
 
 ---
 
@@ -37,7 +38,7 @@ This document describes the database schema for the School Management System.
 |--------|------|-------------|
 | StudentID | INTEGER | PRIMARY KEY AUTOINCREMENT |
 | StudentName | TEXT | NOT NULL |
-| ClassID | INTEGER | FOREIGN KEY → Class(ClassID) |
+| ClassID | INTEGER | FOREIGN KEY → Class(ClassID) ON DELETE CASCADE |
 
 ---
 
@@ -46,8 +47,9 @@ This document describes the database schema for the School Management System.
 |--------|------|-------------|
 | SubjectID | INTEGER | PRIMARY KEY AUTOINCREMENT |
 | SubjectName | TEXT | NOT NULL |
-| ClassID | INTEGER | FOREIGN KEY → Class(ClassID) |
-| Marks | INTEGER | Default: 100 |
+| ClassID | INTEGER | FOREIGN KEY → Class(ClassID) ON DELETE CASCADE |
+
+**Note:** The `Marks` column was removed. Marks are stored per-student in `StudentMarks` table.
 
 ---
 
@@ -56,8 +58,7 @@ This document describes the database schema for the School Management System.
 |--------|------|-------------|
 | TeacherID | INTEGER | PRIMARY KEY AUTOINCREMENT |
 | TeacherName | TEXT | NOT NULL |
-| SubjectID | INTEGER | FOREIGN KEY → Subjects(SubjectID) |
-| Salary | INTEGER | |
+| SubjectID | INTEGER | FOREIGN KEY → Subjects(SubjectID) ON DELETE CASCADE |
 
 ---
 
@@ -80,25 +81,28 @@ This document describes the database schema for the School Management System.
 Returns student grades with calculated percentage and letter grade.
 
 ```sql
-SELECT
+CREATE VIEW IF NOT EXISTS getGrades AS
+SELECT 
   s.StudentName,
   sub.SubjectName,
-  sub.Marks,
+  100 AS TotalMarks,
   g.ObtainedMarks,
-  ((g.ObtainedMarks * 100) / sub.Marks) || '%' AS Percentage,
+  ((g.ObtainedMarks * 100) / 100) || '%' AS Percentage,
   CASE
-    WHEN ((g.ObtainedMarks * 100) / sub.Marks) >= 90 THEN 'A'
-    WHEN ((g.ObtainedMarks * 100) / sub.Marks) >= 80 THEN 'B'
-    WHEN ((g.ObtainedMarks * 100) / sub.Marks) >= 60 THEN 'C'
-    WHEN ((g.ObtainedMarks * 100) / sub.Marks) >= 50 THEN 'D'
+    WHEN ((g.ObtainedMarks * 100) / 100) >= 90 THEN 'A'
+    WHEN ((g.ObtainedMarks * 100) / 100) >= 80 THEN 'B'
+    WHEN ((g.ObtainedMarks * 100) / 100) >= 60 THEN 'C'
+    WHEN ((g.ObtainedMarks * 100) / 100) >= 50 THEN 'D'
     ELSE 'F'
   END AS Grade,
   c.ClassName
 FROM StudentMarks g
   JOIN Student s ON s.StudentID = g.StudentID
   JOIN Subjects sub ON sub.SubjectID = g.SubjectID
-  JOIN Class c ON s.ClassID = c.ClassID
+  JOIN Class c ON s.ClassID = c.ClassID;
 ```
+
+**Note:** TotalMarks is fixed at 100 (not from Subjects table).
 
 ---
 
@@ -108,7 +112,7 @@ FROM StudentMarks g
 Ensures that when inserting grades, the student's class matches the subject's class.
 
 ```sql
-CREATE TRIGGER CheckStudentClass
+CREATE TRIGGER IF NOT EXISTS CheckStudentClass
 BEFORE INSERT ON StudentMarks
 FOR EACH ROW
 BEGIN
@@ -121,43 +125,32 @@ BEGIN
 END;
 ```
 
-### CheckObtainedMarks
-Ensures that obtained marks cannot exceed the total marks for a subject.
-
-```sql
-CREATE TRIGGER CheckObtainedMarks
-BEFORE INSERT ON StudentMarks
-FOR EACH ROW
-BEGIN
-    SELECT
-        CASE
-            WHEN NEW.ObtainedMarks > (SELECT Marks FROM Subjects WHERE SubjectID = NEW.SubjectID)
-            THEN RAISE(ABORT, 'Obtained marks cannot be greater than total marks of the subject.')
-        END;
-END;
-```
-
 ---
 
 ## Entity Relationship Diagram
 
 ```
 School
-  ↑
+  │
   │ (1:M)
-  ↓
-Class ←───────────── Student (M:1)
-  ↑                        │
-  │ (1:M)                   │ (M:1)
-  ↓                         ↓
-Subjects ←───── Teacher    Class (1:M)
-  ↑                │
-  │ (M:1)          │ (M:1)
-  ↓                ↓
-StudentMarks ←───────────── Student
-  (M:1)                  (1:M)
-  ↓
-Subjects
+  ▼
+Class ◄─────────────────── Student
+  │                           │
+  │ (1:M)                     │ (M:1)
+  ▼                           ▼
+Subjects              ┌─────── Class
+  │                   │
+  │ (1:M)             │
+  ▼                   │
+Teacher ──────────────┘
+  │
+  │ (1:M)
+  ▼
+StudentMarks ◄────────────── Student
+    │                          │
+    │ (M:1)                    │ (M:1)
+    ▼                          ▼
+Subjects ◄────────────────── Student
 ```
 
 ---
@@ -166,3 +159,4 @@ Subjects
 
 - **Naming:** The table is named `StudentMarks` as it stores numeric marks (e.g., 85, 92). The actual letter grade (A, B, C, D, F) is calculated in the `getGrades` VIEW.
 - All foreign keys use `ON DELETE CASCADE` where appropriate to maintain referential integrity.
+- Total marks is fixed at 100 for all subjects (hardcoded in Java and views).
