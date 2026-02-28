@@ -43,13 +43,29 @@ public class DBValidator {
         try (Connection conn = Database.getConnection(); Statement rm = conn.createStatement();) {
             ResultSet rs = rm.executeQuery(sqlQuery);
             if (rs.next()) {
-                logger.info("the table " + table + " exist & is not empty. ");
-                return true;
+                int count = rs.getInt(1);
+                if (count > 0) {
+                    logger.info("the table " + table + " exist & has data.");
+                    return true;
+                }
+                logger.info("the table " + table + " exists but is empty.");
+                return false;
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error while validating Table " + table + " in DB: ", e);
         }
         return false;
+    }
+
+    public boolean tableExists(String table) {
+        String sqlQuery = "SELECT 1 FROM " + table + " LIMIT 1";
+
+        try (Connection conn = Database.getConnection(); Statement rm = conn.createStatement();) {
+            rm.executeQuery(sqlQuery);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     // validate Database with Data
@@ -68,18 +84,16 @@ public class DBValidator {
 
     }
 
-    // to remove one table's data if it has data
+    // to remove one table's data
     public boolean removeTable(String table) {
         String sqlQuery = "DELETE FROM " + table;
 
         try (Connection conn = Database.getConnection(); Statement rm = conn.createStatement()) {
-            boolean rs = rm.execute(sqlQuery);
-            if (rs) {
-                logger.info("the table " + table + " exist & is not empty. ");
-                return true;
-            }
+            int rowsAffected = rm.executeUpdate(sqlQuery);
+            logger.info("Deleted " + rowsAffected + " rows from table " + table);
+            return true;
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while validating Table " + table + " in DB: ", e);
+            logger.log(Level.WARNING, "Error while deleting Table " + table + " in DB: ", e);
         }
         return false;
     }
@@ -92,23 +106,22 @@ public class DBValidator {
                 "sqlite_sequence" };
 
         try (Connection conn = Database.getConnection()) {
-            // Disable foreign keys
             try (Statement rm = conn.createStatement()) {
                 rm.execute("PRAGMA foreign_keys = OFF");
             }
 
-            // Execute all delete statements of table
             for (String t : tables) {
-                if (!removeTable(t)) {
-                    logger.warning("Table" + t + " has a problem. ");
-                    return false;
+                String sqlQuery = "DELETE FROM " + t;
+                try (Statement rm = conn.createStatement()) {
+                    int rows = rm.executeUpdate(sqlQuery);
+                    logger.info("Deleted " + rows + " rows from table " + t);
                 }
             }
 
-            // Re-enable foreign keys
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute("PRAGMA foreign_keys = ON");
             }
+            conn.commit();
             return true;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error clearing database data", e);
