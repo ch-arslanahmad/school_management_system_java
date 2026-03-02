@@ -1,5 +1,7 @@
 # School Management System
 
+**Last updated:** 2026-03-01 — files changed: `database/DAO/ClassDAO.java`, `database/DAO/StudentDAO.java`, `database/DBmaker.java`, `database/DBValidator.java`
+
 ## IMPORTANT - Read Before Editing Code
 
 This file contains design decisions, known issues, and context about this codebase. **Before making any changes**, read this file to understand the current state and priorities.
@@ -98,6 +100,17 @@ CREATE TABLE "StudentMarks" (
 
 ---
 
+## Recent Critical Fixes (applied)
+
+- Added `StudentID` to the `getGrades` view in `database/DBmaker.java` so view queries can filter by student id. (file: `database/DBmaker.java`)
+- Fixed a `PreparedStatement` misuse in `database/DAO/ClassDAO.java` (set parameters before `executeQuery`). (file: `database/DAO/ClassDAO.java`)
+- Replaced a MySQL-style upsert with SQLite-compatible `ON CONFLICT(StudentID, SubjectID) DO UPDATE` in `database/DAO/StudentDAO.java`. (file: `database/DAO/StudentDAO.java`)
+- Corrected a validation bug in `database/DAO/StudentDAO.java` (removed null-check against primitive `totalMarks`). (file: `database/DAO/StudentDAO.java`)
+
+These changes were limited to critical fixes that would otherwise prevent correct behavior. See the listed files above for the exact code edits and rationale.
+
+---
+
 ## Java Design - Denormalized Model
 
 The Java classes use a **denormalized model** for convenience - this is **by design**, not a bug.
@@ -144,33 +157,15 @@ class ClassRoom {
 ## Views & Triggers
 
 ### getGrades View
-```sql
-CREATE VIEW getGrades AS
-SELECT 
-  s.StudentName,
-  sub.SubjectName,
-  100 AS TotalMarks,
-  g.ObtainedMarks,
-  ((g.ObtainedMarks * 100) / 100) || '%' AS Percentage,
-  CASE
-    WHEN ((g.ObtainedMarks * 100) / 100) >= 90 THEN 'A'
-    WHEN ((g.ObtainedMarks * 100) / 100) >= 80 THEN 'B'
-    WHEN ((g.ObtainedMarks * 100) / 100) >= 60 THEN 'C'
-    WHEN ((g.ObtainedMarks * 100) / 100) >= 50 THEN 'D'
-    ELSE 'F'
-  END AS Grade,
-  c.ClassName
-FROM StudentMarks g
-  JOIN Student s ON s.StudentID = g.StudentID
-  JOIN Subjects sub ON sub.SubjectID = g.SubjectID
-  JOIN Class c ON s.ClassID = c.ClassID;
-```
 
 ### CheckStudentClass Trigger
 Ensures student's class matches subject's class before inserting marks.
 
 ---
 
+## Suggestions
+
+- Add a `DAO` interface that makes a role-model contract so that each `DAO` class becomes consistent and ease.
 
 
 ## When Updating This File
