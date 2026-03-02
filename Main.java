@@ -1,5 +1,6 @@
-import database.DBManager;
+import database.DBValidator;
 import database.DAO.ClassDAO;
+import database.DAO.GradeDAO;
 import database.DAO.SchoolDAO;
 import database.DAO.StudentDAO;
 import database.DAO.SubjectDAO;
@@ -7,7 +8,6 @@ import database.DAO.TeacherDAO;
 import display.ConsoleDisplay;
 import display.Input;
 import display.MenuHandler;
-import school.Actions;
 
 public class Main {
 
@@ -15,9 +15,8 @@ public class Main {
 
         // ... Menu & Input Objects
         MenuHandler call = new MenuHandler(); // for menus
-        Actions act = new Actions(); // for seperate actions
         Input input = new Input(); // for input
-        DBManager db = new DBManager();
+        DBValidator db = new DBValidator();
         ConsoleDisplay show = new ConsoleDisplay();
 
         // ... Info Block
@@ -27,46 +26,19 @@ public class Main {
                 + " the current menu/input.\n" + "========================================");
 
         // ? handles DB
-        call.handleDatabase(db, input);
 
         // ... DAO Objects
         ClassDAO room = new ClassDAO(); // ClassDAO object
-        SubjectDAO subject = new SubjectDAO(); // subjectDAO object
-        TeacherDAO teacher = new TeacherDAO(); // TeacherDAO object
-        StudentDAO student = new StudentDAO(); // StudentDAO object
+        SubjectDAO subject_dao = new SubjectDAO(); // subjectDAO object
+        TeacherDAO teacher_dao = new TeacherDAO(); // TeacherDAO object
+        StudentDAO student_dao = new StudentDAO(); // StudentDAO object
         SchoolDAO school = new SchoolDAO(); // SchoolDAO object
+        GradeDAO grade_dao = new GradeDAO(); // GradeDAO object
 
-        /*
-         * todo: solve the insert multiple methdods so it is in line with the current
-         * strucutre
-         */
 
-        boolean run = true;
-        while (run) {
-            // now show main menu
-            call.mainMenu();
-            int choice = input.validateMenuInput(6, input);
-            switch (choice) {
-            case 0 -> { // ... stop the loop
-                run = false;
-                System.out.println("Exiting!! Goodbye.");
-            }
-            // handles school INFO
-            case 1 -> call.handleSchoolMenu(input, school, act);
-            // CLASS
-            case 2 -> call.handleClassMenu(room, db, show, input);
-            // SUBJECT
-            case 3 -> call.handleSubjectMenu(subject, db, show, input);
-            // TEACHERS
-            case 4 -> call.handleTeacherMenu(teacher, db, show, input);
-            // STUDENTS
-            case 5 -> call.handleStudentMenu(student, db, show, input);
-            // handle grades of student
-            case 6 -> call.handleStudentGrades(input, student, subject, act);
-            // ... default
-            default -> System.out.println("Invalid Choice.");
-            }
-        }
+
+        // Delegate the main menu loop to MenuHandler for single responsibility
+        call.runMainLoop(input, db, show, room, subject_dao, teacher_dao, student_dao, school, grade_dao);
 
     }
 

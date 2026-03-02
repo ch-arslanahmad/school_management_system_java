@@ -1,7 +1,6 @@
 package database;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.sql.*;
 import java.util.logging.*;
 
@@ -22,15 +21,16 @@ public class Database {
     // setupConnection of DB
     public static Connection getConnection() {
         String path = "storage/people.db";
+        // Ensure storage directory exists so SQLite can create the DB file if missing
         try {
-            File dbFile = new File("storage/people.db");
-            if (!dbFile.exists()) {
-                throw new FileNotFoundException("File Not found: "); // stop if file is not found
+            File storageDir = new File("storage");
+            if (!storageDir.exists()) {
+                storageDir.mkdirs();
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-
+        } catch (SecurityException se) {
+            logger.log(Level.WARNING, "Unable to create storage directory", se);
         }
+
         Connection conn = null;
         try {
             // Load JDBC Driver
@@ -39,10 +39,7 @@ public class Database {
             conn = DriverManager.getConnection("jdbc:sqlite:" + path);
             conn.setAutoCommit(false); // universal auto commit - disabled
         } catch (Exception e) {
-            System.out.print("Error establishing connection with database/sqlite: ");
-            e.printStackTrace();
-
-            logger.warning("Error establishing connection with database/sqlite");
+            logger.log(Level.WARNING, "Error establishing connection with database/sqlite", e);
         }
 
         return conn;

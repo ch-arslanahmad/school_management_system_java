@@ -1,73 +1,81 @@
 package classroom;
 
-import java.util.List;
-
-import people.Student;
-
 public class ClassRoom {
 
-    private int classID;
+    private Integer classID;
     private String className;
-    List<Subjects> subjects;
-    Subjects subject;
-    Student student;
+    private Integer tuition;
+    private Integer stationary;
+    private Integer paper;
 
     public ClassRoom(String className) {
         this.className = className;
     }
 
-    public ClassRoom(String className, List<Subjects> subjects) {
+    public ClassRoom(String className, Integer tuition, Integer stationary, Integer paper) {
         this.className = className;
-        this.subjects = subjects;
+        this.tuition = tuition;
+        this.stationary = stationary;
+        this.paper = paper;
     }
 
-    // for listAll() method in ClassDAO
-    public ClassRoom(String className, Subjects subject, Student student) {
+    public ClassRoom(Integer classID, String className, Integer tuition, Integer stationary, Integer paper) {
+        this.classID = classID;
         this.className = className;
-        this.subject = subject;
-        this.student = student;
-    }
-
-    // FEES OF CLASS
-
-    int tuition;
-    int stationary;
-    int paper;
-
-    public ClassRoom(int tuition, int stationary, int paper) {
         this.tuition = tuition;
         this.stationary = stationary;
         this.paper = paper;
     }
 
     public ClassRoom() {
-
     }
 
-    public int getClassID() {
+    public boolean isEmpty() {
+        return className == null;
+    }
+
+    public Integer getID() {
         return classID;
     }
 
-    public String getClassName() {
+    public String getName() {
         return className;
     }
 
-    // GET FEES
-
-    public int getTuition() {
+    public Integer getTuitionFee() {
         return tuition;
     }
 
-    public int getStationary() {
+    public Integer getStationaryFee() {
         return stationary;
     }
 
-    public int getPaper() {
+    public Integer getPaperFee() {
         return paper;
     }
 
-    public String toString() {
-        return className + " ID is " + classID + ".";
+    public void setName(String className) {
+        this.className = className;
     }
 
+    public void setID(Integer classID) {
+        this.classID = classID;
+    }
+
+    public void setTuitionFee(Integer tuition) {
+        this.tuition = tuition;
+    }
+
+    public void setStationaryFee(Integer stationary) {
+        this.stationary = stationary;
+    }
+
+    public void setPaperFee(Integer paper) {
+        this.paper = paper;
+    }
+
+    public String toString() {
+        return "Class: " + className + "\nID: " + classID + ".\nTuition Fee: " + tuition + "\nStationary Fee: "
+                + stationary + "\nPaper Fee: " + paper;
+    }
 }

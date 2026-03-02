@@ -1,9 +1,13 @@
 package people;
 
 import classroom.ClassRoom;
+import classroom.Subjects;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Student extends Person {
     ClassRoom room;
+    List<Subjects> subjects = new ArrayList<>();
 
     // Constructor for method listStudent()
     public Student(String name, ClassRoom room) {
@@ -27,18 +31,43 @@ public class Student extends Person {
     }
 
     public String getClassName() {
-        return room.getClassName();
+        return room != null ? room.getName() : null;
     }
 
-    // Override Methods
+    // getter
     @Override
-    public int getID() {
+    public Integer getID() {
         return id;
     }
 
     @Override
     public String getName() {
         return name;
+    }
+
+    public ClassRoom getClassRoom() {
+        return room;
+    }
+
+    // setter
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setID(Integer id) {
+        this.id = id;
+    }
+
+    public void setClassRoom(ClassRoom room) {
+        this.room = room;
+    }
+
+    public void addSubject(Subjects subject) {
+        subjects.add(subject);
+    }
+
+    public List<Subjects> getSubjects() {
+        return subjects;
     }
 
     @Override

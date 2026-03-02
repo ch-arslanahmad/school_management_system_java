@@ -2,11 +2,10 @@
 package database.DAO;
 
 // package imports
-import database.*;
-import display.ConsoleDisplay;
 import display.LogHandler;
-import people.Student;
 import classroom.*;
+import database.DBUtils;
+
 // imports
 import java.sql.*;
 import java.util.ArrayList;
@@ -24,353 +23,266 @@ public class ClassDAO {
         LogHandler.createLog(logger, "ClassDAO");
     }
 
-    String classNameDAO;
-    int classID;
+    public ClassRoom fetchClass(Connection conn, String name) {
+        ClassRoom cls = new ClassRoom(name);
+        String classIDSQL = "SELECT * FROM Class WHERE ClassName = ?;";
 
-    ClassRoom room = new ClassRoom();
+        try {
 
-    // method to get ID from Class (-1 Error Code)
-    public int getIDfromClass(String name) {
-        String classIDSQL = "SELECT ClassID FROM Class where ClassName = ?;";
-        // No reasonable ID will reach this amount, hence the reason of this value
-        classID = -1;
-        try (Connection conn = Database.getConnection();
-                PreparedStatement rm = conn.prepareStatement(classIDSQL)) {
-
-            rm.setString(1, name);
-
-            ResultSet rs = rm.executeQuery();
-
-            if (rs.next()) {
-                // fetches and stores the ClassID in a variable from the matched row
-                classID = rs.getInt("ClassID");
-                logger.info(name + " ID is: " + classID);
-            } else {
-                logger.warning("Unable to get ClassID.");
+            if (!ClassExists(conn, cls.getName())) {
+                logger.warning("Class NOT found.");
+                return new ClassRoom();
             }
 
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while fetching ClassID.", e);
-        }
-
-        return classID;
-
-    }
-
-    // see if class exists
-    public boolean ClassExists(String name) {
-        // SQL query to check
-        String check = "SELECT COUNT(*) AS count FROM Class WHERE ClassName = ?;";
-
-        // prepared statement in try block
-        try (Connection conn = Database.getConnection();
-                PreparedStatement rm = conn.prepareStatement(check)) {
-
-            // adding value to query
-            rm.setString(1, name);
-
-            /*
-             * 1. We use executeUpdate() because we are not adding, removing anything we are
-             * simply executing the query to extract some value. 2. executeQuery returns
-             * value in ResultSet Object hence that value is also stored ResultSet variable,
-             * 'rs'.
-             */
-
-            try (ResultSet rs = rm.executeQuery()) {
-
-                /*
-                 * ResultSet (rs) returns a table with one row. It does not automatically point
-                 * to the matched column. To do that you do rs.next(). - res.next() returns row.
-                 * - true if more than 1 - false if 0
-                 * 
-                 * 
-                 * NOTE: THINK OF MAKING A METHOD TO SEE THE ID FROM NAME LIKE getIDClass() or
-                 * smthing.
-                 */
-
-                if (rs.next()) {
-                    int count = rs.getInt("count");
-                    if (count > 0) {
-                        System.out.println("Match found");
-                        return true;
+            try (PreparedStatement rm = conn.prepareStatement(classIDSQL)) {
+                rm.setString(1, name);
+                try (ResultSet rs = rm.executeQuery()) {
+                    if (rs.next()) {
+                        // fetches and stores the ClassID in a variable from the matched row
+                        cls.setID(rs.getInt("ClassID"));
+                        cls.setTuitionFee(rs.getInt("Tuition_Fee"));
+                        cls.setStationaryFee(rs.getInt("Stationary_Fee"));
+                        cls.setPaperFee(rs.getInt("Paper_Fee"));
                     } else {
-                        System.out.println("No match found");
-                        return false;
+                        logger.warning("Unable to get Class.");
                     }
                 }
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Error Executing ClassExists Query");
             }
-
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error finding Class Existance: ", e);
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error while fetching Class.", e);
         }
-        return false;
+
+        return cls;
+
     }
 
-    // method to get Validated ID from Class (-1 Error Code)
-    public int getValidClassID(String name) {
-        // getID only if class exists
-        if (!ClassExists(name)) {
-            logger.info("Class Does Not exist");
-            return -1;
-        } else {
-            // return the ID from class
-            return getIDfromClass(name);
+    public ClassRoom fetchClass(Connection conn, int id) {
+        ClassRoom cls = new ClassRoom();
+        cls.setID(id);
+        String sql = "SELECT * FROM Class WHERE ClassID = ?;";
+
+        try {
+
+            if (!ClassExists(conn, cls.getID())) {
+                logger.warning("Class NOT found.");
+                return new ClassRoom();
+            }
+
+            try (PreparedStatement rm = conn.prepareStatement(sql)) {
+                rm.setInt(1, id);
+
+                try (ResultSet rs = rm.executeQuery()) {
+                    if (rs.next()) {
+                        cls.setName(rs.getString("ClassName"));
+                        cls.setTuitionFee(rs.getInt("Tuition_Fee"));
+                        cls.setStationaryFee(rs.getInt("Stationary_Fee"));
+                        cls.setPaperFee(rs.getInt("Paper_Fee"));
+                    } else {
+                        logger.warning("Unable to get Class.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error while fetching Class by ID.", e);
         }
 
+        return cls;
+
+    }
+
+    // see if class exists by name
+    public boolean ClassExists(Connection conn, String name) {
+        String check = "SELECT 1 FROM Class WHERE ClassName = ?;";
+
+        try (PreparedStatement rm = conn.prepareStatement(check)) {
+            rm.setString(1, name);
+
+            try (ResultSet rs = rm.executeQuery()) {
+                if (rs.next()) {
+                    // If rs.next() returns true, a row exists - meaning class exists
+                    logger.info("Match found, Class Exists.");
+                    return true;
+                }
+                logger.warning("No match found, Class Does Not Exist.");
+                return false;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error checking Class existence.", e);
+            return false;
+        }
+    }
+
+    // see if class exists by ID
+    public boolean ClassExists(Connection conn, int id) {
+        String check = "SELECT 1 FROM Class WHERE ClassID = ?;";
+
+        try (PreparedStatement rm = conn.prepareStatement(check)) {
+            rm.setObject(1, id, Types.INTEGER);
+
+            try (ResultSet rs = rm.executeQuery()) {
+                if (rs.next()) {
+                    // If rs.next() returns true, a row exists - meaning class exists
+                    logger.info("Match found, Class Exists.");
+                    return true;
+                }
+                logger.warning("No match found, Class Does Not Exist.");
+                return false;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error checking Class existence.", e);
+            return false;
+        }
     }
 
     // to insert a class
-    public boolean insertClass(String name) {
-        // SQL query
-        String classSQL = "INSERT INTO Class (ClassName) VALUES (?)";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement rm = conn.prepareStatement(classSQL);) {
-            // set values in the query
-            rm.setString(1, name);
+    public boolean insertClass(ClassRoom cls) {
 
-            // execute query
-            int rs = rm.executeUpdate();
-
-            System.out.println(rs);
-            if (rs > 0 || rs == 1) {
-                // confirmation
-                logger.info("Class Added");
-                conn.commit(); // commit
-                return true;
-            } else {
-                logger.warning("Class Not Added.");
-                conn.rollback(); // rollback
+        return DBUtils.runInTransaction(conn -> {
+            if (ClassExists(conn, cls.getName())) {
+                logger.warning("Class already exists.");
                 return false;
             }
 
-        } catch (Exception e) {
-            // writing text with errors
-            logger.log(Level.WARNING, "Error while Inserting Class: ", e);
-        }
-        return false;
-    }
+            /**
+             * <p>
+             * preparedStatement(query, Statement.RETURN_GENERATED_KEYS) is used to execute
+             * parameterized SQL queries, which helps
+             * prevent SQL injection attacks and allows for efficient query execution.
+             * 
+             * Here ``Statement.RETURN_GENERATED_KEYS`` is used to indicate that we want to
+             * retrieve any auto-generated keys (like an auto-incremented ID) that result
+             * from executing the query. This is particularly useful when inserting new
+             * records into a database, as it allows us to easily obtain the unique
+             * identifier of the newly inserted record without needing to execute a separate
+             * query.
+             * 
+             */
 
-    // to insert a class with fees
-    public boolean insertWithClassFees(String className, int tuition, int stationary, int exam) {
+            String classSQL = "INSERT INTO Class(ClassName, Tuition_Fee,Stationary_Fee,Paper_Fee) VALUES(?,?,?,?)";
+            try (PreparedStatement rm = conn.prepareStatement(classSQL, Statement.RETURN_GENERATED_KEYS);) {
+                // set values in the query
+                rm.setString(1, cls.getName());
+                rm.setObject(2, cls.getTuitionFee(), Types.INTEGER);
+                rm.setObject(3, cls.getStationaryFee(), Types.INTEGER);
+                rm.setObject(4, cls.getPaperFee(), Types.INTEGER);
+                // execute query
+                int rs = rm.executeUpdate();
 
-        if (ClassExists(className)) {
-            logger.warning("Class already exists.");
-            return false;
-        }
+                ResultSet ID = rm.getGeneratedKeys();
 
-        String inputFees = "INSERT INTO Class(ClassName, Tuition_Fee,Stationary_Fee,Paper_Fee) VALUES(?,?,?,?)";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement rm = conn.prepareStatement(inputFees)) {
-            rm.setInt(1, tuition);
-            rm.setInt(2, stationary);
-            rm.setInt(3, exam);
-            if (rm.executeUpdate() > 0) {
-                conn.commit(); // commit
-                return true;
-            } else {
-                logger.warning("Unable to add Class with Fees.");
-                conn.rollback(); // rollback
-                return false;
-            }
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error adding Class with fees: ", e);
-        }
-        return false;
-    }
-
-    public boolean deleteClass(String name) {
-        if (!(ClassExists(name))) {
-            logger.warning("No Match found");
-            return false;
-        }
-        String deleteClassSQL = "DELETE FROM Class WHERE ClassName = ?";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
-            // set values in the query
-            rm.setString(1, name);
-
-            // execute query
-            int rs = rm.executeUpdate();
-
-            if (rs > 0 || rs == 1) {
-                // confirmation
-                logger.info("Class Deleted");
-                conn.commit(); // commit
-                return true;
-            } else {
-                logger.warning("Class unable to delete.");
-                conn.rollback();
-                return false; // rollback
-            }
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while deleting Class: ", e);
-        }
-
-        return false;
-
-    }
-
-    // update class row (classname)
-    public boolean updateClass(String name, String updateName) {
-
-        if (!ClassExists(name)) {
-            logger.warning("Class Doesnt exist.");
-            return false;
-        }
-
-        if (ClassExists(updateName)) {
-            logger.warning("Updated Name: " + updateName + "' name already exists.");
-
-        }
-        String updateClass = "UPDATE Class SET ClassName = ? WHERE ClassName = ?";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement rm = conn.prepareStatement(updateClass)) {
-            rm.setString(1, updateName);
-            rm.setString(2, name);
-
-            int rs = rm.executeUpdate();
-            if (rs > 0) {
-                conn.commit(); // commit if true
-                logger.info("Committed Successfully");
-                return true;
-            } else {
-                conn.rollback(); // rollback if error
-                logger.info("Committed Unsuccessfully");
-                return false;
-            }
-            // for the most part, as autocommit is disabled.
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while updating Class: ", e);
-        }
-        return false;
-    }
-
-    ConsoleDisplay display = new ConsoleDisplay();
-
-    // list all Class+ -- FIX THIS - THIS WILL REQUIRE SOMETHING MORE DETAILED AS IT
-    // MAY BE BEST TO LIST:
-    // - list all classes
-    // - list all subjects of the classes
-    // - list all students of the class
-    public List<ClassRoom> listAll() {
-        List<ClassRoom> rooms = new ArrayList<>();
-
-        // Query to list all Class
-        String listAllSQL = "SELECT Class.ClassName, Subjects.SubjectName, Student.StudentName "
-                + "FROM Class " + "LEFT JOIN Student ON Student.ClassID = Class.ClassID "
-                + "LEFT JOIN Subjects ON Subjects.ClassID = Class.ClassID";
-        // try-block
-        try (Connection conn = Database.getConnection();
-                PreparedStatement rm = conn.prepareStatement(listAllSQL)) {
-
-            // variable to count total rows printed
-            // inner try-block to fetch and display each row
-            try (ResultSet rs = rm.executeQuery()) {
-                // System.out.printf("%-20s | %-20s | %-20s\n", "Class", "Subject", "Student");
-
-                // loop to display every row
-                while (rs.next()) {
-                    ClassRoom room = new ClassRoom(rs.getString("ClassName"),
-                            new Subjects(rs.getString("SubjectName")),
-                            new Student(rs.getString("StudentName")));
-                    rooms.add(room);
-                    // display each row
-                    // display.displayf(rs.getString("ClassName"), rs.getString("SubjectName"),
-                    // rs.getString("StudentName"));
+                if (ID.next()) {
+                    int genID = ID.getInt(1);
+                    logger.info("Inserted Class with ID: " + genID);
+                    cls.setID(genID);
                 }
-                return rooms;
-            } catch (SQLException e) {
-                logger.log(Level.WARNING,
-                        "Error while executing Query to List classes with details: ", e);
+
+                return rs > 0; // return true if at least one row is affected, otherwise false
+            }
+        });
+    }
+
+    public boolean deleteClass(ClassRoom cls) {
+
+        return DBUtils.runInTransaction(conn -> {
+            String deleteClassSQL = "DELETE FROM Class WHERE ClassID = ?";
+            try (PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
+                // set values in the query
+                rm.setObject(1, cls.getID(), Types.INTEGER);
+
+                // execute query
+                int rs = rm.executeUpdate();
+
+                return rs > 0;
+            }
+        });
+    }
+
+    // update class row (classname) by any value
+    public boolean updateClass(ClassRoom oldClass, ClassRoom newClass) {
+
+        /**
+         * <p>
+         * Using `CheckById` for old class, to see its existance.
+         * Using `CheckByName` for new class, to see if the updated name already exists,
+         * as no duplicate names are allowed (for classes)
+         * 
+         */
+
+        return DBUtils.runInTransaction(conn -> {
+            if (!ClassExists(conn, oldClass.getID())) {
+                logger.warning("Class Doesnt exist.");
+                return false;
             }
 
-        } catch (SQLException e) {
+            if (ClassExists(conn, newClass.getName())) {
+                logger.warning("Updated Name: " + newClass.getName() + "' name already exists.");
+                return false;
+            }
 
-            logger.log(Level.WARNING, "Error while listing Classes: ", e);
-        }
+            StringBuilder sql = new StringBuilder("UPDATE Class SET ");
 
-        return new ArrayList<>();
+            List<Object> parameters = new ArrayList<>();
 
+            if (newClass.getName() != null) {
+                sql.append("ClassName = ?,");
+                parameters.add(newClass.getName());
+            }
+            if (newClass.getTuitionFee() != null) {
+                sql.append(" Tuition_Fee = ?,");
+                parameters.add(newClass.getTuitionFee());
+            }
+            if (newClass.getStationaryFee() != null) {
+                sql.append(" Stationary_Fee = ?,");
+                parameters.add(newClass.getStationaryFee());
+            }
+            if (newClass.getPaperFee() != null) {
+                sql.append(" Paper_Fee = ?,");
+                parameters.add(newClass.getPaperFee());
+            }
+
+            sql.append(" WHERE ClassID = ?");
+
+            try (PreparedStatement rm = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < parameters.size(); i++) {
+                    rm.setObject(i + 1, parameters.get(i));
+                }
+                rm.setObject(parameters.size() + 1, oldClass.getID(), Types.INTEGER);
+
+                int rs = rm.executeUpdate();
+                return rs > 0; // return true if 1 row is affected.
+
+            }
+        });
     }
 
     // list All Classes
-    public List<ClassRoom> listClass() {
-        List<ClassRoom> classroom = new ArrayList<>();
-        String listClassSQL = "SELECT ClassName FROM Class";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement rm = conn.prepareStatement(listClassSQL)) {
-            try (ResultSet rs = rm.executeQuery()) {
-                if (!rs.isBeforeFirst()) {
-                    System.out.println("No Data is available.");
-                    return new ArrayList<>();
-                } else {
-                    while (rs.next()) {
-                        classroom.add(new ClassRoom(rs.getString("ClassName")));
-                    }
-                    return classroom;
-                }
-            } catch (SQLException e) {
-                logger.log(Level.WARNING, "Unable to return Classes: ", e);
+    public List<ClassRoom> listClass(Connection conn) {
+
+        List<ClassRoom> classrooms = new ArrayList<>();
+        String listClassSQL = "SELECT * FROM Class";
+        try (PreparedStatement rm = conn.prepareStatement(listClassSQL);
+                ResultSet rs = rm.executeQuery()) {
+
+            if (!rs.isBeforeFirst()) {
+                System.out.println("No Data is available.");
+                return new ArrayList<>();
             }
+            while (rs.next()) {
+
+                ClassRoom cls = new ClassRoom(rs.getInt("ClassID"), rs.getString("ClassName"), rs.getInt("Tuition_Fee"),
+                        rs.getInt("Stationary_Fee"), rs.getInt("Paper_Fee"));
+                classrooms.add(cls);
+            }
+            return classrooms;
 
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Unable to list all Classes", e);
         }
-
         return new ArrayList<>();
     }
 
-    public boolean updateClassFees(String className, int tuition, int stationary, int exam) {
-
-        if (!ClassExists(className)) {
-            logger.warning("Class does not exist.");
-            return false;
-        }
-
-        String inputFees = "UPDATE Class SET Tuition_Fee = ?, Stationary_Fee = ?, Paper_Fee = ? WHERE ClassName = ?";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement rm = conn.prepareStatement(inputFees)) {
-            rm.setInt(1, tuition);
-            rm.setInt(2, stationary);
-            rm.setInt(3, exam);
-            if (rm.executeUpdate() > 0) {
-                conn.commit(); // commit if true
-                return true;
-            } else {
-                logger.warning("Unable to update Fees of Class.");
-                conn.rollback(); // rollback if error
-                return false;
-            }
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error updating Class fees: ", e);
-        }
-        return false;
-    }
-
-    // GET FEE OF A CLASS
-    public ClassRoom getClassFees(String Class) {
-        String feeSQL = "SELECT Tuition_Fee, Stationary_Fee, Paper_Fee FROM Class WHERE ClassName = ?";
-        try (Connection conn = Database.getConnection();
-                PreparedStatement rm = conn.prepareStatement(feeSQL)) {
-            rm.setString(1, Class);
-            try (ResultSet rs = rm.executeQuery()) {
-                if (!rs.isBeforeFirst()) {
-                    System.out.println("No Data is available.");
-                }
-                while (rs.next()) {
-                    return new ClassRoom(rs.getInt("Tuition_Fee"), rs.getInt("Stationary_Fee"),
-                            rs.getInt("Paper_Fee"));
-                }
-            } catch (SQLException e) {
-                logger.log(Level.WARNING, "Error while returning Fees of a Class: ", e);
-            }
-
-        } catch (SQLException e) {
-            logger.log(Level.WARNING, "Error while get Fees of a Class: ", e);
-        }
-        return new ClassRoom();
+    public ClassRoom getClassFees(Connection conn, String className) {
+        return fetchClass(conn, className);
     }
 
 }

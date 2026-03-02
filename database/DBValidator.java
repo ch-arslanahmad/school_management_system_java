@@ -6,24 +6,24 @@ import java.util.logging.*;
 
 import display.LogHandler;
 
-public class DBManager {
+public class DBValidator {
     // variables for LOGGing
-    private static final Logger logger = Logger.getLogger(DBManager.class.getName());
+    private static final Logger logger = Logger.getLogger(DBValidator.class.getName());
 
     // STATIC block for **LOGGING**
     static {
-        LogHandler.createLog(logger, "DBManager");
+        LogHandler.createLog(logger, "DBValidator");
     }
 
     // Checking, does DB file exists?
     public boolean DBfileExists() {
-        File DB = new File("database/people.db");
+        File DB = new File("storage/people.db");
         if (DB.exists()) {
             String checkStructure = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
             try (Connection conn = Database.getConnection();
-                    PreparedStatement rm = conn.prepareStatement(checkStructure)) {
+                    Statement rm = conn.createStatement()) {
 
-                ResultSet rs = rm.executeQuery();
+                ResultSet rs = rm.executeQuery(checkStructure);
                 if (rs.next()) {
                     logger.info("The file exists with a structure.");
                     return true;
@@ -40,11 +40,16 @@ public class DBManager {
     public boolean testTable(String table) {
         String sqlQuery = "SELECT COUNT(*) FROM " + table;
 
-        try (Connection conn = Database.getConnection(); Statement rm = conn.createStatement()) {
-            boolean rs = rm.execute(sqlQuery);
-            if (rs) {
-                logger.info("the table " + table + " exist & is not empty. ");
-                return true;
+        try (Connection conn = Database.getConnection(); Statement rm = conn.createStatement();) {
+            ResultSet rs = rm.executeQuery(sqlQuery);
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                if (count > 0) {
+                    logger.info("the table " + table + " exist & has data.");
+                    return true;
+                }
+                logger.info("the table " + table + " exists but is empty.");
+                return false;
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error while validating Table " + table + " in DB: ", e);
@@ -52,10 +57,21 @@ public class DBManager {
         return false;
     }
 
+    public boolean tableExists(String table) {
+        String sqlQuery = "SELECT 1 FROM " + table + " LIMIT 1";
+
+        try (Connection conn = Database.getConnection(); Statement rm = conn.createStatement();) {
+            rm.executeQuery(sqlQuery);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     // validate Database with Data
     public boolean DBvalidate() {
         if (DBfileExists()) {
-            String[] tables = { "School", "Class", "Subjects", "Student", "Teacher", "Grade" };
+            String[] tables = { "School", "Class", "Subjects", "Student", "Teacher", "StudentMarks" };
             for (String t : tables) {
                 if (!testTable(t)) {
                     return false;
@@ -68,18 +84,16 @@ public class DBManager {
 
     }
 
-    // to remove one table's data if it has data
+    // to remove one table's data
     public boolean removeTable(String table) {
         String sqlQuery = "DELETE FROM " + table;
 
         try (Connection conn = Database.getConnection(); Statement rm = conn.createStatement()) {
-            boolean rs = rm.execute(sqlQuery);
-            if (rs) {
-                logger.info("the table " + table + " exist & is not empty. ");
-                return true;
-            }
+            int rowsAffected = rm.executeUpdate(sqlQuery);
+            logger.info("Deleted " + rowsAffected + " rows from table " + table);
+            return true;
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Error while validating Table " + table + " in DB: ", e);
+            logger.log(Level.WARNING, "Error while deleting Table " + table + " in DB: ", e);
         }
         return false;
     }
@@ -88,27 +102,26 @@ public class DBManager {
         if (!DBvalidate()) {
             return false;
         }
-        String[] tables = { "Grade", "Student", "Teacher", "Subjects", "Class", "School",
+        String[] tables = { "StudentMarks", "Student", "Teacher", "Subjects", "Class", "School",
                 "sqlite_sequence" };
 
         try (Connection conn = Database.getConnection()) {
-            // Disable foreign keys
             try (Statement rm = conn.createStatement()) {
                 rm.execute("PRAGMA foreign_keys = OFF");
             }
 
-            // Execute all delete statements of table
             for (String t : tables) {
-                if (!removeTable(t)) {
-                    logger.warning("Table" + t + " has a problem. ");
-                    return false;
+                String sqlQuery = "DELETE FROM " + t;
+                try (Statement rm = conn.createStatement()) {
+                    int rows = rm.executeUpdate(sqlQuery);
+                    logger.info("Deleted " + rows + " rows from table " + t);
                 }
             }
 
-            // Re-enable foreign keys
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute("PRAGMA foreign_keys = ON");
             }
+            conn.commit();
             return true;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error clearing database data", e);

@@ -2,12 +2,11 @@ package display;
 
 import java.util.List;
 import java.util.logging.*;
+import java.sql.*;
 
 import classroom.ClassRoom;
 import classroom.Subjects;
-import database.DAO.ClassDAO;
-import database.DAO.SchoolDAO;
-import database.DAO.StudentDAO;
+import database.DAO.*;
 import people.Student;
 import school.School;
 
@@ -47,11 +46,9 @@ public class ConsoleDisplay implements Display {
     // --- Student Info ---
     void studentInfoReport(String name, String className, int ID) {
         try {
-
             System.out.println("Name: " + name);
             System.out.println("ID: " + ID);
             System.out.println("ClassName: " + className);
-
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error printing Student Info: ", e);
         }
@@ -60,22 +57,19 @@ public class ConsoleDisplay implements Display {
     // --- ReportCard Table Header ---
     void TableReport(List<Subjects> data) {
         try {
-             displayf("Subjects", "Total Marks", "Obtained Marks", "Percentage", "Grade");
+            displayf("Subjects", "Total Marks", "Obtained Marks", "Percentage", "Grade");
             for (Subjects s : data) {
-                displayf(s.getSubjectName(), String.valueOf(s.getMarks()),
-                        String.valueOf(s.getObtmarks()), String.valueOf(s.getPercentage()),
-                        String.valueOf(s.getGrade(s.getPercentage())));
+                displayf(s.getName(), String.valueOf(s.getTotalMarks()),
+                        String.valueOf(s.getObtMarks()), String.valueOf(s.getPercentage()),
+                        String.valueOf(Subjects.findGrade(s.getPercentage())));
             }
-
-        } catch (
-
-        Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     // --- Report Totals ---
-    void ReportTotals(int totalMarks, int Obtmarks, double totalPercentage, char Grade) {
+    void ReportTotals(int totalMarks, int Obtmarks, double totalPercentage, String Grade) {
         System.out.println("---TOTALS---");
         System.out.println("Total Marks: " + totalMarks);
         System.out.println("Total Obtained Marks: " + Obtmarks);
@@ -85,10 +79,14 @@ public class ConsoleDisplay implements Display {
 
     // --- Footer - Signatories ---
     void sign() {
-        try {
+        try (Connection conn = database.Database.getConnection()) {
             SchoolDAO method = new SchoolDAO();
-            School school = method.getSchoolInfo();
-            System.out.println(school.getPrincipal() + "\n(Signature)");
+            School school = method.fetchSchool(conn);
+            if (school != null) {
+                System.out.println(school.getPrincipal() + "\n(Signature)");
+            } else {
+                System.out.println("Principal information not available.");
+            }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error printing principal name: ", e);
         }
@@ -96,32 +94,40 @@ public class ConsoleDisplay implements Display {
 
     // handle the FULL creation of whole Student Report
     public void handleStudentReport(String StudentName) {
-        try {
-            StudentDAO student = new StudentDAO();
-            if (!student.studentExists(StudentName)) {
+        try (Connection conn = database.Database.getConnection()) {
+            StudentDAO student_dao = new StudentDAO();
+
+
+            GradeDAO grade_dao = new GradeDAO();
+
+            Student student = student_dao.fetchStudent(conn, StudentName);
+
+            if (student.getName() == null) {
                 System.out.println("Student does not exist.");
                 return;
             }
 
-            List<Subjects> data = student.fetchStudentReport(new Student(StudentName));
+            List<Subjects> data = grade_dao.fetchStudentReport(conn, StudentName);
             // fetching data from database
 
             System.out.println("STUDENT REPORT");
 
-            studentInfoReport(StudentName, student.fetchStudentClass(StudentName),
-                    student.fetchStudentID(StudentName)); // Writes
-            // Student Info
+            Student std = student_dao.fetchStudent(conn, StudentName);
+
+            studentInfoReport(StudentName, std.getClassName(),
+                    std.getID()); // Writes Student Info
             int totalMarks = 0;
             int ObtMarks = 0;
             double totalPercentage = 0;
 
             for (Subjects d : data) {
-                totalMarks += d.getMarks();
-                ObtMarks += d.getObtmarks();
+                totalMarks += d.getTotalMarks();
+                ObtMarks += d.getObtMarks();
             }
-            totalPercentage = (ObtMarks * 100) / totalMarks;
-            Subjects s = new Subjects();
-            char finalGrade = s.getGrade(totalPercentage);
+            if (totalMarks > 0) {
+                totalPercentage = (ObtMarks * 100.0) / totalMarks;
+            }
+            String finalGrade = Subjects.findGrade(totalPercentage);
             TableReport(data); // create report table
 
             ReportTotals(totalMarks, ObtMarks, totalPercentage, finalGrade); // report totals
@@ -129,6 +135,8 @@ public class ConsoleDisplay implements Display {
             System.out.println(""); // line break
             sign(); // footer of signatories
 
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database connection error in handleStudentReport: ", e);
         } catch (Exception e) {
             System.err.println("Error making Student Report PDF.");
             e.printStackTrace();
@@ -136,16 +144,16 @@ public class ConsoleDisplay implements Display {
     }
 
     public void handleFeeReciept(String StudentName) {
-        try {
+        try (Connection conn = database.Database.getConnection()) {
             StudentDAO student = new StudentDAO();
-            if (!student.studentExists(StudentName)) {
+            if (!student.studentExists(conn, StudentName)) {
                 System.out.println("Student does not exist.");
                 return;
             }
-            Student std = student.getStudentInfo(StudentName);
+            Student std = student.fetchStudent(conn, StudentName);
             SchoolDAO school = new SchoolDAO();
 
-            School info = school.getSchoolInfo();
+            School info = school.fetchSchool(conn);
 
             System.out.println(info.getName());
             System.out.println("PAYMENT VOUCHER");
@@ -162,11 +170,11 @@ public class ConsoleDisplay implements Display {
 
             System.out.println("Remarks: MONTHLY FEE");
             ClassDAO fee = new ClassDAO();
-            ClassRoom room = fee.getClassFees(std.getClassName());
+            ClassRoom room = fee.getClassFees(conn, std.getClassName());
 
-            int tuition = room.getTuition();
-            int stationary = room.getStationary();
-            int paper = room.getPaper();
+            int tuition = room.getTuitionFee();
+            int stationary = room.getStationaryFee();
+            int paper = room.getPaperFee();
 
             int total = tuition + stationary + paper;
 
@@ -193,14 +201,19 @@ public class ConsoleDisplay implements Display {
     }
 
     public void displaySchoolInfo(SchoolDAO info) {
-        School s = info.getSchoolInfo();
-        if (s == null) {
-            System.out.println("It is returning null;");
-            return;
+        try (Connection conn = database.Database.getConnection()) {
+            School s = info.fetchSchool(conn);
+            if (s == null) {
+                System.out.println("School information not available.");
+                return;
+            }
+            System.out.println("School Name: " + s.getName());
+            System.out.println("Principal Name: " + s.getPrincipal());
+            System.out.println("Location: " + s.getlocation());
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database connection error in displaySchoolInfo: ", e);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error displaying school info: ", e);
         }
-        System.out.println("School Name: " + s.getName());
-        System.out.println("Principal Name: " + s.getPrincipal());
-        System.out.println("Location: " + s.getlocation());
     }
-
 }
