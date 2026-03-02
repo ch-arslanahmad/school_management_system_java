@@ -4,8 +4,7 @@ package display;
 import java.awt.Color; // for cell background color
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.Year;
 import java.util.List;
 import java.util.logging.*;
@@ -19,9 +18,7 @@ import people.Student;
 import people.Teacher;
 import classroom.ClassRoom;
 import classroom.Subjects;
-import database.DAO.ClassDAO;
-import database.DAO.SchoolDAO;
-import database.DAO.StudentDAO;
+import database.DAO.*;
 import school.School;
 
 public class PdfDisplay {
@@ -59,7 +56,7 @@ public class PdfDisplay {
 
             table.addCell(headCell("Class"));
             for (ClassRoom cls : classes) {
-                table.addCell(styleCell(cls.getClassName()));
+                table.addCell(styleCell(cls.getName()));
             }
             document.add(table);
         } catch (Exception e) {
@@ -84,7 +81,7 @@ public class PdfDisplay {
             table.addCell(headCell("Subject"));
             table.addCell(headCell("Class"));
             for (Subjects s : subjects) {
-                table.addCell(styleCell(s.getSubjectName()));
+                table.addCell(styleCell(s.getName()));
                 table.addCell(styleCell(s.getClassName()));
             }
             document.add(table);
@@ -236,7 +233,7 @@ public class PdfDisplay {
         try (Connection conn = database.Database.getConnection()) {
             try {
                 SchoolDAO method = new SchoolDAO();
-                School school = method.fetchSchoolInfo(conn);
+                School school = method.fetchSchool(conn);
                 Paragraph schoolName = new Paragraph(school.getName(), titleFont);
                 schoolName.setAlignment(Element.ALIGN_CENTER);
                 document.add(schoolName);
@@ -258,7 +255,7 @@ public class PdfDisplay {
     public void addInstitutionHeader(String title, Document document, java.sql.Connection conn) {
         try {
             SchoolDAO method = new SchoolDAO();
-            School school = method.fetchSchoolInfo(conn);
+            School school = method.fetchSchool(conn);
             if (school != null) {
                 Paragraph schoolName = new Paragraph(school.getName(), titleFont);
                 schoolName.setAlignment(Element.ALIGN_CENTER);
@@ -387,11 +384,11 @@ public class PdfDisplay {
 
             for (Subjects s : data) {
                 try {
-                    PdfPCell subject = new PdfPCell(new Phrase(s.getSubjectName(), normalFont));
+                    PdfPCell subject = new PdfPCell(new Phrase(s.getName(), normalFont));
                     subject.setPadding(headSize);
                     marksTable.addCell(subject);
 
-                    PdfPCell marks = new PdfPCell(new Phrase(String.valueOf(s.getMarks()), normalFont));
+                    PdfPCell marks = new PdfPCell(new Phrase(String.valueOf(s.getTotalMarks()), normalFont));
                     marks.setPadding(headSize);
                     marksTable.addCell(marks);
 
@@ -462,7 +459,7 @@ public class PdfDisplay {
     private void sign(Connection conn, Document document) {
         try {
             SchoolDAO method = new SchoolDAO();
-            School school = method.fetchSchoolInfo(conn);
+            School school = method.fetchSchool(conn);
 
             PdfPTable signTable = new PdfPTable(1);
             signTable.setWidthPercentage(95);
@@ -498,7 +495,9 @@ public class PdfDisplay {
 
             Student std = student.fetchStudent(conn, StudentName);
 
-            List<Subjects> data = student.fetchStudentReport(conn, StudentName);
+            GradeDAO grade_dao = new GradeDAO();
+
+            List<Subjects> data = grade_dao.fetchStudentReport(conn, StudentName);
 
             addInstitutionHeader("STUDENT REPORT", document, conn);
 
@@ -510,7 +509,7 @@ public class PdfDisplay {
             double totalPercentage = 0.0;
 
             for (Subjects d : data) {
-                totalMarks += d.getMarks();
+                totalMarks += d.getTotalMarks();
                 ObtMarks += d.getObtMarks();
             }
             if (totalMarks > 0) {
@@ -658,7 +657,7 @@ public class PdfDisplay {
 
             Student std = student.fetchStudent(conn, studentName);
             SchoolDAO school = new SchoolDAO();
-            School info = school.fetchSchoolInfo(conn);
+            School info = school.fetchSchool(conn);
 
             try {
                 document = createPDF(studentName + "_Fee.pdf");
@@ -788,9 +787,9 @@ public class PdfDisplay {
                     line.setLeading(0f, 0.2f); // line spacing control
                     document.add(line);
 
-                    int tuition = room.getTuition();
-                    int exam = room.getPaper();
-                    int stationary = room.getStationary();
+                    int tuition = room.getTuitionFee();
+                    int exam = room.getPaperFee();
+                    int stationary = room.getStationaryFee();
                     int totals = tuition + exam + stationary;
 
                     Paragraph fee1 = new Paragraph(createPhrase("Tuition Fee", tuition));

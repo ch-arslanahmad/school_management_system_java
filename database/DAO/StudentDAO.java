@@ -143,14 +143,16 @@ public class StudentDAO {
 
         return DBUtils.runInTransaction(conn -> {
             String upsertSQL = "INSERT INTO StudentMarks (StudentID, SubjectID, ObtainedMarks) VALUES (?, ?, ?) "
-                    + "ON DUPLICATE KEY UPDATE ObtainedMarks = VALUES(ObtainedMarks)";
+                    + "ON CONFLICT(StudentID, SubjectID) DO UPDATE SET ObtainedMarks = excluded.ObtainedMarks";
 
-            if (student.getID() == null) {
+            Student fetched = fetchStudent(conn, student.getName()); // to ensure student ID is set
+
+            if (fetched.getID() == null) {
                 logger.warning("Student Doesnt exist.");
                 return false;
             }
 
-            if (subject.getID() == null) {
+            if (subject.getID() == null || subject.getID() == 0) {
                 logger.warning("Subject ID is not set.");
                 return false;
             }
@@ -162,7 +164,7 @@ public class StudentDAO {
             }
 
             try (PreparedStatement rm = conn.prepareStatement(upsertSQL)) {
-                rm.setInt(1, student.getID());
+                rm.setInt(1, fetched.getID());
                 rm.setInt(2, subject.getID());
                 rm.setInt(3, subject.getObtMarks());
 
@@ -290,35 +292,4 @@ public class StudentDAO {
         }
         return students;
     }
-
-    public List<Subjects> fetchStudentReport(Connection conn, String studentName) {
-        List<Subjects> subjects = new ArrayList<>();
-        String sql = "SELECT * FROM getGrades WHERE StudentName = ?";
-
-        try (PreparedStatement rm = conn.prepareStatement(sql)) {
-            rm.setString(1, studentName);
-
-            try (ResultSet rs = rm.executeQuery()) {
-                while (rs.next()) {
-                    Subjects subject = new Subjects();
-                    subject.setName(rs.getString("SubjectName"));
-                    subject.setObtMarks(rs.getInt("ObtainedMarks"));
-
-                    String percentageStr = rs.getString("Percentage");
-                    if (percentageStr != null && percentageStr.contains("%")) {
-                        subject.setObtMarks(rs.getInt("ObtainedMarks"));
-                    }
-
-                    subject.setClassName(rs.getString("ClassName"));
-                    subjects.add(subject);
-                }
-            }
-        } catch (SQLException e) {
-            logger.log(Level.WARNING, "Error while fetching student report", e);
-        }
-        return subjects;
-    }
-
-
-
 }

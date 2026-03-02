@@ -22,7 +22,8 @@ public class Input {
     private final Scanner scanner = new Scanner(System.in);
 
     public String getLowerStrInput() {
-        return scanner.nextLine().toLowerCase().trim();
+        String s = getStrInput();
+        return s.toLowerCase();
     }
 
     public String getNormalLowerInput() {
@@ -38,6 +39,11 @@ public class Input {
 
     // get String input
     public String getStrInput() {
+        // If stdin is closed (no more lines), log and return "0" to signal exit/back
+        if (!scanner.hasNextLine()) {
+            logger.info("EOF on stdin detected; treating as '0' (back/exit).");
+            return "0";
+        }
         return scanner.nextLine().trim();
     }
 
