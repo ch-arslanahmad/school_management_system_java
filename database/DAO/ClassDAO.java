@@ -34,19 +34,18 @@ public class ClassDAO {
                 return new ClassRoom();
             }
 
-            try (PreparedStatement rm = conn.prepareStatement(classIDSQL);
-                    ResultSet rs = rm.executeQuery()) {
-
+            try (PreparedStatement rm = conn.prepareStatement(classIDSQL)) {
                 rm.setString(1, name);
-
-                if (rs.next()) {
-                    // fetches and stores the ClassID in a variable from the matched row
-                    cls.setID(rs.getInt("ClassID"));
-                    cls.setTuitionFee(rs.getInt("Tuition_Fee"));
-                    cls.setStationaryFee(rs.getInt("Stationary_Fee"));
-                    cls.setPaperFee(rs.getInt("Paper_Fee"));
-                } else {
-                    logger.warning("Unable to get Class.");
+                try (ResultSet rs = rm.executeQuery()) {
+                    if (rs.next()) {
+                        // fetches and stores the ClassID in a variable from the matched row
+                        cls.setID(rs.getInt("ClassID"));
+                        cls.setTuitionFee(rs.getInt("Tuition_Fee"));
+                        cls.setStationaryFee(rs.getInt("Stationary_Fee"));
+                        cls.setPaperFee(rs.getInt("Paper_Fee"));
+                    } else {
+                        logger.warning("Unable to get Class.");
+                    }
                 }
             }
         } catch (SQLException e) {

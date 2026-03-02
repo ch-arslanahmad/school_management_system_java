@@ -4,6 +4,7 @@ bin/
 
 // ignore log files
 *.txt
+*.txt.*
 *.pdf
 
 ignore .vscode

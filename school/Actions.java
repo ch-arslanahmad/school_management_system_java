@@ -1,15 +1,12 @@
 package school;
 
 import java.util.logging.*;
-import java.sql.*;
 import java.util.List;
 import classroom.*;
 import database.*;
 import database.DAO.*;
-import display.ConsoleDisplay;
-import display.Input;
-import display.LogHandler;
-import display.PdfDisplay;
+import display.*;
+
 import people.Student;
 import people.Teacher;
 
@@ -23,8 +20,9 @@ public class Actions {
     }
 
     // ADD SCHOOL INFO
-    public Boolean addSchoolInfo(SchoolDAO school, Input input) {
-        try (Connection conn = database.Database.getConnection()) {
+    public Boolean addSchoolInfo(SchoolDAO school_dao, Input input) {
+
+        return DBUtils.runInTransaction(conn -> {
             while (true) {
                 // SCHOOL
                 System.out.print("Enter Updated School name: ");
@@ -32,28 +30,38 @@ public class Actions {
                 if (schoolName.equals("0")) {
                     return null;
                 }
+
+                School school = new School(schoolName);
+
                 System.out.print("Enter Updated School Principle name: ");
                 String principleName = input.getNormalInput();
                 System.out.print("Enter Updated School Location: ");
                 String location = input.getNormalInput();
+
+                School newSchool = new School(schoolName, principleName, location);
                 // if School-info is not inserted
-                if (!school.updateSchool(schoolName, principleName, location)) {
+                if (!school_dao.updateSchool(school, newSchool)) {
                     String error = "Database Creation Abort : School-Info";
                     logger.warning(error);
                 } else {
                     return true;
                 }
             }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Database connection error: ", e);
-        }
-        return false;
+        });
     }
 
     // show school info
-    public void showSchoolInfo(SchoolDAO school) {
-        ConsoleDisplay console = new ConsoleDisplay();
-        console.displaySchoolInfo(school);
+    public void showSchoolInfo(SchoolDAO school_dao) {
+        DBUtils.runInTransaction(conn -> {
+            School school = school_dao.fetchSchool(conn);
+            if (school.getName() == null) {
+                System.out.println("No school info found. Please add school info first.");
+                return false;
+            }
+            ConsoleDisplay console = new ConsoleDisplay();
+            console.displaySchoolInfo(school_dao);
+            return true;
+        });
     }
 
     // CLASS with MENU (with or without fees)
@@ -69,16 +77,14 @@ public class Actions {
         System.out.print("Enter ClassName: ");
         String className = input.getNormalInput();
 
+        ClassRoom cls = new ClassRoom(className);
         return DBUtils.runInTransaction(conn -> {
 
-            if (room.ClassExists(conn, className)) {
+            if (room.ClassExists(conn, cls.getName())) {
                 System.out.println("Class Already exists.");
                 return true;
             }
-
-            if (choice == 1) {
-                return room.insertClass(className);
-            }
+            // for checking if class has students when deleting class
 
             if (choice == 2) {
                 System.out.print("Enter Tuition Fee: ");
@@ -88,10 +94,12 @@ public class Actions {
                 System.out.print("Enter Exam/Paper Fee: ");
                 int exam = input.getIntInput();
 
-                return room.insertWithClassFees(className, tuition, stationary, exam);
-            }
+                cls.setTuitionFee(tuition);
+                cls.setStationaryFee(stationary);
+                cls.setPaperFee(exam);
 
-            return false;
+            }
+            return room.insertClass(cls);
         });
 
     }
@@ -114,7 +122,9 @@ public class Actions {
             return true;
         }
 
-        return room.deleteClass(className);
+        ClassRoom cls = new ClassRoom(className);
+
+        return room.deleteClass(cls);
     }
 
     public boolean updateClass(ClassDAO room, Input input) {
@@ -122,73 +132,66 @@ public class Actions {
             System.out.println(
                     "1. Update ClassName Only\n2. Update Class with Fees\n3. Only Fees of Class");
             int choice = input.validateMenuInput(3, input);
-            switch (choice) {
-                case 0: {
-                    return true;
-                }
-                case 1: {
-                    System.out.print("Enter previous ClassName: ");
-                    String className = input.getNormalInput();
 
-                    System.out.print("Enter updated ClassName: ");
-                    String updateClass = input.getNormalInput();
-                    return room.updateClass(className, updateClass);
+            return DBUtils.runInTransaction(conn -> {
+                ClassRoom updatedCLS, cls;
 
+                System.out.print("Enter previous ClassName: ");
+                String className = input.getNormalInput();
+
+                cls = room.fetchClass(conn, className); // fetch existing class
+                if (cls.isEmpty()) {
+                    System.out.println("Class does not exist.");
+                    return false;
                 }
-                case 2: {
-                    System.out.print("Enter previous ClassName: ");
-                    String className = input.getNormalInput();
-                    System.out.print("Enter updated ClassName: ");
-                    String updateClass = input.getNormalInput();
-                    if (!room.updateClass(className, updateClass)) {
-                        return false;
-                    }
-                    // ENTER FEES
+
+                if (choice == 3) {
                     System.out.print("Enter Tuition Fee: ");
                     int tuition = input.getIntInput();
                     System.out.print("Enter Stationary Fee: ");
                     int stationary = input.getIntInput();
                     System.out.print("Enter Exam/Paper Fee: ");
                     int exam = input.getIntInput();
-                    if (room.updateClassFees(updateClass, tuition, stationary, exam)) {
+
+                    cls.setTuitionFee(tuition);
+                    cls.setStationaryFee(stationary);
+                    cls.setPaperFee(exam);
+
+                    return room.updateClass(cls, cls);
+                }
+
+                System.out.print("Enter updated ClassName: ");
+                String updateClassName = input.getNormalInput();
+
+                switch (choice) {
+                    case 0: {
                         return true;
                     }
-                    break;
+                    case 1: {
+                        updatedCLS = new ClassRoom(updateClassName);
+                        return room.updateClass(cls, updatedCLS);
+                    }
+                    case 2: {
+                        System.out.print("Enter Tuition Fee: ");
+                        int tuition = input.getIntInput();
+                        System.out.print("Enter Stationary Fee: ");
+                        int stationary = input.getIntInput();
+                        System.out.print("Enter Exam/Paper Fee: ");
+                        int exam = input.getIntInput();
+
+                        updatedCLS = new ClassRoom(updateClassName, tuition, stationary, exam);
+                        return room.updateClass(cls, updatedCLS);
+                    }
                 }
-                case 3:
-                    updateFees(room, input); // updating fee method
-                default:
-                    break;
-            }
+                // default fallback
+                return false;
+            });
         }
-    }
-
-    // update/set fees of a class
-    public boolean updateFees(ClassDAO room, Input input) {
-        System.out.print("Enter ClassName: ");
-        String className = input.getNormalInput();
-
-        DBUtils.runInTransaction(conn -> {
-            if (!room.ClassExists(conn, className)) {
-                System.out.println("Class does not exist");
-            }
-
-            // ENTER FEES
-            System.out.print("Enter Tuition Fee: ");
-            int tuition = input.getIntInput();
-            System.out.print("Enter Stationary Fee: ");
-            int stationary = input.getIntInput();
-            System.out.print("Enter Exam/Paper Fee: ");
-            int exam = input.getIntInput();
-            return room.updateClassFees(className, tuition, stationary, exam);
-        });
-        return false;
-
     }
 
     public boolean showClasses(ClassDAO rooms, Input input, ConsoleDisplay show) {
 
-        DBUtils.runInTransaction(conn -> {
+        return DBUtils.runInTransaction(conn -> {
             List<ClassRoom> classroom = rooms.listClass(conn);
             if (classroom.isEmpty()) { // check if list is empty
                 System.out.println("Classroom List is empty");
@@ -206,7 +209,7 @@ public class Actions {
                 // this prints one column on console
                 show.displayf("ClassName");
                 for (ClassRoom room : classroom) {
-                    show.displayf(room.getClassName());
+                    show.displayf(room.getName());
                 }
                 return true;
             }
@@ -222,7 +225,6 @@ public class Actions {
             }
             return false;
         });
-        return false;
 
     }
 
@@ -231,10 +233,11 @@ public class Actions {
     ClassDAO room = new ClassDAO(); // ... get Class DAO
 
     public Boolean inputSubject(SubjectDAO subject, Input input) {
-        DBUtils.runInTransaction(conn -> {
+        return DBUtils.runInTransaction(conn -> {
             while (true) {
                 System.out.print("Enter the Class: ");
                 String className = input.getNormalInput();
+
                 if (!room.ClassExists(conn, className)) {
                     System.out.println("Class does not exist.");
                     return false;
@@ -249,15 +252,15 @@ public class Actions {
                 } else if (subjectName.equals("0")) {
                     return null;
                 }
-                System.out.print("Enter the Subject Total Marks: ");
-                int marks = input.getIntInput();
 
-                if (subject.insertSubject(className, subjectName, marks)) {
+                if (subject.insertSubject(className, subjectName)) {
                     return true;
                 }
             }
+            // unreachable but required for compilation
+            // return false as default
+            // return false;
         });
-        return false;
     }
 
     // method to add multiple Subjects
@@ -311,7 +314,7 @@ public class Actions {
             System.out.print("Enter the Updated Name: ");
             String uptName = input.getNormalInput();
 
-            if (subject.updateSubject(className, subjectName, uptName)) {
+            if (subject.updateSubject(subjectName, uptName)) {
                 return true;
             }
             return false;
@@ -337,7 +340,7 @@ public class Actions {
                 // this prints one column on console
                 show.displayf("Subjects", "ClassName");
                 for (Subjects s : subjects) {
-                    show.displayf(s.getSubjectName(), s.getClassName());
+                    show.displayf(s.getName(), s.getClassName());
                 }
             }
 
@@ -354,8 +357,8 @@ public class Actions {
     }
 
     // TEACHER
-    public Boolean inputTeacher(TeacherDAO teacher, Input input) {
-        DBUtils.runInTransaction(conn -> {
+    public boolean inputTeacher(TeacherDAO teacher, Input input) {
+        return DBUtils.runInTransaction(conn -> {
             System.out.print("Enter the Subject of Teacher: ");
             SubjectDAO subject = new SubjectDAO();
             String subjectName = input.getNormalInput();
@@ -363,26 +366,29 @@ public class Actions {
                 System.out.println("Subject does not exist.");
                 return false;
             } else if (subjectName.equals("0")) {
-                return null;
+                return false;
             }
             System.out.print("Enter the Teacher: ");
             String name = input.getNormalInput();
             if (teacher.teacherExists(conn, name)) {
                 System.out.println("Teacher already exists.");
+                return false;
             } else if (name.equals("0")) {
-                return null;
+                return false;
             }
-            return teacher.insertTeacher(subjectName, name);
+
+            Teacher teach = new Teacher(name, new Subjects(subjectName));
+
+            return teacher.insertTeacher(teach);
         });
-        return false;
     }
 
     // method to add multiple Teachers
     public void inputTeachers(TeacherDAO teacher, Input input) {
         while (true) { // ... infinite until '0' input
-            Boolean run = inputTeacher(teacher, input);
+            boolean run = inputTeacher(teacher, input);
 
-            if (run == null) {
+            if (run == false) {
                 break;
             }
         }
@@ -392,10 +398,7 @@ public class Actions {
         System.out.print("Enter the TeacherName: ");
         String name = input.getNormalInput();
 
-        if (teacher.deleteTeacher(name)) {
-            return true;
-        }
-        return false;
+        return teacher.deleteTeacher(new Teacher(name));
     }
 
     public boolean updateTeacher(TeacherDAO teacher, Input input) {
@@ -413,13 +416,19 @@ public class Actions {
         }
         System.out.print("Enter the Updated Name: ");
         String uptName = input.getNormalInput();
+
+        Teacher teach = new Teacher(name);
+        Teacher newTeach = new Teacher(uptName);
         if (choice == 1) {
-            return teacher.updateTeacher(name, uptName);
+            return teacher.updateTeacher(teach, newTeach);
         } else if (choice == 2) {
 
             System.out.print("Enter the Updated SubjectName: ");
             String updateSubject = input.getNormalInput();
-            return teacher.updateTeacherSubject(name, uptName, updateSubject);
+
+            newTeach.setSubject(new Subjects(updateSubject));
+
+            return teacher.updateTeacher(teach, newTeach);
 
         }
         return false;
@@ -459,8 +468,8 @@ public class Actions {
                 return true;
             }
             return false;
-           
-                });
+
+        });
         return false;
     }
 
@@ -482,7 +491,8 @@ public class Actions {
                 if (name.equals("0")) {
                     return null;
                 }
-                if (student.insertStudent(className, name)) {
+                Student stu = new Student(name, new ClassRoom(className));
+                if (student.insertStudent(stu)) {
                     return true;
                 }
             }
@@ -510,7 +520,7 @@ public class Actions {
                 System.out.println("Student does not exist.");
                 return false;
             }
-            if (student.deleteStudent(name)) {
+            if (student.deleteStudent(new Student(name))) {
                 return true;
             }
             return false;
@@ -527,7 +537,7 @@ public class Actions {
             }
             System.out.print("Enter the Updated Name: ");
             String uptName = input.getNormalInput();
-            if (student.updateStudent(name, uptName)) {
+            if (student.updateStudent(new Student(name), new Student(uptName))) {
                 return true;
             }
             return false;
@@ -574,8 +584,7 @@ public class Actions {
             String studentName = input.getNormalInput();
             show.handleStudentReport(studentName);
         } else if (choice == 3 && ch == 1) {
-            // add to print reciept on console
-            System.out.print("Enter StudentName: ");
+            // add to print reciep System.out.print("Enter StudentName: ");
             String studentName = input.getNormalInput();
             show.handleFeeReciept(studentName);
         }
@@ -589,7 +598,7 @@ public class Actions {
 
         return DBUtils.runInTransaction(conn -> {
 
-            List<Student> students = student.listStudent(conn);
+            List<Student> students = student.listStudents(conn);
             if (students.isEmpty()) { // check if list is empty
                 System.out.println("Student List is empty.");
                 return false;
@@ -622,37 +631,34 @@ public class Actions {
         });
     }
 
-    public boolean addSubjectObtMarks(String studentName, String SubjectName, int ObtMarks,
-            StudentDAO student, SubjectDAO subject) {
-        if (student.updateStudentObtMarks(subject, studentName, SubjectName, ObtMarks)) {
-            return true;
-        }
-        return false;
-    }
-
-    public boolean addClassObtMarks(String studentName, String className, Input input,
-            StudentDAO student, SubjectDAO subject) {
+    public boolean updateOrInsert(Student student, StudentDAO student_dao, Input input) {
 
         return DBUtils.runInTransaction(conn -> {
-            List<Subjects> classSubjectList = subject.listClassSubjectswithMarks(conn, className);
 
-            for (Subjects s : classSubjectList) {
+            GradeDAO grade_dao = new GradeDAO();
+
+            List<Subjects> subjects = grade_dao.fetchStudentReport(conn, student.getName()); // just to get subjects
+                                                                                             // list for input
+
+            for (Subjects s : subjects) {
                 while (true) {
-                    System.out.print("Total marks of " + s.getSubjectName() + ": " + s.getMarks());
-                    System.out.print("Enter Obtained marks of " + s.getSubjectName() + ": ");
+                    System.out.print("Total marks of " + s.getName() + ": " + s.getTotalMarks());
+                    System.out.print("Enter Obtained marks of " + s.getName() + ": ");
                     int marks = input.getIntInput();
                     if (marks == 0) {
                         System.out.println("Invalid input. Please enter a valid number.");
                         continue;
-                    } else if (s.getMarks() < marks) {
+                    } else if (s.getTotalMarks() < marks) {
                         System.out.println("Obtained marks cannot be greater than total Marks.");
                         continue;
                     }
-                    addSubjectObtMarks(studentName, s.getSubjectName(), marks, student, subject);
+                    s.setObtMarks(marks);
+                    student_dao.insertOrUpdateMarks(student, s);
                     break;
                 }
             }
             return true;
         });
     }
+
 }
