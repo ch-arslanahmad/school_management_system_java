@@ -76,20 +76,22 @@ public class DBmaker {
     }
 
     public DBmaker createView() {
+        // Use a view definition that matches the existing DB schema to avoid discrepancies
         String createViewSQL = "CREATE VIEW IF NOT EXISTS getGrades AS "
                 + "SELECT "
+                + "  s.StudentID, "
                 + "  s.StudentName, "
+                + "  sub.SubjectID, "
                 + "  sub.SubjectName, "
-                + "  100 AS TotalMarks, "
                 + "  g.ObtainedMarks, "
-                + "  ((g.ObtainedMarks * 100) / 100) || '%' AS Percentage, "
                 + "  CASE "
-                + "    WHEN ((g.ObtainedMarks * 100) / 100) >= 90 THEN 'A' "
-                + "    WHEN ((g.ObtainedMarks * 100) / 100) >= 80 THEN 'B' "
-                + "    WHEN ((g.ObtainedMarks * 100) / 100) >= 60 THEN 'C' "
-                + "    WHEN ((g.ObtainedMarks * 100) / 100) >= 50 THEN 'D' "
+                + "    WHEN g.ObtainedMarks >= 90 THEN 'A' "
+                + "    WHEN g.ObtainedMarks >= 80 THEN 'B' "
+                + "    WHEN g.ObtainedMarks >= 60 THEN 'C' "
+                + "    WHEN g.ObtainedMarks >= 50 THEN 'D' "
                 + "    ELSE 'F' "
                 + "  END AS Grade, "
+                + "  c.ClassID, "
                 + "  c.ClassName "
                 + "FROM StudentMarks g "
                 + "  JOIN Student s ON s.StudentID = g.StudentID "
@@ -139,44 +141,45 @@ public class DBmaker {
 
     public DBmaker createTables() {
         String[] tableSQLs = {
-            "CREATE TABLE IF NOT EXISTS School ("
-            + "id INTEGER PRIMARY KEY, "
-            + "Name TEXT NOT NULL, "
-            + "Principal TEXT NOT NULL, "
-            + "location TEXT NOT NULL)",
+                "CREATE TABLE IF NOT EXISTS School ("
+                        + "id INTEGER PRIMARY KEY CHECK (id = 1), "
+                        + "Name TEXT, "
+                        + "Principal TEXT, "
+                        + "location TEXT DEFAULT 'Unknown')",
 
-            "CREATE TABLE IF NOT EXISTS Class ("
-            + "ClassID INTEGER PRIMARY KEY AUTOINCREMENT, "
-            + "ClassName TEXT NOT NULL UNIQUE, "
-            + "Tuition_Fee INTEGER DEFAULT 0, "
-            + "Stationary_Fee INTEGER DEFAULT 0, "
-            + "Paper_Fee INTEGER DEFAULT 0)",
+                "CREATE TABLE IF NOT EXISTS Class ("
+                        + "ClassID INTEGER PRIMARY KEY AUTOINCREMENT, "
+                        + "ClassName TEXT NOT NULL UNIQUE, "
+                        + "Tuition_Fee INTEGER DEFAULT 0, "
+                        + "Stationary_Fee INTEGER DEFAULT 0, "
+                        + "Paper_Fee INTEGER DEFAULT 0)",
 
-            "CREATE TABLE IF NOT EXISTS Subjects ("
-            + "SubjectID INTEGER PRIMARY KEY AUTOINCREMENT, "
-            + "SubjectName TEXT NOT NULL, "
-            + "ClassID INTEGER NOT NULL, "
-            + "FOREIGN KEY (ClassID) REFERENCES Class(ClassID))",
+                "CREATE TABLE IF NOT EXISTS Subjects ("
+                        + "SubjectID INTEGER PRIMARY KEY AUTOINCREMENT, "
+                        + "SubjectName TEXT NOT NULL, "
+                        + "ClassID INTEGER NOT NULL, "
+                        + "FOREIGN KEY (ClassID) REFERENCES Class(ClassID))",
 
-            "CREATE TABLE IF NOT EXISTS Student ("
-            + "StudentID INTEGER PRIMARY KEY AUTOINCREMENT, "
-            + "StudentName TEXT NOT NULL, "
-            + "ClassID INTEGER NOT NULL, "
-            + "FOREIGN KEY (ClassID) REFERENCES Class(ClassID))",
+                "CREATE TABLE IF NOT EXISTS Student ("
+                        + "StudentID INTEGER PRIMARY KEY AUTOINCREMENT, "
+                        + "StudentName TEXT, "
+                        + "ClassID INTEGER, "
+                        + "FOREIGN KEY (ClassID) REFERENCES Class(ClassID) ON DELETE CASCADE)",
 
-            "CREATE TABLE IF NOT EXISTS Teacher ("
-            + "TeacherID INTEGER PRIMARY KEY AUTOINCREMENT, "
-            + "TeacherName TEXT NOT NULL, "
-            + "SubjectID INTEGER NOT NULL, "
-            + "FOREIGN KEY (SubjectID) REFERENCES Subjects(SubjectID))",
+                "CREATE TABLE IF NOT EXISTS Teacher ("
+                        + "TeacherID INTEGER PRIMARY KEY AUTOINCREMENT, "
+                        + "TeacherName TEXT NOT NULL, "
+                        + "SubjectID INTEGER NOT NULL, "
+                        + "FOREIGN KEY (SubjectID) REFERENCES Subjects(SubjectID))",
 
-            "CREATE TABLE IF NOT EXISTS StudentMarks ("
-            + "StudentID INTEGER NOT NULL, "
-            + "SubjectID INTEGER NOT NULL, "
-            + "ObtainedMarks INTEGER NOT NULL, "
-            + "PRIMARY KEY (StudentID, SubjectID), "
-            + "FOREIGN KEY (StudentID) REFERENCES Student(StudentID), "
-            + "FOREIGN KEY (SubjectID) REFERENCES Subjects(SubjectID))"
+                "CREATE TABLE IF NOT EXISTS StudentMarks ("
+                        + "StudentMarkID INTEGER PRIMARY KEY AUTOINCREMENT, "
+                        + "StudentID INTEGER, "
+                        + "SubjectID INTEGER, "
+                        + "ObtainedMarks INTEGER, "
+                        + "FOREIGN KEY (StudentID) REFERENCES Student(StudentID), "
+                        + "FOREIGN KEY (SubjectID) REFERENCES Subjects(SubjectID), "
+                        + "UNIQUE(StudentID, SubjectID))"
         };
 
         try (Connection conn = Database.getConnection();

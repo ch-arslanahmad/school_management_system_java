@@ -1,16 +1,13 @@
 package display;
 
 import java.util.logging.*;
+import java.util.List;
+import classroom.Subjects;
 import java.util.InputMismatchException;
 
-import database.DBUtils;
-import database.DBValidator;
-import database.DBmaker;
-import database.DAO.ClassDAO;
-import database.DAO.SchoolDAO;
-import database.DAO.StudentDAO;
-import database.DAO.SubjectDAO;
-import database.DAO.TeacherDAO;
+import database.*;
+import database.DAO.*;
+import people.Student;
 import school.Actions;
 
 public class MenuHandler {
@@ -66,7 +63,7 @@ public class MenuHandler {
         while (true) {
             try {
                 showMenu("Classes", options);
-                System.out.print("Enter choice (0 to go back): ");
+
                 int choice = input.validateMenuInput(5, input);
                 switch (choice) {
                     case 0: // stop the loop
@@ -113,7 +110,7 @@ public class MenuHandler {
         while (true) {
             try {
                 showMenu("Subjects", options);
-                System.out.print("Enter choice (0 to go back): ");
+
                 int choice = input.validateMenuInput(5, input);
                 switch (choice) {
                     case 0: // stop the loop
@@ -158,7 +155,7 @@ public class MenuHandler {
         while (true) {
             try {
                 showMenu("Teachers", options);
-                System.out.print("Enter choice (0 to go back): ");
+
                 int choice = input.validateMenuInput(5, input);
                 switch (choice) {
                     case 0: // stop the loop
@@ -204,7 +201,6 @@ public class MenuHandler {
         while (true) {
             try {
                 showMenu("Students", options);
-                System.out.print("Enter choice (0 to go back): ");
                 int choice = input.validateMenuInput(5, input);
                 switch (choice) {
                     case 0:
@@ -290,54 +286,89 @@ public class MenuHandler {
         return false;
     }
 
-    public boolean handleStudentGrades(Input input, StudentDAO student, SubjectDAO subject,
-            Actions act) {
+    public boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO subject_dao, GradeDAO grade_dao,
+            Actions act, Input input) {
         while (true) {
             System.out.print("Enter Student name: "); // get student
             String studentName = input.getNormalInput();
 
+            if (studentName.equals("0")) {
+                return true;
+            }
+
             DBUtils.runInTransaction(conn -> {
-                if (!student.studentExists(conn, studentName)) {
+                if (!student_dao.studentExists(conn, studentName)) {
                     System.out.println("Student does not exist.");
                     return false;
                 }
 
-                if (studentName.equals("0")) {
-                    return true;
-                }
-
                 System.out.println("1. Add Obtained Marks of every Subject\n"
                         + "2. Add Obtained marks of a Subject");
-                System.out.print("Enter choice (0 to go back): ");
+
                 int choice = input.validateMenuInput(2, input);
+
+                Student stu = student_dao.fetchStudent(conn, studentName);
 
                 if (choice == 0) {
                     return true;
                 } else if (choice == 1) {
-                    // get ClassName of Student
-                    String className = student.fetchStudentClass(conn, studentName);
-                    act.addClassObtMarks(studentName, className, input, student, subject);
-                } else if (choice == 2) {
+                    // get subjects for the student and prompt for obtained marks one by one
+                    List<Subjects> subjects = grade_dao.fetchStudentReport(conn, studentName);
+                    for (Subjects sub : subjects) {
+                        int total = (sub.getTotalMarks() != 0) ? sub.getTotalMarks() : 100;
+                        System.out.print("Enter Obtained marks for '" + sub.getName() + "' (Total " + total
+                                + ") [enter -1 to skip]: ");
+                        int obt;
+                        try {
+                            obt = input.getIntInput();
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid number, skipping.");
+                            continue;
+                        }
+                        if (obt == -1) {
+                            continue; // skip this subject
+                        }
+                        sub.setObtMarks(obt);
+                        if (!student_dao.insertOrUpdateMarks(stu, sub)) {
+                            System.out.println("Failed to update marks for '" + sub.getName() + "'.");
+                        }
+                    }
+                } else if (choice == 2) { // Add Obtained marks of a Subject
                     System.out.print("Enter Subject name: "); // get subject
                     String subjectName = input.getNormalInput();
-                    if (!subject.subjectExists(conn, subjectName)) {
-                        System.out.println("Subjecct does not exist.");
+
+                    Subjects sub = subject_dao.fetchSubject(conn, subjectName); // check if subject exists
+
+                    if (sub == null) {
+                        System.out.println("Subject does not exist.");
+                        return false;
                     } else if (subjectName.equals("0")) {
                         return true;
                     }
 
-                    int totalMarks = 100; // hardcode, standard // (todo: change)
+                    int totalMarks = (sub.getTotalMarks() != 0) ? sub.getTotalMarks() : 100; // prefer subject total if
+                                                                                             // available
 
-                    System.out.print("Enter Total marks of " + subjectName + ": " + totalMarks + "\n");
-                    System.out.print("Enter Obtained marks of " + subjectName + ": "); // get obt marks
-                    int ObtMarks = input.getIntInput();
-                    if (ObtMarks == 0) {
+                    System.out.print("Enter Obtained marks of " + subjectName + " (Total " + totalMarks
+                            + ") "); // get obt marks
+                    int ObtMarks;
+                    try {
+                        ObtMarks = input.getIntInput();
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid number.");
+                        return true;
+                    }
+                    if (ObtMarks == -1) {
                         return true;
                     }
 
-                    if (act.addSubjectObtMarks(studentName, subjectName, ObtMarks, student,
-                            subject)) {
-                        return true;
+                    sub.setObtMarks(ObtMarks);
+
+                    if (student_dao.insertOrUpdateMarks(stu, sub)) {
+                        System.out.println(
+                                "Successfully updated marks for " + studentName + " in subject " + subjectName);
+                    } else {
+                        System.out.println("Failed to update marks for " + studentName + " in subject " + subjectName);
                     }
                 }
                 return false;
@@ -351,7 +382,7 @@ public class MenuHandler {
     public void handleSchoolMenu(Input input, SchoolDAO school, Actions act) {
         while (true) {
             System.out.println("1. Show School Info\n2. Add School Info");
-            System.out.print("Enter choice (0 to go back): ");
+
             int choice = input.validateMenuInput(2, input);
 
             switch (choice) {
@@ -365,6 +396,46 @@ public class MenuHandler {
                     break;
                 default:
                     break;
+            }
+        }
+    }
+
+    // Run the main menu loop from MenuHandler so this class fully
+    // manages showing menus, reading input and dispatching handlers.
+    // This complements Main.java which can simply create the required
+    // helpers and call this method to start the UI loop.
+    public void runMainLoop(Input input, DBValidator db, ConsoleDisplay show,
+            ClassDAO room, SubjectDAO subject_dao, TeacherDAO teacher_dao,
+            StudentDAO student_dao, SchoolDAO school, GradeDAO grade_dao) {
+
+        boolean run = true;
+        while (run) {
+            // Show top-level menu
+            mainMenu();
+            int choice = input.validateMenuInput(7, input);
+            switch (choice) {
+                case 0 -> { // ... stop the loop
+                    System.out.println("Exiting Program.");
+                    run = false;
+                }
+                // handles school INFO
+                case 1 -> handleSchoolMenu(input, school, this.act);
+                // CLASS
+                case 2 -> handleClassMenu(room, db, show, input);
+                // SUBJECT
+                case 3 -> handleSubjectMenu(subject_dao, db, show, input);
+                // TEACHERS
+                case 4 -> handleTeacherMenu(teacher_dao, db, show, input);
+                // STUDENTS
+                case 5 -> handleStudentMenu(student_dao, db, show, input);
+                // handle grades of student
+                case 6 -> handleStudentGrades(student_dao, subject_dao, grade_dao, this.act, input);
+                case 7 -> {
+                    run = handleDatabase(db, input);
+                    System.out.println("Exiting Setup.");
+                }
+                // ... default
+                default -> System.out.println("Invalid Choice.");
             }
         }
     }
