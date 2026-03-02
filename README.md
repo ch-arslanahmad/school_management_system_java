@@ -43,6 +43,21 @@ A console-based application to manage basic school operations like adding, remov
 - **SQLite-based backend** for persistent storage
 - Show/export data in the console or as PDF reports
 - Detailed logging of system activities using Java's Logger
+- **Transaction management** via DBUtils for atomic database operations
+- Comprehensive documentation (ADR, design decisions, task lists)
+
+---
+
+## Recent Changes
+
+### v1.1.0 - Critical Cleanup & DAO Refactoring
+
+- **DAO Refactoring**: Major restructuring of all DAO classes (StudentDAO, SubjectDAO, TeacherDAO, ClassDAO)
+- **Transaction Management**: Added `DBUtils` for automatic transaction handling in write/update operations
+- **Database Validation**: Renamed `DBManager` → `DBValidator` for clarity
+- **New GradeDAO**: Added for student report fetching
+- **Model Improvements**: Removed circular references, standardized method names, updated data types to Integer for fees/IDs
+- **Documentation**: Added comprehensive docs folder with ADR, context, task-list, and database structure documentation
 
 ---
 
@@ -57,13 +72,12 @@ school_management_system_java/
 │   └── sqlite-jdbc-3.50.3.0.jar
 ├── display/
 │   ├── Input.java
-│   ├── Display.java
-│   ├── ...
-│   └── MenuHandler.java
+│   ├── ConsoleDisplay.java
+│   ├── PdfDisplay.java
+│   ├── MenuHandler.java
 │   └── LogHandler.java
 ├── people/
 │   ├── Person.java
-│   ├── Admin.java
 │   ├── Student.java
 │   └── Teacher.java
 ├── classroom/
@@ -72,18 +86,26 @@ school_management_system_java/
 ├── database/
 │   ├── Database.java
 │   ├── DBmaker.java
-│   ├── DBManager.java
-│   ├── DATABASE.md  (now README.md)
-│   ├── ... db files
+│   ├── DBValidator.java
+│   ├── DBUtils.java
+│   ├── editDB.java
 │   └── DAO/
 │       ├── ClassDAO.java
 │       ├── SubjectDAO.java
 │       ├── StudentDAO.java
 │       ├── TeacherDAO.java
+│       ├── GradeDAO.java
 │       ├── SchoolDAO.java
-│       ├── editDB.java
-│       └── testing.java
-└── ...
+│       └── editDB.java
+├── docs/
+│   ├── context.md
+│   ├── task-list.md
+│   ├── database-structure.md
+│   └── adr/
+│       ├── connection-transaction.md
+│       └── orm-problem.md
+└── school/
+    └── Actions.java
 ```
 
 ---
@@ -193,9 +215,11 @@ Main.java -> LogHandler(Open) -> MenuHandler -> Actions -> DAOs -> Database
 
 - `display/ConsoleDisplay.java` / `display/PdfDisplay.java` — presentation logic (console formatting and PDF export).
 
-- `database/Database.java`, `DBManager.java` — connection, initialization, and transaction helpers.
+- `database/Database.java`, `DBValidator.java` — connection, initialization, and validation helpers.
 
-- `database/DAO/*.java` — data access objects (CRUD) for classes, students, teachers, subjects, and school info.
+- `database/DBUtils.java` — transaction management for write/update operations.
+
+- `database/DAO/*.java` — data access objects (CRUD) for classes, students, teachers, subjects, grades, and school info.
 
 - `people/`, `classroom/`, `school/` — model classes (Student, Teacher, ClassRoom, Subjects, School, etc.), that are essential for every operation relating to display or Database as they are the `model`.
 
@@ -211,7 +235,7 @@ Main.java -> LogHandler(Open) -> MenuHandler -> Actions -> DAOs -> Database
 - **Action/Process logic**: `school/Actions.java` and the ***DAOs*** (Data Access Object) in `database/DAO/*`.
 
 - Actual **Database** *actions/queries* Logic: `database/DAO/*`
-- **Database** (*Connection* & Creation): `database/Database.java` and `database/DBManager.java`.
+- **Database** (*Connection* & Creation): `database/Database.java`, `database/DBValidator.java`, and `database/DBUtils.java`.
 
 - **Logging** (Creation & Writing): `display/LogHandler.java`
 
@@ -231,19 +255,20 @@ flowchart TD
     end
 
     subgraph Model[Model Layer]
-        M[Person, Student, Teacher,\nAdmin, ClassRoom, Subjects,\nSchool, SchoolData]
+        M[Person, Student, Teacher,\nClassRoom, Subjects]
     end
 
     subgraph Business[Business Logic Layer]
         E[Actions]
         F[LogHandler]
-        K[DBManager]
+        K[DBValidator]
     end
 
     subgraph Persistence[Persistence Layer]
-        G[ClassDAO, SchoolDAO,\nStudentDAO, SubjectDAO,\nTeacherDAO]
-        H[Database.java]
-        J[SQLite Database File]
+        G[ClassDAO, SchoolDAO,\nStudentDAO, SubjectDAO,\nTeacherDAO, GradeDAO]
+        J[Database.java]
+        L[DBUtils]
+        H[SQLite Database File]
     end
 
     %% Input Flow - All Input goes through Main
@@ -253,7 +278,9 @@ flowchart TD
     I --> B --> E
     E --> K
     K --> G
-    G --> H --> J
+    G --> J --> H
+    E --> L
+    L --> J
     
     %% Data Model Flow
     G --> M
@@ -264,9 +291,10 @@ flowchart TD
     E --> D
     
     %% Database Core Relationships
-    H -.->|Gives Connection Framework| G
-    H -.->|Gives Connection Framework| K
-    K -.->|Manages Database  Data & Structure| H
+    J -.->|Gives Connection Framework| G
+    J -.->|Gives Connection Framework| K
+    K -.->|Validates Database| J
+    L -.->|Transaction Management| J
     
     %% Logging (F)
     B --> F
