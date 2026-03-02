@@ -14,11 +14,18 @@ public class LogHandler {
             LogManager.getLogManager().reset();
             String a = "storage/log/" + path + ".txt";
             File file = new File(a);
-            // if file does not exist, create it
-            if (!(file.exists())) {
+            // ensure parent directory exists
+            File parent = file.getParentFile();
+            if (parent != null && !parent.exists()) {
+                parent.mkdirs();
+            }
+            // Create the file if it doesn't exist
+            if (!file.exists()) {
                 file.createNewFile();
             }
-            fh = new FileHandler(a, 1024 * 1024, 1, true); // path, size, n of files, append or not
+            // Use a single, non-rotating FileHandler so only one log file is produced.
+            // If rotation is desired in future, switch to the size+count constructor
+            fh = new FileHandler(a, true);
             fh.setLevel(Level.ALL);
 
             logger.addHandler(fh);

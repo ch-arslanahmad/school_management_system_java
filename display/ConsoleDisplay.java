@@ -6,9 +6,7 @@ import java.sql.*;
 
 import classroom.ClassRoom;
 import classroom.Subjects;
-import database.DAO.ClassDAO;
-import database.DAO.SchoolDAO;
-import database.DAO.StudentDAO;
+import database.DAO.*;
 import people.Student;
 import school.School;
 
@@ -61,7 +59,7 @@ public class ConsoleDisplay implements Display {
         try {
             displayf("Subjects", "Total Marks", "Obtained Marks", "Percentage", "Grade");
             for (Subjects s : data) {
-                displayf(s.getSubjectName(), String.valueOf(s.getMarks()),
+                displayf(s.getName(), String.valueOf(s.getTotalMarks()),
                         String.valueOf(s.getObtMarks()), String.valueOf(s.getPercentage()),
                         String.valueOf(Subjects.findGrade(s.getPercentage())));
             }
@@ -83,7 +81,7 @@ public class ConsoleDisplay implements Display {
     void sign() {
         try (Connection conn = database.Database.getConnection()) {
             SchoolDAO method = new SchoolDAO();
-            School school = method.fetchSchoolInfo(conn);
+            School school = method.fetchSchool(conn);
             if (school != null) {
                 System.out.println(school.getPrincipal() + "\n(Signature)");
             } else {
@@ -97,25 +95,33 @@ public class ConsoleDisplay implements Display {
     // handle the FULL creation of whole Student Report
     public void handleStudentReport(String StudentName) {
         try (Connection conn = database.Database.getConnection()) {
-            StudentDAO student = new StudentDAO();
-            if (!student.studentExists(conn, StudentName)) {
+            StudentDAO student_dao = new StudentDAO();
+
+
+            GradeDAO grade_dao = new GradeDAO();
+
+            Student student = student_dao.fetchStudent(conn, StudentName);
+
+            if (student.getName() == null) {
                 System.out.println("Student does not exist.");
                 return;
             }
 
-            List<Subjects> data = student.fetchStudentReport(conn, StudentName);
+            List<Subjects> data = grade_dao.fetchStudentReport(conn, StudentName);
             // fetching data from database
 
             System.out.println("STUDENT REPORT");
 
-            studentInfoReport(StudentName, student.fetchStudentClass(conn, StudentName),
-                    student.fetchStudentID(conn, StudentName)); // Writes Student Info
+            Student std = student_dao.fetchStudent(conn, StudentName);
+
+            studentInfoReport(StudentName, std.getClassName(),
+                    std.getID()); // Writes Student Info
             int totalMarks = 0;
             int ObtMarks = 0;
             double totalPercentage = 0;
 
             for (Subjects d : data) {
-                totalMarks += d.getMarks();
+                totalMarks += d.getTotalMarks();
                 ObtMarks += d.getObtMarks();
             }
             if (totalMarks > 0) {
@@ -147,7 +153,7 @@ public class ConsoleDisplay implements Display {
             Student std = student.fetchStudent(conn, StudentName);
             SchoolDAO school = new SchoolDAO();
 
-            School info = school.fetchSchoolInfo(conn);
+            School info = school.fetchSchool(conn);
 
             System.out.println(info.getName());
             System.out.println("PAYMENT VOUCHER");
@@ -166,9 +172,9 @@ public class ConsoleDisplay implements Display {
             ClassDAO fee = new ClassDAO();
             ClassRoom room = fee.getClassFees(conn, std.getClassName());
 
-            int tuition = room.getTuition();
-            int stationary = room.getStationary();
-            int paper = room.getPaper();
+            int tuition = room.getTuitionFee();
+            int stationary = room.getStationaryFee();
+            int paper = room.getPaperFee();
 
             int total = tuition + stationary + paper;
 
@@ -196,7 +202,7 @@ public class ConsoleDisplay implements Display {
 
     public void displaySchoolInfo(SchoolDAO info) {
         try (Connection conn = database.Database.getConnection()) {
-            School s = info.fetchSchoolInfo(conn);
+            School s = info.fetchSchool(conn);
             if (s == null) {
                 System.out.println("School information not available.");
                 return;
