@@ -1,11 +1,13 @@
-// ignore compiled files
+# ignore compiled files
 bin/
 *.class
+# Maven target directory
+/target/ 
 
-// ignore log files
+# ignore log files
 *.txt
 *.txt.*
 *.pdf
 
-ignore .vscode
+# ignore .vscode
 /.vscode/

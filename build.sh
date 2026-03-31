@@ -1,20 +1,50 @@
 #!/bin/bash
 
-# 1. Navigate to script's directory
+
 cd "$(dirname "$0")" || exit
 
-# 2. Clean previous builds
-echo "Cleaning old class files..."
-find . -name "*.class" -delete
-
-# 3. Compile all Java files
-echo "Compiling all sources..."
-javac -d bin -cp "storage/lib/sqlite-jdbc-3.50.3.0.jar:storage/lib/itext-2.1.7.jar" $(find . -name "*.java") || {
-    echo "Compilation failed."
-    exit 1
+help() {
+    echo "Usage: $0 [compile|run|clean|all]"
+    echo "Help: $0 --help/-h"
+    exit 0
 }
 
-# 4. Run specified class (default: display.testPDF)
-CLASS_TO_RUN="${1:-display.testPDF}"
-echo "Running $CLASS_TO_RUN..."
-java -cp "bin:storage/lib/sqlite-jdbc-3.50.3.0.jar:storage/lib/itext-2.1.7.jar" "$CLASS_TO_RUN"
+if [ -z "$ACTION" ]; then
+    echo "Compiling and Running..."
+    mvn compile exec:java -Dexec.mainClass="Main"
+    exit 1
+fi
+
+# Check for help first
+if [ "$ACTION" = "--help" ] || [ "$ACTION" = "-h" ]; then
+    help;
+elif [ ! -f "Main.java" ]; then
+    echo "Main.java does not exist."
+    exit 1
+elif [ ! -f "pom.xml" ]; then
+    echo "pom.xml does not exist."
+    exit 1
+fi
+
+case "$ACTION" in
+  compile)
+    echo "Compiling..."
+    mvn compile
+    ;;
+  run)
+    echo "Running..."
+    mvn exec:java -Dexec.mainClass="Main"
+    ;;
+  clean)
+    echo "Cleaning..."
+    mvn clean
+    ;;
+  all)
+    echo "Compiling and Running..."
+    mvn compile exec:java -Dexec.mainClass="Main"
+    ;;
+  *)
+    echo "Invalid option: $ACTION"
+    help
+    ;;
+esac

@@ -66,10 +66,8 @@ A console-based application to manage basic school operations like adding, remov
 ```structure
 school_management_system_java/
 ├── Main.java
-├── build.sh - script to run
-├── lib/
-│   ├── itext-2.1.7.jar
-│   └── sqlite-jdbc-3.50.3.0.jar
+├── pom.xml                    # Maven configuration
+├── build.sh                   # (deprecated - use Maven)
 ├── display/
 │   ├── Input.java
 │   ├── ConsoleDisplay.java
@@ -115,13 +113,14 @@ school_management_system_java/
 ### Requirements
 
 - Java JDK (17 or later)
-- SQLite JDBC & iText driver (already included in `lib/`)
+- Maven
 - Git
 
 ### Tools Used (& Learnings)
 
 - **Language:** Java
 - Java JDK
+- **Build Tool:** Maven
 - **Database:** **SQL**ite
 - **IDE:** VS Code (Java)
 - **Libraries:**
@@ -141,35 +140,27 @@ school_management_system_java/
    cd school_management_system_java
    ```
 
-2. Compile and run:
-There are two options:
+2. Build and run with Maven:
 
-- Direct Command
+   ```shell
+   mvn compile
+   mvn exec:java
+   ```
 
-Run the following:
+   Or do both in one command:
 
-```shell
-javac -d bin -cp "storage/lib/sqlite-jdbc-3.50.3.0.jar:storage/lib/itext-2.1.7.jar"
-```
+   ```sh
+   mvn compile exec:java
+   ```
 
-- Run `build.sh` script (simple, & for macOS / Linux users)
-
-```shell
-chmod +x buil.sh
-./build.sh Main
-```
-
-If it does not work, make sure you are in correct directory and run again with:
-
-```shell
-sudo chmod +x buil.sh
-./build.sh Main
-```
-
-You will need to provide device password.
+   You can also try one command via script,
+   ```shell
+   chmod +x build.sh && ./build.sh
+   ```
 
 > [!Note]
 > This is a CLI-based app.
+> See [docs/maven.md](docs/maven.md) for Maven guide.
 ---
 
 ## Program Flow - how program runs or organised?
