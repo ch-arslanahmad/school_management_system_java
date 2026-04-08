@@ -8,37 +8,41 @@ import database.DAO.TeacherDAO;
 import display.ConsoleDisplay;
 import display.Input;
 import display.MenuHandler;
+import web.WebServer;
 
 public class Main {
 
     public static void main(String[] args) {
+        boolean runWeb = true; // Set to true to run web server instead of TUI
 
-        // ... Menu & Input Objects
-        MenuHandler call = new MenuHandler(); // for menus
-        Input input = new Input(); // for input
-        DBValidator db = new DBValidator();
-        ConsoleDisplay show = new ConsoleDisplay();
+        if (runWeb) {
+            WebServer.start();
+        } else {
+            MenuHandler call = new MenuHandler(); // for menus
+            Input input = new Input(); // for input
+            DBValidator db = new DBValidator();
+            ConsoleDisplay show = new ConsoleDisplay();
+            // ... Info Block
 
-        // ... Info Block
+            System.out.println("================= INFO =================\n"
+                    + " At any point, enter [0] to go back or exit \n"
+                    + " the current menu/input.\n" + "========================================");
 
-        System.out.println("================= INFO =================\n"
-                + " At any point, enter [0] to go back or exit \n"
-                + " the current menu/input.\n" + "========================================");
+            // ? handles DB
 
-        // ? handles DB
-
-        // ... DAO Objects
-        ClassDAO room = new ClassDAO(); // ClassDAO object
-        SubjectDAO subject_dao = new SubjectDAO(); // subjectDAO object
-        TeacherDAO teacher_dao = new TeacherDAO(); // TeacherDAO object
-        StudentDAO student_dao = new StudentDAO(); // StudentDAO object
-        SchoolDAO school = new SchoolDAO(); // SchoolDAO object
-        GradeDAO grade_dao = new GradeDAO(); // GradeDAO object
+            // ... DAO Objects
+            ClassDAO room = new ClassDAO(); // ClassDAO object
+            SubjectDAO subject_dao = new SubjectDAO(); // subjectDAO object
+            TeacherDAO teacher_dao = new TeacherDAO(); // TeacherDAO object
+            StudentDAO student_dao = new StudentDAO(); // StudentDAO object
+            SchoolDAO school = new SchoolDAO(); // SchoolDAO object
+            GradeDAO grade_dao = new GradeDAO(); // GradeDAO object
 
 
 
-        // Delegate the main menu loop to MenuHandler for single responsibility
-        call.runMainLoop(input, db, show, room, subject_dao, teacher_dao, student_dao, school, grade_dao);
+            // Delegate the main menu loop to MenuHandler for single responsibility
+            call.runMainLoop(input, db, show, room, subject_dao, teacher_dao, student_dao, school, grade_dao);
+        }
 
     }
 
