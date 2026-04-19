@@ -242,7 +242,7 @@ public class StudentDAO {
 
     public List<Student> listStudents(Connection conn) {
         List<Student> students = new ArrayList<>();
-        String listStudentSQL = "SELECT * FROM Student";
+        String listStudentSQL = "SELECT s.StudentID, s.StudentName, s.ClassID, c.ClassName FROM Student s LEFT JOIN Class c ON s.ClassID = c.ClassID";
 
         try (PreparedStatement rm = conn.prepareStatement(listStudentSQL);
                 ResultSet rs = rm.executeQuery()) {
@@ -258,6 +258,7 @@ public class StudentDAO {
                 student.setName(rs.getString("StudentName"));
                 ClassRoom room = new ClassRoom();
                 room.setID(rs.getInt("ClassID"));
+                room.setName(rs.getString("ClassName"));
                 student.setClassRoom(room);
                 students.add(student);
             }

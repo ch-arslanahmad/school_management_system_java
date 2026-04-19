@@ -13,40 +13,38 @@ import web.WebServer;
 public class Main {
 
     public static void main(String[] args) {
-        boolean runWeb = true; // Set to true to run web server instead of TUI
+        System.out.println("Select\n1. TUI\n2. Web Server");
+
+        int choice = Input.validateMenuInput(2);
+
+        boolean runWeb = choice != 1;
 
         if (runWeb) {
+            System.out.println("Starting Web Server");
             WebServer.start();
-        } else {
-            MenuHandler call = new MenuHandler(); // for menus
-            Input input = new Input(); // for input
-            DBValidator db = new DBValidator();
-            ConsoleDisplay show = new ConsoleDisplay();
-            // ... Info Block
-
-            System.out.println("================= INFO =================\n"
-                    + " At any point, enter [0] to go back or exit \n"
-                    + " the current menu/input.\n" + "========================================");
-
-            // ? handles DB
-
-            // ... DAO Objects
-            ClassDAO room = new ClassDAO(); // ClassDAO object
-            SubjectDAO subject_dao = new SubjectDAO(); // subjectDAO object
-            TeacherDAO teacher_dao = new TeacherDAO(); // TeacherDAO object
-            StudentDAO student_dao = new StudentDAO(); // StudentDAO object
-            SchoolDAO school = new SchoolDAO(); // SchoolDAO object
-            GradeDAO grade_dao = new GradeDAO(); // GradeDAO object
-
-
-
-            // Delegate the main menu loop to MenuHandler for single responsibility
-            call.runMainLoop(input, db, show, room, subject_dao, teacher_dao, student_dao, school, grade_dao);
+            return;
         }
 
+        MenuHandler call = new MenuHandler();
+
+        DBValidator db = new DBValidator();
+        ConsoleDisplay show = new ConsoleDisplay();
+
+        System.out.println("================= INFO =================\n"
+                + " At any point, enter [0] to go back or exit \n"
+                + " the current menu/input.\n" + "========================================");
+
+        ClassDAO room = new ClassDAO();
+        SubjectDAO subject_dao = new SubjectDAO();
+        TeacherDAO teacher_dao = new TeacherDAO();
+        StudentDAO student_dao = new StudentDAO();
+        SchoolDAO school = new SchoolDAO();
+        GradeDAO grade_dao = new GradeDAO();
+
+        call.runMainLoop(db, show, room, subject_dao, teacher_dao, student_dao, school, grade_dao);
     }
 
-    // DONT FORGET TO CLOSE DOCUMENT/FILE and other things you opened (if any)
+    // DON'T FORGET TO CLOSE DOCUMENT/FILE and other things you opened (if any)
 
     /*
      * BETTER (& Current) SOLUTION MADE A LAMBDA FUNCTION THAT executes lines to

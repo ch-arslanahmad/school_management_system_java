@@ -235,7 +235,7 @@ public class SubjectDAO {
 
     public List<Subjects> listSubjects(Connection conn) {
         List<Subjects> subjects = new ArrayList<>();
-        String listSubjectSQL = "SELECT * FROM Subjects";
+        String listSubjectSQL = "SELECT s.SubjectID, s.SubjectName, s.ClassID, c.ClassName FROM Subjects s LEFT JOIN Class c ON s.ClassID = c.ClassID";
 
         try (PreparedStatement rm = conn.prepareStatement(listSubjectSQL);
                 ResultSet rs = rm.executeQuery()) {
@@ -250,6 +250,7 @@ public class SubjectDAO {
                 subj.setID(rs.getInt("SubjectID"));
                 subj.setName(rs.getString("SubjectName"));
                 subj.setClassID(rs.getInt("ClassID"));
+                subj.setClassName(rs.getString("ClassName"));
                 subjects.add(subj);
             }
             return subjects;
@@ -264,7 +265,7 @@ public class SubjectDAO {
     public List<Subjects> listSubjects(Connection conn, String className) {
 
         List<Subjects> subjects = new ArrayList<>();
-        String listSubjectSQL = "SELECT * FROM Subjects WHERE ClassID = (SELECT ClassID FROM Class WHERE ClassName = ?);";
+        String listSubjectSQL = "SELECT s.SubjectID, s.SubjectName, s.ClassID, c.ClassName FROM Subjects s JOIN Class c ON s.ClassID = c.ClassID WHERE c.ClassName = ?";
 
         try (PreparedStatement rm = conn.prepareStatement(listSubjectSQL)) {
             rm.setString(1, className);
@@ -281,6 +282,7 @@ public class SubjectDAO {
                     subj.setID(rs.getInt("SubjectID"));
                     subj.setName(rs.getString("SubjectName"));
                     subj.setClassID(rs.getInt("ClassID"));
+                    subj.setClassName(rs.getString("ClassName"));
                     subjects.add(subj);
                 }
                 return subjects;

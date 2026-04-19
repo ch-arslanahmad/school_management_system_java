@@ -56,4 +56,8 @@ public class School {
     public void setPrincipal(String principal) {
         this.principal = principal;
     }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
 }

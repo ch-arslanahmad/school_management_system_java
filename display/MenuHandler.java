@@ -19,8 +19,6 @@ public class MenuHandler {
         LogHandler.createLog(logger, "MenuHandler");
     }
 
-    private Actions act = new Actions();
-
     /// ALL MENUS
 
     // MAIN MENU
@@ -59,40 +57,40 @@ public class MenuHandler {
     String[] options = { "Insert", "Delete", "Insert Multiple", "Update", "Show" };
 
     // CLASS MENU
-    public void handleClassMenu(ClassDAO room, DBValidator db, ConsoleDisplay show, Input input) {
+    public void handleClassMenu(ClassDAO room, DBValidator db, ConsoleDisplay show) {
         while (true) {
             try {
                 showMenu("Classes", options);
 
-                int choice = input.validateMenuInput(5, input);
+                int choice = Input.validateMenuInput(5);
                 switch (choice) {
                     case 0: // stop the loop
                         return;
                     case 1: // insert class
-                        if (!act.inputClass(room, input)) {
+                        if (!Actions.inputClass(room)) {
                             System.out.println("Error inserting Class");
                             return;
                         }
                         break;
                     case 2: // delete class
-                        if (!act.deleteClass(room, input)) {
+                        if (!Actions.deleteClass(room)) {
                             System.out.println("Error deleting Class");
                             return;
                         }
                         break;
                     case 3: { // insert multiple
-                        act.inputClasses(room, input);
+                        Actions.inputClasses(room);
                         break;
                     }
                     case 4: // update class
-                        if (!act.updateClass(room, input)) {
+                        if (!Actions.updateClass(room)) {
                             System.out.println("Error updating Class");
                             return;
                         }
                         break;
 
                     case 5: // show classes
-                        act.showClasses(room, input, show);
+                        Actions.showClasses(room, show);
                         break;
                     default:
                         System.out.println("Invalid Choice.");
@@ -105,39 +103,38 @@ public class MenuHandler {
     }
 
     // SUBJECT MENU
-    public void handleSubjectMenu(SubjectDAO subject, DBValidator db, ConsoleDisplay show,
-            Input input) {
+    public void handleSubjectMenu(SubjectDAO subject, ClassDAO room, DBValidator db, ConsoleDisplay show) {
         while (true) {
             try {
                 showMenu("Subjects", options);
 
-                int choice = input.validateMenuInput(5, input);
+                int choice = Input.validateMenuInput(5);
                 switch (choice) {
                     case 0: // stop the loop
                         return;
                     case 1: // insert
-                        if (!act.inputSubject(subject, input)) {
+                        if (!Actions.inputSubject(subject, room)) {
                             System.out.println("Error inserting Subject");
                             return;
                         }
                         break;
                     case 2: // delete
-                        if (!act.deleteSubject(subject, input)) {
+                        if (!Actions.deleteSubject(subject, room)) {
                             System.out.println("Error deleting Subject");
                             return;
                         }
                         break;
                     case 3: // insert MULTIPLE
-                        act.inputSubjects(subject, input);
+                        Actions.inputSubjects(subject, room);
                         break;
                     case 4: // update
-                        if (!act.updateSubject(subject, input)) {
+                        if (!Actions.updateSubject(subject, room)) {
                             System.out.println("Error updating Subject");
                             return;
                         }
                         break;
                     case 5: // show
-                        act.showSubjects(subject, input, show);
+                        Actions.showSubjects(subject, room, show);
                         break;
                     default:
                         System.out.println("Invalid Choice.");
@@ -150,40 +147,39 @@ public class MenuHandler {
     }
 
     // TEACHERMENU
-    public void handleTeacherMenu(TeacherDAO teacher, DBValidator db, ConsoleDisplay show,
-            Input input) {
+    public void handleTeacherMenu(TeacherDAO teacher, DBValidator db, ConsoleDisplay show) {
         while (true) {
             try {
                 showMenu("Teachers", options);
 
-                int choice = input.validateMenuInput(5, input);
+                int choice = Input.validateMenuInput(5);
                 switch (choice) {
                     case 0: // stop the loop
                         return;
                     case 1: // insert
-                        if (!act.inputTeacher(teacher, input)) {
+                        if (!Actions.inputTeacher(teacher)) {
                             System.out.println("Error inserting Teacher");
                             return;
                         }
                         break;
                     case 2: // delete
-                        if (!act.deleteTeacher(teacher, input)) {
+                        if (!Actions.deleteTeacher(teacher)) {
                             System.out.println("Error deleting Teacher");
                             return;
                         }
                         break;
                     case 3: // insert MULTIPLE
-                        act.inputTeachers(teacher, input);
+                        Actions.inputTeachers(teacher);
                         break;
                     case 4: // update
-                        if (!act.updateTeacher(teacher, input)) {
+                        if (!Actions.updateTeacher(teacher)) {
                             System.out.println("Error updating Teacher");
                             return;
                         }
                         break;
 
                     case 5: // show
-                        act.showTeachers(teacher, input, show);
+                        Actions.showTeachers(teacher, show);
                         break;
                     default:
                         System.out.println("Invalid Choice.");
@@ -196,39 +192,38 @@ public class MenuHandler {
     }
 
     // STUDENT MENU
-    public void handleStudentMenu(StudentDAO student, DBValidator db, ConsoleDisplay show,
-            Input input) {
+    public void handleStudentMenu(StudentDAO student, DBValidator db, ConsoleDisplay show) {
         while (true) {
             try {
                 showMenu("Students", options);
-                int choice = input.validateMenuInput(5, input);
+                int choice = Input.validateMenuInput(5);
                 switch (choice) {
                     case 0:
                         return; // stop the loop
                     case 1: // insert
-                        if (!act.inputStudent(student, input)) {
+                        if (!Actions.inputStudent(student)) {
                             System.out.println("Error inserting Student.");
                             return;
                         }
                         break;
                     case 2: // delete
-                        if (!act.deleteStudent(student, input)) {
+                        if (!Actions.deleteStudent(student)) {
                             System.out.println("Error deleting Student.");
                             return;
                         }
                         break;
                     case 3: // insert MULTIPLE
-                        act.inputStudents(student, input);
+                        Actions.inputStudents(student);
                         break;
                     case 4: // update
-                        if (!act.updateStudent(student, input)) {
+                        if (!Actions.updateStudent(student)) {
                             System.out.println("Error updating Student.");
                             return;
                         }
                         break;
 
                     case 5: // show
-                        act.showStudents(student, input, show);
+                        Actions.showStudents(student, show);
                         break;
                     default:
                         System.out.println("Invalid Choice.");
@@ -240,13 +235,13 @@ public class MenuHandler {
         }
     }
 
-    public boolean handleDatabase(DBValidator db, Input input) {
+    public boolean handleDatabase(DBValidator db) {
 
         // DB setup section
         String[] options = { "Wipe dummy data and recreate DB (recommended for first use)",
                 "Keep existing data" };
         showMenu("Database Setup", options);
-        int dbChoice = input.validateMenuInput(2, input);
+        int dbChoice = Input.validateMenuInput(2);
 
         switch (dbChoice) {
             case 0: {
@@ -256,14 +251,14 @@ public class MenuHandler {
             case 1:
                 System.out.println(
                         "⚠ WARNING: This will delete EVERYTHING. Type 'CONFIRM' to proceed: ");
-                String confirm = input.getNormalInput();
+                String confirm = Input.getNormalInput();
                 if (confirm.equalsIgnoreCase("CONFIRM")) {
                     if (!db.delDB()) {
                         System.out.println("Unable to delete DB.");
                         break;
                     }
                     DBmaker data = new DBmaker();
-                    data.createDB(input);
+                    data.createDB();
                     System.out.println("Database wiped and recreated successfully.");
                 } else {
                     System.out.println("Cancelled wipe. Keeping existing data.");
@@ -274,7 +269,7 @@ public class MenuHandler {
                 if (!db.DBvalidate()) {
                     System.out.println("No valid database found. Creating a new one...");
                     DBmaker data = new DBmaker();
-                    data.createDB(input);
+                    data.createDB();
                 } else {
                     System.out.println("Using existing database.");
                 }
@@ -286,11 +281,10 @@ public class MenuHandler {
         return false;
     }
 
-    public boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO subject_dao, GradeDAO grade_dao,
-            Actions act, Input input) {
+public boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO subject_dao, GradeDAO grade_dao) {
         while (true) {
             System.out.print("Enter Student name: "); // get student
-            String studentName = input.getNormalInput();
+            String studentName = Input.getNormalInput();
 
             if (studentName.equals("0")) {
                 return true;
@@ -305,7 +299,7 @@ public class MenuHandler {
                 System.out.println("1. Add Obtained Marks of every Subject\n"
                         + "2. Add Obtained marks of a Subject");
 
-                int choice = input.validateMenuInput(2, input);
+                int choice = Input.validateMenuInput(2);
 
                 Student stu = student_dao.fetchStudent(conn, studentName);
 
@@ -320,7 +314,7 @@ public class MenuHandler {
                                 + ") [enter -1 to skip]: ");
                         int obt;
                         try {
-                            obt = input.getIntInput();
+                            obt = Input.getIntInput();
                         } catch (NumberFormatException e) {
                             System.out.println("Invalid number, skipping.");
                             continue;
@@ -335,7 +329,7 @@ public class MenuHandler {
                     }
                 } else if (choice == 2) { // Add Obtained marks of a Subject
                     System.out.print("Enter Subject name: "); // get subject
-                    String subjectName = input.getNormalInput();
+                    String subjectName = Input.getNormalInput();
 
                     Subjects sub = subject_dao.fetchSubject(conn, subjectName); // check if subject exists
 
@@ -347,13 +341,13 @@ public class MenuHandler {
                     }
 
                     int totalMarks = (sub.getTotalMarks() != 0) ? sub.getTotalMarks() : 100; // prefer subject total if
-                                                                                             // available
+                                                                                 // available
 
                     System.out.print("Enter Obtained marks of " + subjectName + " (Total " + totalMarks
                             + ") "); // get obt marks
                     int ObtMarks;
                     try {
-                        ObtMarks = input.getIntInput();
+                        ObtMarks = Input.getIntInput();
                     } catch (NumberFormatException e) {
                         System.out.println("Invalid number.");
                         return true;
@@ -379,20 +373,20 @@ public class MenuHandler {
     }
 
     // SchoolInfo Menu
-    public void handleSchoolMenu(Input input, SchoolDAO school, Actions act) {
+    public void handleSchoolMenu(SchoolDAO school) {
         while (true) {
             System.out.println("1. Show School Info\n2. Add School Info");
 
-            int choice = input.validateMenuInput(2, input);
+            int choice = Input.validateMenuInput(2);
 
             switch (choice) {
                 case 0:
                     return;
                 case 1:
-                    act.showSchoolInfo(school);
+                    Actions.showSchoolInfo(school);
                     break;
                 case 2:
-                    act.addSchoolInfo(school, input);
+                    Actions.addSchoolInfo(school);
                     break;
                 default:
                     break;
@@ -404,7 +398,7 @@ public class MenuHandler {
     // manages showing menus, reading input and dispatching handlers.
     // This complements Main.java which can simply create the required
     // helpers and call this method to start the UI loop.
-    public void runMainLoop(Input input, DBValidator db, ConsoleDisplay show,
+    public void runMainLoop(DBValidator db, ConsoleDisplay show,
             ClassDAO room, SubjectDAO subject_dao, TeacherDAO teacher_dao,
             StudentDAO student_dao, SchoolDAO school, GradeDAO grade_dao) {
 
@@ -412,26 +406,26 @@ public class MenuHandler {
         while (run) {
             // Show top-level menu
             mainMenu();
-            int choice = input.validateMenuInput(7, input);
+            int choice = Input.validateMenuInput(7);
             switch (choice) {
                 case 0 -> { // ... stop the loop
                     System.out.println("Exiting Program.");
                     run = false;
                 }
                 // handles school INFO
-                case 1 -> handleSchoolMenu(input, school, this.act);
+                case 1 -> handleSchoolMenu(school);
                 // CLASS
-                case 2 -> handleClassMenu(room, db, show, input);
+                case 2 -> handleClassMenu(room, db, show);
                 // SUBJECT
-                case 3 -> handleSubjectMenu(subject_dao, db, show, input);
+                case 3 -> handleSubjectMenu(subject_dao, room, db, show);
                 // TEACHERS
-                case 4 -> handleTeacherMenu(teacher_dao, db, show, input);
+                case 4 -> handleTeacherMenu(teacher_dao, db, show);
                 // STUDENTS
-                case 5 -> handleStudentMenu(student_dao, db, show, input);
+                case 5 -> handleStudentMenu(student_dao, db, show);
                 // handle grades of student
-                case 6 -> handleStudentGrades(student_dao, subject_dao, grade_dao, this.act, input);
+                case 6 -> handleStudentGrades(student_dao, subject_dao, grade_dao);
                 case 7 -> {
-                    run = handleDatabase(db, input);
+                    run = handleDatabase(db);
                     System.out.println("Exiting Setup.");
                 }
                 // ... default

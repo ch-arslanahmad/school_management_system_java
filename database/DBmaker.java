@@ -15,20 +15,18 @@ public class DBmaker {
         LogHandler.createLog(logger, "DBMaker");
     }
 
-    public void createDB(Input input) {
+    public void createDB() {
         SchoolDAO school = new SchoolDAO();
         ClassDAO room = new ClassDAO();
         StudentDAO student = new StudentDAO();
         SubjectDAO subject = new SubjectDAO();
         TeacherDAO teacher = new TeacherDAO();
 
-        Actions act = new Actions();
-
-        createSchoolInfo(school, act, input);
-        createClasses(room, act, input);
-        createStudents(student, act, input);
-        createSubjects(subject, act, input);
-        createTeachers(teacher, act, input);
+        createSchoolInfo(school);
+        createClasses(room);
+        createStudents(student);
+        createSubjects(subject, room);
+        createTeachers(teacher);
     }
 
     public DBmaker create() {
@@ -45,33 +43,33 @@ public class DBmaker {
         return this;
     }
 
-    public DBmaker createSchoolInfo(SchoolDAO school, Actions act, Input input) {
+    public DBmaker createSchoolInfo(SchoolDAO school) {
         System.out.println("Now School Info.");
-        act.addSchoolInfo(school, input);
+        Actions.addSchoolInfo(school);
         return this;
     }
 
-    public DBmaker createClasses(ClassDAO room, Actions act, Input input) {
+    public DBmaker createClasses(ClassDAO room) {
         System.out.println("Now Classes.");
-        act.inputClasses(room, input);
+        Actions.inputClasses(room);
         return this;
     }
 
-    public DBmaker createStudents(StudentDAO student, Actions act, Input input) {
+    public DBmaker createStudents(StudentDAO student) {
         System.out.println("Now Students");
-        act.inputStudents(student, input);
+        Actions.inputStudents(student);
         return this;
     }
 
-    public DBmaker createSubjects(SubjectDAO subject, Actions act, Input input) {
+    public DBmaker createSubjects(SubjectDAO subject, ClassDAO room) {
         System.out.println("Now Subjects");
-        act.inputSubjects(subject, input);
+        Actions.inputSubjects(subject, room);
         return this;
     }
 
-    public DBmaker createTeachers(TeacherDAO teacher, Actions act, Input input) {
+    public DBmaker createTeachers(TeacherDAO teacher) {
         System.out.println("Now Teachers");
-        act.inputTeachers(teacher, input);
+        Actions.inputTeachers(teacher);
         return this;
     }
 

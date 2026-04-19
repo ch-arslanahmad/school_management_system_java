@@ -145,6 +145,7 @@ public class SchoolDAO {
                 school.setId(rs.getInt("id"));
                 school.setName(rs.getString("Name"));
                 school.setPrincipal(rs.getString("Principal"));
+                school.setLocation(rs.getString("location"));
                 schools.add(school);
             }
             return schools;
