@@ -11,7 +11,7 @@ import people.Student;
 import school.School;
 
 // main class - implement of Display.java
-public class ConsoleDisplay implements Display {
+public class ConsoleDisplay {
 
     // variables for LOGGing
     private static final Logger logger = Logger.getLogger(ConsoleDisplay.class.getName());
@@ -21,22 +21,20 @@ public class ConsoleDisplay implements Display {
         LogHandler.createLog(logger, "ConsoleDisplay");
     }
 
-    public void displayf(String value1) {
+    public static void displayf(String value1) {
         System.out.printf("|%-20s|\n", value1);
 
     }
 
-    @Override
-    public void displayf(String value1, String value2) {
+    public static void displayf(String value1, String value2) {
         System.out.printf("| %-20s | %-20s |\n", value1, value2);
     }
 
-    @Override
-    public void displayf(String value1, String value2, String value3) {
+    public static void displayf(String value1, String value2, String value3) {
         System.out.printf("|%-20s | %-20s | %-20s |\n", value1, value2, value3);
     }
 
-    public void displayf(String value1, String value2, String value3, String value4,
+    public static void displayf(String value1, String value2, String value3, String value4,
             String value5) {
         System.out.printf("|%-20s | %-11s | %-14s| | %-10s | %-5s |\n", value1, value2, value3,
                 value4, value5);
@@ -44,7 +42,7 @@ public class ConsoleDisplay implements Display {
     }
 
     // --- Student Info ---
-    void studentInfoReport(String name, String className, int ID) {
+    static void studentInfoReport(String name, String className, int ID) {
         try {
             System.out.println("Name: " + name);
             System.out.println("ID: " + ID);
@@ -55,7 +53,7 @@ public class ConsoleDisplay implements Display {
     }
 
     // --- ReportCard Table Header ---
-    void TableReport(List<Subjects> data) {
+    static void TableReport(List<Subjects> data) {
         try {
             displayf("Subjects", "Total Marks", "Obtained Marks", "Percentage", "Grade");
             for (Subjects s : data) {
@@ -69,7 +67,7 @@ public class ConsoleDisplay implements Display {
     }
 
     // --- Report Totals ---
-    void ReportTotals(int totalMarks, int Obtmarks, double totalPercentage, String Grade) {
+    static void ReportTotals(int totalMarks, int Obtmarks, double totalPercentage, String Grade) {
         System.out.println("---TOTALS---");
         System.out.println("Total Marks: " + totalMarks);
         System.out.println("Total Obtained Marks: " + Obtmarks);
@@ -78,7 +76,7 @@ public class ConsoleDisplay implements Display {
     }
 
     // --- Footer - Signatories ---
-    void sign() {
+    static void sign() {
         try (Connection conn = database.Database.getConnection()) {
             SchoolDAO method = new SchoolDAO();
             School school = method.fetchSchool(conn);
@@ -93,10 +91,9 @@ public class ConsoleDisplay implements Display {
     }
 
     // handle the FULL creation of whole Student Report
-    public void handleStudentReport(String StudentName) {
+    public static void handleStudentReport(String StudentName) {
         try (Connection conn = database.Database.getConnection()) {
             StudentDAO student_dao = new StudentDAO();
-
 
             GradeDAO grade_dao = new GradeDAO();
 
@@ -143,7 +140,7 @@ public class ConsoleDisplay implements Display {
         }
     }
 
-    public void handleFeeReciept(String StudentName) {
+    public static void handleFeeReciept(String StudentName) {
         try (Connection conn = database.Database.getConnection()) {
             StudentDAO student = new StudentDAO();
             if (!student.studentExists(conn, StudentName)) {
@@ -200,7 +197,7 @@ public class ConsoleDisplay implements Display {
         }
     }
 
-    public void displaySchoolInfo(SchoolDAO info) {
+    public static void displaySchoolInfo(SchoolDAO info) {
         try (Connection conn = database.Database.getConnection()) {
             School s = info.fetchSchool(conn);
             if (s == null) {

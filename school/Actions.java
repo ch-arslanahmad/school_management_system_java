@@ -57,8 +57,7 @@ public class Actions {
                 System.out.println("No school info found. Please add school info first.");
                 return false;
             }
-            ConsoleDisplay console = new ConsoleDisplay();
-            console.displaySchoolInfo(school_dao);
+            ConsoleDisplay.displaySchoolInfo(school_dao);
             return true;
         });
     }
@@ -186,43 +185,34 @@ public class Actions {
         }
     }
 
-    public static boolean showClasses(ClassDAO rooms, ConsoleDisplay show) {
+public static boolean showClasses(ClassDAO class_dao) {
 
         return DBUtils.runInTransaction(conn -> {
-            List<ClassRoom> classroom = rooms.listClass(conn);
-            if (classroom.isEmpty()) { // check if list is empty
+            List<ClassRoom> classroom = class_dao.listClass(conn);
+            if (classroom.isEmpty()) {
                 System.out.println("Classroom List is empty");
                 return false;
             }
 
-            System.out.println("1. Console\n2. PDF");
-            int choice;
-            // VALIDATING INPUT
-            choice = Input.validateMenuInput(2); // has loop
-            // now divide if to print in PDF / Console
+            System.out.println("1. Console\n2. PDF\n");
+            int choice = Input.validateMenuInput(2);
 
-            // print on CONSOLE
             if (choice == 1) {
-                // this prints one column on console
-                show.displayf("ClassName");
+                ConsoleDisplay.displayf("ClassName");
                 for (ClassRoom room : classroom) {
-                    show.displayf(room.getName());
+                    ConsoleDisplay.displayf(room.getName());
                 }
                 return true;
             }
 
-            // print on PDF
-
-            PdfDisplay pdf = new PdfDisplay(); // PDF object
+            PdfDisplay pdf = new PdfDisplay();
 
             if (choice == 2) {
                 pdf.displayClasses(classroom);
-                // this prints one column in PDF.
                 return true;
             }
             return false;
         });
-
     }
 
     // SUBJECT
@@ -312,7 +302,7 @@ public class Actions {
         });
     }
 
-    public static boolean showSubjects(SubjectDAO subject, ClassDAO room, ConsoleDisplay show) {
+    public static boolean showSubjects(SubjectDAO subject, ClassDAO room) {
         return DBUtils.runInTransaction(conn -> {
             List<Subjects> subjects = subject.listSubjects(conn);
             if (subjects.isEmpty()) { // check if list is empty
@@ -329,9 +319,9 @@ public class Actions {
             // print on CONSOLE
             if (choice == 1) {
                 // this prints one column on console
-                show.displayf("Subjects", "ClassName");
+                ConsoleDisplay.displayf("Subjects", "ClassName");
                 for (Subjects s : subjects) {
-                    show.displayf(s.getName(), s.getClassName());
+                    ConsoleDisplay.displayf(s.getName(), s.getClassName());
                 }
             }
 
@@ -422,7 +412,7 @@ public class Actions {
         return false;
     }
 
-    public static boolean showTeachers(TeacherDAO teacher, ConsoleDisplay show) {
+    public static boolean showTeachers(TeacherDAO teacher) {
         return DBUtils.runInTransaction(conn -> {
             List<Teacher> teachers = teacher.listTeacher(conn);
             if (teachers.isEmpty()) { // check if list is empty
@@ -439,9 +429,9 @@ public class Actions {
             // print on CONSOLE
             if (choice == 1) {
                 // this prints one column on console
-                show.displayf("Teachers", "Subjects");
+                ConsoleDisplay.displayf("Teachers", "Subjects");
                 for (Teacher t : teachers) {
-                    show.displayf(t.getName(), t.getSubjectName());
+                    ConsoleDisplay.displayf(t.getName(), t.getSubjectName());
                 }
             }
 
@@ -545,8 +535,7 @@ public class Actions {
         }
     }
 
-    public static void ManageDisplayStu(List<Student> students /* for student list (in PDF) */,
-            ConsoleDisplay show, PdfDisplay pdf, int choice) {
+    public static void ManageDisplayStu(List<Student> students, PdfDisplay pdf, int choice) {
         System.out.println("1. Console\n2. PDF");
         int ch = Input.validateMenuInput(2);
 
@@ -554,20 +543,20 @@ public class Actions {
         // Student LIST in 'console'
         if (choice == 1 && ch == 1) {
             // this prints students columns on console
-            show.displayf("Students", "Class");
+            ConsoleDisplay.displayf("Students", "Class");
             for (Student t : students) {
-                show.displayf(t.getName(), t.getClassName());
+                ConsoleDisplay.displayf(t.getName(), t.getClassName());
             }
         }
         // student report in 'console'
         else if (choice == 2 && ch == 1) {
             System.out.print("Enter StudentName: ");
             String studentName = Input.getNormalInput();
-            show.handleStudentReport(studentName);
+            ConsoleDisplay.handleStudentReport(studentName);
         } else if (choice == 3 && ch == 1) {
             // add to print reciep System.out.print("Enter StudentName: ");
             String studentName = Input.getNormalInput();
-            show.handleFeeReciept(studentName);
+            ConsoleDisplay.handleFeeReciept(studentName);
         }
         // print PDF on ALL CHOICES
         if (ch == 2)
@@ -575,7 +564,7 @@ public class Actions {
 
     }
 
-    public static boolean showStudents(StudentDAO student, ConsoleDisplay show) {
+    public static boolean showStudents(StudentDAO student) {
 
         System.out.print("1. Student List\n2. Individual Student Report\n3. Fee Receipt\n");
 
@@ -591,7 +580,7 @@ public class Actions {
                     System.out.println("Student List is empty.");
                     return false;
                 }
-                ManageDisplayStu(students, show, pdf, choice);
+                ManageDisplayStu(students, pdf, choice);
                 return true;
             });
         }
@@ -599,14 +588,14 @@ public class Actions {
         if (choice == 2) {
             System.out.print("Enter StudentName: ");
             String studentName = Input.getNormalInput();
-            show.handleStudentReport(studentName);
+            ConsoleDisplay.handleStudentReport(studentName);
             return true;
         }
 
         if (choice == 3) {
             System.out.print("Enter StudentName: ");
             String studentName = Input.getNormalInput();
-            show.handleFeeReciept(studentName);
+            ConsoleDisplay.handleFeeReciept(studentName);
             return true;
         }
 

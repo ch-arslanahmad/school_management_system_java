@@ -22,7 +22,7 @@ public class MenuHandler {
     /// ALL MENUS
 
     // MAIN MENU
-    public void mainMenu() {
+    public static void mainMenu() {
         String[] menu = {
                 "School-Info",
                 "Class >",
@@ -37,7 +37,7 @@ public class MenuHandler {
     }
 
     // easy template for making Menus with names
-    public void showMenu(String name, String[] options) {
+    public static void showMenu(String name, String[] options) {
         System.out.println("\n========== " + name + " ==========\n");
         System.out.println("0. Back/Exit");
         for (int i = 0; i < options.length; i++) {
@@ -45,7 +45,7 @@ public class MenuHandler {
         }
     }
 
-    public void showSimpleMenu(String name, String[] options) {
+    public static void showSimpleMenu(String name, String[] options) {
         System.out.println("\n========== " + name + " ==========\n");
         System.out.println("0. Back/Exit");
         for (int i = 0; i < options.length; i++) {
@@ -54,10 +54,10 @@ public class MenuHandler {
     }
 
     // TEMPLATE OPTIONS FOR SUB - MENUS
-    String[] options = { "Insert", "Delete", "Insert Multiple", "Update", "Show" };
+    static String[] options = { "Insert", "Delete", "Insert Multiple", "Update", "Show" };
 
     // CLASS MENU
-    public void handleClassMenu(ClassDAO room, DBValidator db, ConsoleDisplay show) {
+    public static void handleClassMenu(ClassDAO room, DBValidator db) {
         while (true) {
             try {
                 showMenu("Classes", options);
@@ -90,7 +90,7 @@ public class MenuHandler {
                         break;
 
                     case 5: // show classes
-                        Actions.showClasses(room, show);
+                        Actions.showClasses(room);
                         break;
                     default:
                         System.out.println("Invalid Choice.");
@@ -103,7 +103,7 @@ public class MenuHandler {
     }
 
     // SUBJECT MENU
-    public void handleSubjectMenu(SubjectDAO subject, ClassDAO room, DBValidator db, ConsoleDisplay show) {
+    public static void handleSubjectMenu(SubjectDAO subject, ClassDAO room, DBValidator db) {
         while (true) {
             try {
                 showMenu("Subjects", options);
@@ -134,7 +134,7 @@ public class MenuHandler {
                         }
                         break;
                     case 5: // show
-                        Actions.showSubjects(subject, room, show);
+                        Actions.showSubjects(subject, room);
                         break;
                     default:
                         System.out.println("Invalid Choice.");
@@ -147,7 +147,7 @@ public class MenuHandler {
     }
 
     // TEACHERMENU
-    public void handleTeacherMenu(TeacherDAO teacher, DBValidator db, ConsoleDisplay show) {
+    public static void handleTeacherMenu(TeacherDAO teacher, DBValidator db) {
         while (true) {
             try {
                 showMenu("Teachers", options);
@@ -179,7 +179,7 @@ public class MenuHandler {
                         break;
 
                     case 5: // show
-                        Actions.showTeachers(teacher, show);
+                        Actions.showTeachers(teacher);
                         break;
                     default:
                         System.out.println("Invalid Choice.");
@@ -192,7 +192,7 @@ public class MenuHandler {
     }
 
     // STUDENT MENU
-    public void handleStudentMenu(StudentDAO student, DBValidator db, ConsoleDisplay show) {
+    public static void handleStudentMenu(StudentDAO student, DBValidator db) {
         while (true) {
             try {
                 showMenu("Students", options);
@@ -223,7 +223,7 @@ public class MenuHandler {
                         break;
 
                     case 5: // show
-                        Actions.showStudents(student, show);
+                        Actions.showStudents(student);
                         break;
                     default:
                         System.out.println("Invalid Choice.");
@@ -235,7 +235,7 @@ public class MenuHandler {
         }
     }
 
-    public boolean handleDatabase(DBValidator db) {
+    public static boolean handleDatabase(DBValidator db) {
 
         // DB setup section
         String[] options = { "Wipe dummy data and recreate DB (recommended for first use)",
@@ -281,7 +281,7 @@ public class MenuHandler {
         return false;
     }
 
-public boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO subject_dao, GradeDAO grade_dao) {
+public static boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO subject_dao, GradeDAO grade_dao) {
         while (true) {
             System.out.print("Enter Student name: "); // get student
             String studentName = Input.getNormalInput();
@@ -373,7 +373,7 @@ public boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO subject_da
     }
 
     // SchoolInfo Menu
-    public void handleSchoolMenu(SchoolDAO school) {
+    public static void handleSchoolMenu(SchoolDAO school) {
         while (true) {
             System.out.println("1. Show School Info\n2. Add School Info");
 
@@ -396,39 +396,29 @@ public boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO subject_da
 
     // Run the main menu loop from MenuHandler so this class fully
     // manages showing menus, reading input and dispatching handlers.
-    // This complements Main.java which can simply create the required
-    // helpers and call this method to start the UI loop.
-    public void runMainLoop(DBValidator db, ConsoleDisplay show,
+    public static void runMainLoop(DBValidator db,
             ClassDAO room, SubjectDAO subject_dao, TeacherDAO teacher_dao,
             StudentDAO student_dao, SchoolDAO school, GradeDAO grade_dao) {
 
         boolean run = true;
         while (run) {
-            // Show top-level menu
             mainMenu();
             int choice = Input.validateMenuInput(7);
             switch (choice) {
-                case 0 -> { // ... stop the loop
+                case 0 -> {
                     System.out.println("Exiting Program.");
                     run = false;
                 }
-                // handles school INFO
                 case 1 -> handleSchoolMenu(school);
-                // CLASS
-                case 2 -> handleClassMenu(room, db, show);
-                // SUBJECT
-                case 3 -> handleSubjectMenu(subject_dao, room, db, show);
-                // TEACHERS
-                case 4 -> handleTeacherMenu(teacher_dao, db, show);
-                // STUDENTS
-                case 5 -> handleStudentMenu(student_dao, db, show);
-                // handle grades of student
+                case 2 -> handleClassMenu(room, db);
+                case 3 -> handleSubjectMenu(subject_dao, room, db);
+                case 4 -> handleTeacherMenu(teacher_dao, db);
+                case 5 -> handleStudentMenu(student_dao, db);
                 case 6 -> handleStudentGrades(student_dao, subject_dao, grade_dao);
                 case 7 -> {
                     run = handleDatabase(db);
                     System.out.println("Exiting Setup.");
                 }
-                // ... default
                 default -> System.out.println("Invalid Choice.");
             }
         }

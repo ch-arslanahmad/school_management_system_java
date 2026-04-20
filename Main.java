@@ -25,10 +25,7 @@ public class Main {
             return;
         }
 
-        MenuHandler call = new MenuHandler();
-
         DBValidator db = new DBValidator();
-        ConsoleDisplay show = new ConsoleDisplay();
 
         System.out.println("================= INFO =================\n"
                 + " At any point, enter [0] to go back or exit \n"
@@ -41,7 +38,7 @@ public class Main {
         SchoolDAO school = new SchoolDAO();
         GradeDAO grade_dao = new GradeDAO();
 
-        call.runMainLoop(db, show, room, subject_dao, teacher_dao, student_dao, school, grade_dao);
+        MenuHandler.runMainLoop(db, room, subject_dao, teacher_dao, student_dao, school, grade_dao);
     }
 
     // DON'T FORGET TO CLOSE DOCUMENT/FILE and other things you opened (if any)
