@@ -8,7 +8,16 @@ public class ClassRoom {
     private Integer stationary;
     private Integer paper;
 
+
+    public ClassRoom() {
+    }
+
     public ClassRoom(String className) {
+        this.className = className;
+    }
+
+    public ClassRoom(Integer classID, String className) {
+        this.classID = classID;
         this.className = className;
     }
 
@@ -27,8 +36,6 @@ public class ClassRoom {
         this.paper = paper;
     }
 
-    public ClassRoom() {
-    }
 
     public boolean isEmpty() {
         return className == null;

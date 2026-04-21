@@ -40,9 +40,7 @@ public class StudentDAO {
                     if (rs.next()) {
                         student.setID(rs.getInt("StudentID"));
                         student.setName(rs.getString("StudentName"));
-                        ClassRoom cls = new ClassRoom();
-                        cls.setID(rs.getInt("ClassID"));
-                        student.setClassRoom(cls);
+                        student.setClassID(rs.getInt("ClassID"));
                     } else {
                         logger.warning("Unable to get Student.");
                     }
@@ -256,10 +254,8 @@ public class StudentDAO {
                 Student student = new Student();
                 student.setID(rs.getInt("StudentID"));
                 student.setName(rs.getString("StudentName"));
-                ClassRoom room = new ClassRoom();
-                room.setID(rs.getInt("ClassID"));
-                room.setName(rs.getString("ClassName"));
-                student.setClassRoom(room);
+                student.setClassID(rs.getInt("ClassID"));
+                student.setClassName(rs.getString("ClassName"));
                 students.add(student);
             }
             return students;
@@ -282,9 +278,7 @@ public class StudentDAO {
                     Student student = new Student();
                     student.setID(rs.getInt("StudentID"));
                     student.setName(rs.getString("StudentName"));
-                    ClassRoom room = new ClassRoom();
-                    room.setID(rs.getInt("ClassID"));
-                    student.setClassRoom(room);
+                    student.setClassID(rs.getInt("ClassID"));
                     students.add(student);
                 }
             }

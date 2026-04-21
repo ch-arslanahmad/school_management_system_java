@@ -109,14 +109,6 @@ public class Subjects {
         return className;
     }
 
-    public ClassRoom getClassRoom() {
-        if (classID == null)
-            return null;
-        ClassRoom room = new ClassRoom();
-        room.setID(classID);
-        return room;
-    }
-
     // setters
 
     public void setID(int subjectID) {
@@ -135,9 +127,6 @@ public class Subjects {
         this.className = className;
     }
 
-    public void setClassRoom(ClassRoom room) {
-        this.classID = room != null ? room.getID() : null;
-    }
 
     public void setObtMarks(Integer obtainedMarks) {
         this.obtainedMarks = obtainedMarks;

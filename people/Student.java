@@ -62,6 +62,20 @@ public class Student extends Person {
         this.room = room;
     }
 
+    public void setClassID(Integer classID) {
+        if (this.room == null) this.room = new ClassRoom();
+        this.room.setID(classID);
+    }
+
+    public void setClassName(String className) {
+        if (this.room == null) this.room = new ClassRoom();
+        this.room.setName(className);
+    }
+
+    public Integer getClassID() {
+        return room != null ? room.getID() : null;
+    }
+
     public void addSubject(Subjects subject) {
         subjects.add(subject);
     }
