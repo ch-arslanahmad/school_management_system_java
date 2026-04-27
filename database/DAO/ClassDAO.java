@@ -197,60 +197,53 @@ public class ClassDAO {
         });
     }
 
-    // update class row (classname) by any value
-    public boolean updateClass(ClassRoom oldClass, ClassRoom newClass) {
-
-        /**
-         * <p>
-         * Using `CheckById` for old class, to see its existance.
-         * Using `CheckByName` for new class, to see if the updated name already exists,
-         * as no duplicate names are allowed (for classes)
-         * 
-         */
-
+    // update class
+    public boolean updateClass(ClassRoom cls) {
         return DBUtils.runInTransaction(conn -> {
-            if (!ClassExists(conn, oldClass.getID())) {
-                logger.warning("Class Doesnt exist.");
+            if (cls.getID() == null || cls.getID() == 0) {
+                logger.warning("Class ID is required.");
                 return false;
             }
 
-            if (ClassExists(conn, newClass.getName())) {
-                logger.warning("Updated Name: " + newClass.getName() + "' name already exists.");
+            if (!ClassExists(conn, cls.getID())) {
+                logger.warning("Class does not exist.");
                 return false;
             }
 
             StringBuilder sql = new StringBuilder("UPDATE Class SET ");
+            List<Object> params = new ArrayList<>();
 
-            List<Object> parameters = new ArrayList<>();
-
-            if (newClass.getName() != null) {
+            if (cls.getName() != null && !cls.getName().isEmpty()) {
                 sql.append("ClassName = ?,");
-                parameters.add(newClass.getName());
+                params.add(cls.getName());
             }
-            if (newClass.getTuitionFee() != null) {
-                sql.append(" Tuition_Fee = ?,");
-                parameters.add(newClass.getTuitionFee());
+            if (cls.getTuitionFee() != null) {
+                sql.append("Tuition_Fee = ?,");
+                params.add(cls.getTuitionFee());
             }
-            if (newClass.getStationaryFee() != null) {
-                sql.append(" Stationary_Fee = ?,");
-                parameters.add(newClass.getStationaryFee());
+            if (cls.getStationaryFee() != null) {
+                sql.append("Stationary_Fee = ?,");
+                params.add(cls.getStationaryFee());
             }
-            if (newClass.getPaperFee() != null) {
-                sql.append(" Paper_Fee = ?,");
-                parameters.add(newClass.getPaperFee());
+            if (cls.getPaperFee() != null) {
+                sql.append("Paper_Fee = ?,");
+                params.add(cls.getPaperFee());
             }
 
+            if (params.isEmpty()) {
+                logger.warning("No fields to update.");
+                return false;
+            }
+
+            sql.setLength(sql.length() - 1); // removing trailing ','
             sql.append(" WHERE ClassID = ?");
 
             try (PreparedStatement rm = conn.prepareStatement(sql.toString())) {
-                for (int i = 0; i < parameters.size(); i++) {
-                    rm.setObject(i + 1, parameters.get(i));
+                for (int i = 0; i < params.size(); i++) {
+                    rm.setObject(i + 1, params.get(i));
                 }
-                rm.setObject(parameters.size() + 1, oldClass.getID(), Types.INTEGER);
-
-                int rs = rm.executeUpdate();
-                return rs > 0; // return true if 1 row is affected.
-
+                rm.setInt(params.size() + 1, cls.getID());
+                return rm.executeUpdate() > 0;
             }
         });
     }

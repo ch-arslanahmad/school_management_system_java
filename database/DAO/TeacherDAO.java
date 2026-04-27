@@ -167,43 +167,44 @@ public class TeacherDAO {
         });
     }
 
-    public boolean updateTeacher(Teacher oldTeacher, Teacher newTeacher) {
+    public boolean updateTeacher(Teacher teacher) {
         return DBUtils.runInTransaction(conn -> {
-
-            Teacher fetchedOldTeacher = fetchTeacher(conn, oldTeacher.getID());
-            if (fetchedOldTeacher.getID() == 0) {
-                logger.warning("Teacher Doesnt exist.");
+            if (teacher.getID() == null || teacher.getID() == 0) {
+                logger.warning("Teacher ID is required for update.");
                 return false;
             }
 
-            if (newTeacher.getName() != null && teacherExists(conn, newTeacher.getName())) {
-                logger.warning("Updated Name: " + newTeacher.getName() + "' already exists.");
+            if (!teacherExists(conn, teacher.getID())) {
+                logger.warning("Teacher does not exist.");
                 return false;
             }
 
             StringBuilder sql = new StringBuilder("UPDATE Teacher SET ");
+            List<Object> params = new ArrayList<>();
 
-            List<Object> parameters = new ArrayList<>();
-
-            if (newTeacher.getName() != null) {
+            if (teacher.getName() != null && !teacher.getName().isEmpty()) {
                 sql.append("TeacherName = ?,");
-                parameters.add(newTeacher.getName());
+                params.add(teacher.getName());
             }
-            if (newTeacher.getSubject() != null && newTeacher.getSubject().getID() != 0) {
-                sql.append(" SubjectID = ?,");
-                parameters.add(newTeacher.getSubject().getID());
+            if (teacher.getSubject() != null && teacher.getSubject().getID() != null && teacher.getSubject().getID() != 0) {
+                sql.append("SubjectID = ?,");
+                params.add(teacher.getSubject().getID());
             }
 
-            sql.append(" WHERE TeacherName = ?");
+            if (params.isEmpty()) {
+                logger.warning("No fields to update.");
+                return false;
+            }
+
+            sql.setLength(sql.length() - 1); // remove trailing comma
+            sql.append(" WHERE TeacherID = ?");
 
             try (PreparedStatement rm = conn.prepareStatement(sql.toString())) {
-                for (int i = 0; i < parameters.size(); i++) {
-                    rm.setObject(i + 1, parameters.get(i));
+                for (int i = 0; i < params.size(); i++) {
+                    rm.setObject(i + 1, params.get(i));
                 }
-                rm.setString(parameters.size() + 1, oldTeacher.getName());
-
-                int rs = rm.executeUpdate();
-                return rs > 0;
+                rm.setInt(params.size() + 1, teacher.getID());
+                return rm.executeUpdate() > 0;
             }
         });
     }
@@ -237,6 +238,78 @@ public class TeacherDAO {
         }
         return new ArrayList<>();
     }
+
+    // Filter teachers by class
+    public List<Teacher> listTeachersByClass(Connection conn, int classId) {
+        List<Teacher> teachers = new ArrayList<>();
+        String sql = "SELECT DISTINCT t.TeacherID, t.TeacherName, t.SubjectID, s.SubjectName FROM Teacher t " +
+                   "JOIN Subjects s ON t.SubjectID = s.SubjectID " +
+                   "JOIN Class c ON s.ClassID = c.ClassID " +
+                   "WHERE c.ClassID = ?";
+
+        try (PreparedStatement rm = conn.prepareStatement(sql)) {
+            rm.setInt(1, classId);
+            try (ResultSet rs = rm.executeQuery()) {
+
+                if (!rs.isBeforeFirst()) {
+                    System.out.println("No Teachers found for this class.");
+                    return new ArrayList<>();
+                }
+
+                while (rs.next()) {
+                    Teacher teacher = new Teacher();
+                    teacher.setID(rs.getInt("TeacherID"));
+                    teacher.setName(rs.getString("TeacherName"));
+                    Subjects subj = new Subjects();
+                    subj.setID(rs.getInt("SubjectID"));
+                    subj.setName(rs.getString("SubjectName"));
+                    teacher.setSubject(subj);
+                    teachers.add(teacher);
+                }
+                return teachers;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Unable to list Teachers by class", e);
+        }
+        return new ArrayList<>();
+    }
+
+    // Filter teachers by subject
+    public List<Teacher> listTeachersBySubject(Connection conn, int subjectId) {
+        List<Teacher> teachers = new ArrayList<>();
+        String sql = "SELECT t.TeacherID, t.TeacherName, t.SubjectID, s.SubjectName FROM Teacher t " +
+                   "JOIN Subjects s ON t.SubjectID = s.SubjectID " +
+                   "WHERE t.SubjectID = ?";
+
+        try (PreparedStatement rm = conn.prepareStatement(sql)) {
+            rm.setInt(1, subjectId);
+            try (ResultSet rs = rm.executeQuery()) {
+
+                if (!rs.isBeforeFirst()) {
+                    System.out.println("No Teachers found for this subject.");
+                    return new ArrayList<>();
+                }
+
+                while (rs.next()) {
+                    Teacher teacher = new Teacher();
+                    teacher.setID(rs.getInt("TeacherID"));
+                    teacher.setName(rs.getString("TeacherName"));
+                    Subjects subj = new Subjects();
+                    subj.setID(rs.getInt("SubjectID"));
+                    subj.setName(rs.getString("SubjectName"));
+                    teacher.setSubject(subj);
+                    teachers.add(teacher);
+                }
+                return teachers;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Unable to list Teachers by subject", e);
+        }
+        return new ArrayList<>();
+    }
+
+
+    // list by subject
 
     List<Subjects> listWithSubjects(Connection conn) {
         List<Subjects> subjects = new ArrayList<>();

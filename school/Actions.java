@@ -40,7 +40,7 @@ public class Actions {
 
                 School newSchool = new School(schoolName, principleName, location);
                 // if School-info is not inserted
-                if (!school_dao.updateSchool(school, newSchool)) {
+                if (!school_dao.updateSchool(newSchool)) {
                     String error = "Database Creation Abort : School-Info";
                     logger.warning(error);
                 } else {
@@ -130,18 +130,20 @@ public class Actions {
             int choice = Input.validateMenuInput(3);
 
             return DBUtils.runInTransaction(conn -> {
-                ClassRoom updatedCLS, cls;
-
                 System.out.print("Enter previous ClassName: ");
                 String className = Input.getNormalInput();
 
-                cls = room.fetchClass(conn, className); // fetch existing class
+                ClassRoom cls = room.fetchClass(conn, className);
                 if (cls.isEmpty()) {
                     System.out.println("Class does not exist.");
                     return false;
                 }
 
-                if (choice == 3) {
+                System.out.print("Enter updated ClassName: ");
+                String updateClassName = Input.getNormalInput();
+                cls.setName(updateClassName);
+
+                if (choice == 2 || choice == 3) {
                     System.out.print("Enter Tuition Fee: ");
                     int tuition = Input.getIntInput();
                     System.out.print("Enter Stationary Fee: ");
@@ -152,35 +154,9 @@ public class Actions {
                     cls.setTuitionFee(tuition);
                     cls.setStationaryFee(stationary);
                     cls.setPaperFee(exam);
-
-                    return room.updateClass(cls, cls);
                 }
 
-                System.out.print("Enter updated ClassName: ");
-                String updateClassName = Input.getNormalInput();
-
-                switch (choice) {
-                    case 0: {
-                        return true;
-                    }
-                    case 1: {
-                        updatedCLS = new ClassRoom(updateClassName);
-                        return room.updateClass(cls, updatedCLS);
-                    }
-                    case 2: {
-                        System.out.print("Enter Tuition Fee: ");
-                        int tuition = Input.getIntInput();
-                        System.out.print("Enter Stationary Fee: ");
-                        int stationary = Input.getIntInput();
-                        System.out.print("Enter Exam/Paper Fee: ");
-                        int exam = Input.getIntInput();
-
-                        updatedCLS = new ClassRoom(updateClassName, tuition, stationary, exam);
-                        return room.updateClass(cls, updatedCLS);
-                    }
-                }
-                // default fallback
-                return false;
+                return room.updateClass(cls);
             });
         }
     }
@@ -295,10 +271,9 @@ public static boolean showClasses(ClassDAO class_dao) {
             System.out.print("Enter the Updated Name: ");
             String uptName = Input.getNormalInput();
 
-            if (subject.updateSubject(subjectName, uptName)) {
-                return true;
-            }
-            return false;
+            Subjects existing = subject.fetchSubject(conn, subjectName);
+            existing.setName(uptName);
+            return subject.updateSubject(existing);
         });
     }
 
@@ -395,21 +370,22 @@ public static boolean showClasses(ClassDAO class_dao) {
         System.out.print("Enter the Updated Name: ");
         String uptName = Input.getNormalInput();
 
-        Teacher teach = new Teacher(name);
-        Teacher newTeach = new Teacher(uptName);
-        if (choice == 1) {
-            return teacher.updateTeacher(teach, newTeach);
-        } else if (choice == 2) {
+        return DBUtils.runInTransaction(conn -> {
+            Teacher existing = teacher.fetchTeacher(conn, name);
+            if (existing.getID() == null || existing.getID() == 0) {
+                return false;
+            }
 
-            System.out.print("Enter the Updated SubjectName: ");
-            String updateSubject = Input.getNormalInput();
+            existing.setName(uptName);
+            if (choice == 2) {
+                System.out.print("Enter the Updated SubjectName: ");
+                String updateSubject = Input.getNormalInput();
+                Subjects subject = new Subjects(updateSubject);
+                existing.setSubject(subject);
+            }
 
-            newTeach.setSubject(new Subjects(updateSubject));
-
-            return teacher.updateTeacher(teach, newTeach);
-
-        }
-        return false;
+            return teacher.updateTeacher(existing);
+        });
     }
 
     public static boolean showTeachers(TeacherDAO teacher) {
@@ -509,10 +485,10 @@ public static boolean showClasses(ClassDAO class_dao) {
             }
             System.out.print("Enter the Updated Name: ");
             String uptName = Input.getNormalInput();
-            if (student.updateStudent(new Student(name), new Student(uptName))) {
-                return true;
-            }
-            return false;
+
+            Student existing = student.fetchStudent(conn, name);
+            existing.setName(uptName);
+            return student.updateStudent(existing);
         });
     }
 

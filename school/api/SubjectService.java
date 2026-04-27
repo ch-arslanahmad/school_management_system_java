@@ -22,6 +22,14 @@ public class SubjectService {
         return DBUtils.runInTransaction(conn -> new SubjectDAO().fetchSubject(conn, name));
     }
 
+    public static List<Subjects> getSubjectsByClass(int classId) {
+        return DBUtils.runInTransaction(conn -> new SubjectDAO().listSubjectsByClass(conn, classId));
+    }
+
+    public static List<Subjects> getSubjectsByTeacher(int teacherId) {
+        return DBUtils.runInTransaction(conn -> new SubjectDAO().listSubjectsByTeacher(conn, teacherId));
+    }
+
     // ===== WRITE =====
 
     public static boolean addSubject(Subjects subject) {
@@ -32,14 +40,24 @@ public class SubjectService {
         return new SubjectDAO().insertSubject(className, subjectName);
     }
 
+    public static boolean updateSubject(int id, String newName) {
+        return DBUtils.runInTransaction(conn -> {
+            SubjectDAO dao = new SubjectDAO();
+            Subjects existing = dao.fetchSubject(conn, newName);
+            if (existing.getID() == null || existing.getID() == 0) {
+                // fetch by ID if name not found
+                existing = new Subjects();
+                existing.setID(id);
+            }
+            existing.setName(newName);
+            return dao.updateSubject(existing);
+        });
+    }
+
     public static boolean deleteSubject(int id) {
         SubjectDAO dao = new SubjectDAO();
         Subjects subj = new Subjects();
         subj.setID(id);
         return dao.deleteSubject(subj);
-    }
-
-    public static boolean updateSubject(String oldName, String newName) {
-        return new SubjectDAO().updateSubject(oldName, newName);
     }
 }

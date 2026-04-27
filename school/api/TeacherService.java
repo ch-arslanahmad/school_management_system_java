@@ -9,117 +9,88 @@ import people.Teacher;
 
 public class TeacherService {
 
-	// ===== READ METHODS =====
+    // ===== READ =====
 
-	public static List<Teacher> getTeachers() {
-		return DBUtils.runInTransaction(conn -> {
-			TeacherDAO teacherDAO = new TeacherDAO();
-			return teacherDAO.listTeachers(conn);
-		});
-	}
+    public static List<Teacher> getTeachers() {
+        return DBUtils.runInTransaction(conn -> new TeacherDAO().listTeachers(conn));
+    }
 
-	public static Teacher getTeacher(String name) {
-		return DBUtils.runInTransaction(conn -> {
-			TeacherDAO teacherDAO = new TeacherDAO();
-			return teacherDAO.fetchTeacher(conn, name);
-		});
-	}
+    public static List<Teacher> getTeachersByClass(int classId) {
+        return DBUtils.runInTransaction(conn -> new TeacherDAO().listTeachersByClass(conn, classId));
+    }
 
-	public static Teacher getTeacher(int id) {
-		return DBUtils.runInTransaction(conn -> {
-			TeacherDAO teacherDAO = new TeacherDAO();
-			return teacherDAO.fetchTeacher(conn, id);
-		});
-	}
+    public static List<Teacher> getTeachersBySubject(int subjectId) {
+        return DBUtils.runInTransaction(conn -> new TeacherDAO().listTeachersBySubject(conn, subjectId));
+    }
 
-	public static boolean teacherExists(String name) {
-		return DBUtils.runInTransaction(conn -> {
-			TeacherDAO teacherDAO = new TeacherDAO();
-			return teacherDAO.teacherExists(conn, name);
-		});
-	}
+    public static Teacher getTeacher(String name) {
+        return DBUtils.runInTransaction(conn -> new TeacherDAO().fetchTeacher(conn, name));
+    }
 
-	// ===== WRITE METHODS =====
+    public static Teacher getTeacher(int id) {
+        return DBUtils.runInTransaction(conn -> new TeacherDAO().fetchTeacher(conn, id));
+    }
 
-	public static boolean addTeacher(Teacher teacher) {
-		return DBUtils.runInTransaction(conn -> {
-			TeacherDAO teacherDAO = new TeacherDAO();
-			return teacherDAO.insertTeacher(teacher);
-		});
-	}
+    // ===== WRITE =====
 
-	public static boolean addTeacher(String name, int subjectId) {
-		Teacher teacher = new Teacher(name);
-		teacher.setSubject(new Subjects());
-		teacher.getSubject().setID(subjectId);
-		return addTeacher(teacher);
-	}
+    public static boolean addTeacher(Teacher teacher) {
+        return new TeacherDAO().insertTeacher(teacher);
+    }
 
-	public static boolean updateTeacher(String oldName, String newName) {
-		return DBUtils.runInTransaction(conn -> {
-			TeacherDAO teacherDAO = new TeacherDAO();
-			Teacher existing = teacherDAO.fetchTeacher(conn, oldName);
-			if (existing.getID() == null || existing.getID() == 0) {
-				return false;
-			}
+    public static boolean addTeacher(String name, int subjectId) {
+        Teacher teacher = new Teacher(name);
+        Subjects subject = new Subjects();
+        subject.setID(subjectId);
+        teacher.setSubject(subject);
+        return addTeacher(teacher);
+    }
 
-			Teacher oldTeacher = new Teacher(existing.getName());
-			oldTeacher.setID(existing.getID());
+    public static boolean updateTeacher(int id, String newName) {
+        return DBUtils.runInTransaction(conn -> {
+            TeacherDAO dao = new TeacherDAO();
+            Teacher existing = dao.fetchTeacher(conn, id);
+            if (existing.getID() == null || existing.getID() == 0) {
+                return false;
+            }
+            existing.setName(newName);
+            return dao.updateTeacher(existing);
+        });
+    }
 
-			Teacher updated = new Teacher();
-			updated.setName(newName);
-			return teacherDAO.updateTeacher(oldTeacher, updated);
-		});
-	}
+    public static boolean updateTeacher(int id, String newName, int subjectId) {
+        return DBUtils.runInTransaction(conn -> {
+            TeacherDAO dao = new TeacherDAO();
+            Teacher existing = dao.fetchTeacher(conn, id);
+            if (existing.getID() == null || existing.getID() == 0) {
+                return false;
+            }
+            existing.setName(newName);
+            Subjects subject = new Subjects();
+            subject.setID(subjectId);
+            existing.setSubject(subject);
+            return dao.updateTeacher(existing);
+        });
+    }
 
-	public static boolean assignSubject(String teacherName, int subjectId) {
-		return DBUtils.runInTransaction(conn -> {
-			TeacherDAO teacherDAO = new TeacherDAO();
-			Teacher existing = teacherDAO.fetchTeacher(conn, teacherName);
-			if (existing.getID() == null || existing.getID() == 0) {
-				return false;
-			}
+    public static boolean assignSubject(int teacherId, int subjectId) {
+        return DBUtils.runInTransaction(conn -> {
+            TeacherDAO dao = new TeacherDAO();
+            Teacher existing = dao.fetchTeacher(conn, teacherId);
+            if (existing.getID() == null || existing.getID() == 0) {
+                return false;
+            }
+            Subjects subject = new Subjects();
+            subject.setID(subjectId);
+            existing.setSubject(subject);
+            return dao.updateTeacher(existing);
+        });
+    }
 
-			Teacher oldTeacher = new Teacher(existing.getName());
-			oldTeacher.setID(existing.getID());
-
-			Teacher updated = new Teacher();
-			Subjects subject = new Subjects();
-			subject.setID(subjectId);
-			updated.setSubject(subject);
-
-			return teacherDAO.updateTeacher(oldTeacher, updated);
-		});
-	}
-
-	public static boolean updateTeacher(String oldName, String newName, Integer subjectId) {
-		return DBUtils.runInTransaction(conn -> {
-			TeacherDAO teacherDAO = new TeacherDAO();
-			Teacher existing = teacherDAO.fetchTeacher(conn, oldName);
-			if (existing.getID() == null || existing.getID() == 0) {
-				return false;
-			}
-
-			Teacher oldTeacher = new Teacher(existing.getName());
-			oldTeacher.setID(existing.getID());
-
-			Teacher updated = new Teacher();
-			updated.setName(newName);
-			if (subjectId != null) {
-				Subjects subject = new Subjects();
-				subject.setID(subjectId);
-				updated.setSubject(subject);
-			}
-
-			return teacherDAO.updateTeacher(oldTeacher, updated);
-		});
-	}
-
-	public static boolean deleteTeacher(String name) {
-		return DBUtils.runInTransaction(conn -> {
-			TeacherDAO teacherDAO = new TeacherDAO();
-			Teacher teacher = teacherDAO.fetchTeacher(conn, name);
-			return teacherDAO.deleteTeacher(teacher);
-		});
-	}
+    public static boolean deleteTeacher(int id) {
+        return DBUtils.runInTransaction(conn -> {
+            TeacherDAO dao = new TeacherDAO();
+            Teacher teacher = dao.fetchTeacher(conn, id);
+            return dao.deleteTeacher(teacher);
+        });
+    }
 }

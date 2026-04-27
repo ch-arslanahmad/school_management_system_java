@@ -91,7 +91,7 @@ public class SchoolDAO {
         });
     }
 
-    public boolean updateSchool(School oldSchool, School newSchool) {
+    public boolean updateSchool(School school) {
         return DBUtils.runInTransaction(conn -> {
             if (!schoolExists(conn)) {
                 logger.warning("School does not exist.");
@@ -99,31 +99,34 @@ public class SchoolDAO {
             }
 
             StringBuilder sql = new StringBuilder("UPDATE School SET ");
+            List<Object> params = new ArrayList<>();
 
-            List<Object> parameters = new ArrayList<>();
-
-            if (newSchool.getName() != null) {
+            if (school.getName() != null && !school.getName().isEmpty()) {
                 sql.append("Name = ?,");
-                parameters.add(newSchool.getName());
+                params.add(school.getName());
             }
-            if (newSchool.getPrincipal() != null) {
-                sql.append(" Principal = ?,");
-                parameters.add(newSchool.getPrincipal());
+            if (school.getPrincipal() != null && !school.getPrincipal().isEmpty()) {
+                sql.append("Principal = ?,");
+                params.add(school.getPrincipal());
             }
-            if (newSchool.getlocation() != null) {
-                sql.append(" location = ?,");
-                parameters.add(newSchool.getlocation());
+            if (school.getlocation() != null && !school.getlocation().isEmpty()) {
+                sql.append("location = ?,");
+                params.add(school.getlocation());
             }
 
+            if (params.isEmpty()) {
+                logger.warning("No fields to update.");
+                return false;
+            }
+
+            sql.setLength(sql.length() - 1); // removing trailing ','
             sql.append(" WHERE id = 1");
 
             try (PreparedStatement rm = conn.prepareStatement(sql.toString())) {
-                for (int i = 0; i < parameters.size(); i++) {
-                    rm.setObject(i + 1, parameters.get(i));
+                for (int i = 0; i < params.size(); i++) {
+                    rm.setObject(i + 1, params.get(i));
                 }
-
-                int rs = rm.executeUpdate();
-                return rs > 0;
+                return rm.executeUpdate() > 0;
             }
         });
     }

@@ -1,7 +1,6 @@
 package database;
 
 import database.DAO.*;
-import display.Input;
 import display.LogHandler;
 import school.Actions;
 

@@ -51,6 +51,36 @@ public class StudentDAO {
         return student;
     }
 
+    public Student fetchStudent(Connection conn, int id) {
+        Student student = new Student();
+
+        String studentSQL = "SELECT * FROM Student WHERE StudentID = ?;";
+
+        try {
+            if (!studentExists(conn, id)) {
+                logger.warning("Student NOT found.");
+                return student;
+            }
+
+            try (PreparedStatement rm = conn.prepareStatement(studentSQL)) {
+                rm.setInt(1, id);
+
+                try (ResultSet rs = rm.executeQuery()) {
+                    if (rs.next()) {
+                        student.setID(rs.getInt("StudentID"));
+                        student.setName(rs.getString("StudentName"));
+                        student.setClassID(rs.getInt("ClassID"));
+                    } else {
+                        logger.warning("Unable to get Student.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error while fetching Student.", e);
+        }
+        return student;
+    }
+
     public Student fetchStudentWithMarks(Connection conn, String studentName) {
         Student student = fetchStudent(conn, studentName);
 
@@ -85,10 +115,31 @@ public class StudentDAO {
 
             try (ResultSet rs = rm.executeQuery()) {
                 if (rs.next()) {
-                    logger.info("Match found, Student Exists.");
+                    logger.info("Match found, Student exists.");
                     return true;
                 } else {
-                    logger.warning("No match found, Student Does Not Exist.");
+                    logger.warning("Student does not exist.");
+                    return false;
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error checking Student existence.", e);
+        }
+        return false;
+    }
+
+    public boolean studentExists(Connection conn, int id) {
+        String check = "SELECT 1 FROM Student WHERE StudentID = ?;";
+
+        try (PreparedStatement rm = conn.prepareStatement(check)) {
+            rm.setInt(1, id);
+
+            try (ResultSet rs = rm.executeQuery()) {
+                if (rs.next()) {
+                    logger.info("Match found, Student exists.");
+                    return true;
+                } else {
+                    logger.warning("Student does not exist.");
                     return false;
                 }
             }
@@ -183,42 +234,44 @@ public class StudentDAO {
         });
     }
 
-    public boolean updateStudent(Student oldStudent, Student newStudent) {
+    public boolean updateStudent(Student student) {
         return DBUtils.runInTransaction(conn -> {
-            if (!studentExists(conn, oldStudent.getName())) {
-                logger.warning("Student Doesnt exist.");
+            if (student.getID() == null || student.getID() == 0) {
+                logger.warning("Student ID is required.");
                 return false;
             }
 
-            if (newStudent.getName() != null && studentExists(conn, newStudent.getName())) {
-                logger.warning("Updated Name: " + newStudent.getName() + "' already exists.");
+            if (!studentExists(conn, student.getID())) {
+                logger.warning("Student does not exist.");
                 return false;
             }
 
             StringBuilder sql = new StringBuilder("UPDATE Student SET ");
+            List<Object> params = new ArrayList<>();
 
-            List<Object> parameters = new ArrayList<>();
-
-            if (newStudent.getName() != null) {
+            if (student.getName() != null && !student.getName().isEmpty()) {
                 sql.append("StudentName = ?,");
-                parameters.add(newStudent.getName());
+                params.add(student.getName());
             }
-            if (newStudent.getClassRoom() != null && newStudent.getClassRoom().getID() != null
-                    && newStudent.getClassRoom().getID() != 0) {
-                sql.append(" ClassID = ?,");
-                parameters.add(newStudent.getClassRoom().getID());
+            if (student.getClassID() != null && student.getClassID() != 0) {
+                sql.append("ClassID = ?,");
+                params.add(student.getClassID());
             }
 
-            sql.append(" WHERE StudentName = ?");
+            if (params.isEmpty()) {
+                logger.warning("No fields to update.");
+                return false;
+            }
+
+            sql.setLength(sql.length() - 1); // removing trailing ','
+            sql.append(" WHERE StudentID = ?");
 
             try (PreparedStatement rm = conn.prepareStatement(sql.toString())) {
-                for (int i = 0; i < parameters.size(); i++) {
-                    rm.setObject(i + 1, parameters.get(i));
+                for (int i = 0; i < params.size(); i++) {
+                    rm.setObject(i + 1, params.get(i));
                 }
-                rm.setString(parameters.size() + 1, oldStudent.getName());
-
-                int rs = rm.executeUpdate();
-                return rs > 0;
+                rm.setInt(params.size() + 1, student.getID());
+                return rm.executeUpdate() > 0;
             }
         });
     }
@@ -251,7 +304,7 @@ public class StudentDAO {
         return new ArrayList<>();
     }
 
-    // list students by class
+    // list (filter) students by class
     public List<Student> listStudents(Connection conn, int classID) {
         List<Student> students = new ArrayList<>();
         String listStudentSQL = "SELECT * FROM Student WHERE ClassID = ?";

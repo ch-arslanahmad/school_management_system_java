@@ -18,18 +18,40 @@ public class ClassService {
         return DBUtils.runInTransaction(conn -> new ClassDAO().fetchClass(conn, name));
     }
 
-    public static ClassRoom getClassById(int id) {
+    public static ClassRoom getClass(int id) {
         return DBUtils.runInTransaction(conn -> new ClassDAO().fetchClass(conn, id));
-    }
-
-    public static boolean exists(String name) {
-        return DBUtils.runInTransaction(conn -> new ClassDAO().ClassExists(conn, name));
     }
 
     // ===== WRITE =====
 
-    public static boolean addClass(ClassRoom classRoom) {
-        return new ClassDAO().insertClass(classRoom);
+    public static boolean addClass(ClassRoom cls) {
+        return new ClassDAO().insertClass(cls);
+    }
+
+    public static boolean updateClass(int id, String name) {
+        return DBUtils.runInTransaction(conn -> {
+            ClassDAO dao = new ClassDAO();
+            ClassRoom existing = dao.fetchClass(conn, id);
+            if (existing.isEmpty()) {
+                return false;
+            }
+            existing.setName(name);
+            return dao.updateClass(existing);
+        });
+    }
+
+    public static boolean updateClass(int id, int tuitionFee, int stationaryFee, int paperFee) {
+        return DBUtils.runInTransaction(conn -> {
+            ClassDAO dao = new ClassDAO();
+            ClassRoom existing = dao.fetchClass(conn, id);
+            if (existing.isEmpty()) {
+                return false;
+            }
+            existing.setTuitionFee(tuitionFee);
+            existing.setStationaryFee(stationaryFee);
+            existing.setPaperFee(paperFee);
+            return dao.updateClass(existing);
+        });
     }
 
     public static boolean deleteClass(int id) {
@@ -37,12 +59,5 @@ public class ClassService {
         ClassRoom cls = new ClassRoom();
         cls.setID(id);
         return dao.deleteClass(cls);
-    }
-
-    public static boolean updateClass(int oldId, ClassRoom newClass) {
-        ClassDAO dao = new ClassDAO();
-        ClassRoom oldClass = new ClassRoom();
-        oldClass.setID(oldId);
-        return dao.updateClass(oldClass, newClass);
     }
 }
