@@ -208,7 +208,7 @@ public class TeacherDAO {
         });
     }
 
-    public List<Teacher> listTeacher(Connection conn) {
+    public List<Teacher> listTeachers(Connection conn) {
         List<Teacher> teachers = new ArrayList<>();
         String listTeacherSQL = "SELECT t.TeacherID, t.TeacherName, t.SubjectID, s.SubjectName FROM Teacher t LEFT JOIN Subjects s ON t.SubjectID = s.SubjectID";
 

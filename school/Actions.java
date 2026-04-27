@@ -414,7 +414,7 @@ public static boolean showClasses(ClassDAO class_dao) {
 
     public static boolean showTeachers(TeacherDAO teacher) {
         return DBUtils.runInTransaction(conn -> {
-            List<Teacher> teachers = teacher.listTeacher(conn);
+            List<Teacher> teachers = teacher.listTeachers(conn);
             if (teachers.isEmpty()) { // check if list is empty
                 System.out.println("Teacher List is empty.");
                 return false;
@@ -649,6 +649,9 @@ public static boolean showClasses(ClassDAO class_dao) {
             return studentDAO.fetchStudentWithMarks(conn, name);
         });
     }
+
+
+    // -- S
 
 
 }

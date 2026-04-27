@@ -4,7 +4,6 @@ package database.DAO;
 // package imports
 import display.LogHandler;
 import people.Student;
-import classroom.ClassRoom;
 import classroom.Subjects;
 import database.DBUtils;
 
@@ -177,20 +176,6 @@ public class StudentDAO {
             String deleteStudentSQL = "DELETE FROM Student WHERE StudentID = ?";
             try (PreparedStatement rm = conn.prepareStatement(deleteStudentSQL)) {
                 rm.setObject(1, student.getID(), Types.INTEGER);
-
-                int rs = rm.executeUpdate();
-                return rs > 0;
-            }
-        });
-    }
-
-    // Delete marks of students in a specific subject.
-    public boolean deleteMarks(Student student, Subjects subject) {
-        return DBUtils.runInTransaction(conn -> {
-            String deleteMarksSQL = "DELETE FROM StudentMarks WHERE StudentID = ? AND SubjectID = ?";
-            try (PreparedStatement rm = conn.prepareStatement(deleteMarksSQL)) {
-                rm.setInt(1, student.getID());
-                rm.setInt(2, subject.getID());
 
                 int rs = rm.executeUpdate();
                 return rs > 0;
