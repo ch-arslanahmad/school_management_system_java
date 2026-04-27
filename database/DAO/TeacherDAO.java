@@ -106,7 +106,7 @@ public class TeacherDAO {
         return false;
     }
 
-    public boolean teacherExists(Connection conn, int id) throws SQLException {
+    public boolean teacherExists(Connection conn, int id) {
         String check = "SELECT 1 FROM Teacher WHERE TeacherID = ?;";
 
         try (PreparedStatement rm = conn.prepareStatement(check)) {
@@ -121,7 +121,10 @@ public class TeacherDAO {
                     return false;
                 }
             }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error checking Teacher existence.", e);
         }
+        return false;
     }
 
     public boolean insertTeacher(Teacher teacher) {

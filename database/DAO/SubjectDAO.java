@@ -52,6 +52,38 @@ public class SubjectDAO {
         return subj;
     }
 
+    public Subjects fetchSubject(Connection conn, int id) {
+        Subjects subj = new Subjects();
+
+        String subjectSQL = "SELECT * FROM Subjects WHERE SubjectID = ?;";
+
+        try {
+            if (!subjectExists(conn, id)) {
+                logger.warning("Subject NOT found.");
+                return new Subjects();
+            }
+
+            try (PreparedStatement rm = conn.prepareStatement(subjectSQL)) {
+                rm.setInt(1, id);
+
+                try (ResultSet rs = rm.executeQuery()) {
+                    if (rs.next()) {
+                        subj.setID(rs.getInt("SubjectID"));
+                        subj.setName(rs.getString("SubjectName"));
+                        subj.setClassID(rs.getInt("ClassID"));
+
+                    } else {
+                        logger.warning("Unable to get Subject.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error while fetching Subject by ID.", e);
+        }
+
+        return subj;
+    }
+
     public boolean subjectExists(Connection conn, String name) {
         String check = "SELECT 1 FROM Subjects WHERE SubjectName = ?;";
 

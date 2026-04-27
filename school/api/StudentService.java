@@ -30,7 +30,7 @@ public class StudentService {
     // ===== WRITE =====
 
     public static boolean addStudent(Student student) {
-        return new StudentDAO().insertStudent(student);
+        return DBUtils.runInTransaction(conn -> new StudentDAO().insertStudent(student));
     }
 
     public static boolean updateStudent(int id, String newName) {

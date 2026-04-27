@@ -25,7 +25,7 @@ public class ClassService {
     // ===== WRITE =====
 
     public static boolean addClass(ClassRoom cls) {
-        return new ClassDAO().insertClass(cls);
+        return DBUtils.runInTransaction(conn -> new ClassDAO().insertClass(cls));
     }
 
     public static boolean updateClass(int id, String name) {
@@ -55,9 +55,13 @@ public class ClassService {
     }
 
     public static boolean deleteClass(int id) {
-        ClassDAO dao = new ClassDAO();
-        ClassRoom cls = new ClassRoom();
-        cls.setID(id);
-        return dao.deleteClass(cls);
+        return DBUtils.runInTransaction(conn -> {
+            ClassDAO dao = new ClassDAO();
+            ClassRoom cls = dao.fetchClass(conn, id);
+            if (cls.isEmpty()) {
+                return false;
+            }
+            return dao.deleteClass(cls);
+        });
     }
 }

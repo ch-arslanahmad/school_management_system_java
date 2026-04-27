@@ -34,7 +34,7 @@ public class TeacherService {
     // ===== WRITE =====
 
     public static boolean addTeacher(Teacher teacher) {
-        return new TeacherDAO().insertTeacher(teacher);
+        return DBUtils.runInTransaction(conn -> new TeacherDAO().insertTeacher(teacher));
     }
 
     public static boolean addTeacher(String name, int subjectId) {

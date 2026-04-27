@@ -22,6 +22,10 @@ public class SubjectService {
         return DBUtils.runInTransaction(conn -> new SubjectDAO().fetchSubject(conn, name));
     }
 
+    public static Subjects getSubject(int id) {
+        return DBUtils.runInTransaction(conn -> new SubjectDAO().fetchSubject(conn, id));
+    }
+
     public static List<Subjects> getSubjectsByClass(int classId) {
         return DBUtils.runInTransaction(conn -> new SubjectDAO().listSubjectsByClass(conn, classId));
     }
@@ -33,21 +37,19 @@ public class SubjectService {
     // ===== WRITE =====
 
     public static boolean addSubject(Subjects subject) {
-        return new SubjectDAO().insertSubject(subject);
+        return DBUtils.runInTransaction(conn -> new SubjectDAO().insertSubject(subject));
     }
 
     public static boolean addSubject(String className, String subjectName) {
-        return new SubjectDAO().insertSubject(className, subjectName);
+        return DBUtils.runInTransaction(conn -> new SubjectDAO().insertSubject(className, subjectName));
     }
 
     public static boolean updateSubject(int id, String newName) {
         return DBUtils.runInTransaction(conn -> {
             SubjectDAO dao = new SubjectDAO();
-            Subjects existing = dao.fetchSubject(conn, newName);
+            Subjects existing = dao.fetchSubject(conn, id);
             if (existing.getID() == null || existing.getID() == 0) {
-                // fetch by ID if name not found
-                existing = new Subjects();
-                existing.setID(id);
+                return false;
             }
             existing.setName(newName);
             return dao.updateSubject(existing);
@@ -55,9 +57,13 @@ public class SubjectService {
     }
 
     public static boolean deleteSubject(int id) {
-        SubjectDAO dao = new SubjectDAO();
-        Subjects subj = new Subjects();
-        subj.setID(id);
-        return dao.deleteSubject(subj);
+        return DBUtils.runInTransaction(conn -> {
+            SubjectDAO dao = new SubjectDAO();
+            Subjects subj = dao.fetchSubject(conn, id);
+            if (subj.getID() == null || subj.getID() == 0) {
+                return false;
+            }
+            return dao.deleteSubject(subj);
+        });
     }
 }
