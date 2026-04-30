@@ -7,7 +7,6 @@ import database.*;
 import java.sql.Connection;
 import display.*;
 import school.service.*;
-import database.DAO.GradeDAO;
 
 import people.Student;
 import people.Teacher;
@@ -540,34 +539,28 @@ public static boolean showClasses() {
         return false;
     }
 
-    public static boolean updateOrInsert(Student student) {
+public static boolean updateOrInsert(Student student) {
 
-        return DBUtils.runInTransaction(conn -> {
+        List<Subjects> subjects = StudentService.getStudentSubjects(student.getName());
 
-            GradeDAO grade_dao = new GradeDAO();
-
-            List<Subjects> subjects = grade_dao.fetchStudentReport(conn, student.getName()); // just to get subjects
-                                                                                             // list for input
-
-            for (Subjects s : subjects) {
-                while (true) {
-                    System.out.print("Total marks of " + s.getName() + ": " + s.getTotalMarks());
-                    System.out.print("Enter Obtained marks of " + s.getName() + ": ");
-                    int marks = Input.getIntInput();
-                    if (marks == 0) {
-                        System.out.println("Invalid input. Please enter a valid number.");
-                        continue;
-                    } else if (s.getTotalMarks() < marks) {
-                        System.out.println("Obtained marks cannot be greater than total Marks.");
-                        continue;
-                    }
-                    s.setObtMarks(marks);
-                    StudentService.insertOrUpdateMarks(student.getName(), s.getID(), marks);
-                    break;
+        for (Subjects s : subjects) {
+            while (true) {
+                System.out.print("Total marks of " + s.getName() + ": " + s.getTotalMarks());
+                System.out.print("Enter Obtained marks of " + s.getName() + ": ");
+                int marks = Input.getIntInput();
+                if (marks == 0) {
+                    System.out.println("Invalid input. Please enter a valid number.");
+                    continue;
+                } else if (s.getTotalMarks() < marks) {
+                    System.out.println("Obtained marks cannot be greater than total Marks.");
+                    continue;
                 }
+                s.setObtMarks(marks);
+                StudentService.insertOrUpdateMarks(student.getName(), s.getID(), marks);
+                break;
             }
-            return true;
-        });
+        }
+        return true;
     }
 
     public static List<Student> getStudents() {

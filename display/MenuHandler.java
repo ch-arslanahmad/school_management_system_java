@@ -6,10 +6,10 @@ import classroom.Subjects;
 import java.util.InputMismatchException;
 
 import database.*;
-import database.DAO.*;
 import people.Student;
 import school.Actions;
 import school.service.StudentService;
+import school.service.SubjectService;
 
 public class MenuHandler {
 
@@ -58,7 +58,7 @@ public class MenuHandler {
     static String[] options = { "Insert", "Delete", "Insert Multiple", "Update", "Show" };
 
     // CLASS MENU
-    public static void handleClassMenu(ClassDAO room, DBValidator db) {
+    public static void handleClassMenu() {
         while (true) {
             try {
                 showMenu("Classes", options);
@@ -104,7 +104,7 @@ public class MenuHandler {
     }
 
     // SUBJECT MENU
-    public static void handleSubjectMenu(SubjectDAO subject, ClassDAO room, DBValidator db) {
+    public static void handleSubjectMenu() {
         while (true) {
             try {
                 showMenu("Subjects", options);
@@ -147,8 +147,8 @@ public class MenuHandler {
         }
     }
 
-    // TEACHERMENU
-    public static void handleTeacherMenu(TeacherDAO teacher, DBValidator db) {
+    // TEACHER MENU
+    public static void handleTeacherMenu() {
         while (true) {
             try {
                 showMenu("Teachers", options);
@@ -193,7 +193,7 @@ public class MenuHandler {
     }
 
     // STUDENT MENU
-    public static void handleStudentMenu(StudentDAO student, DBValidator db) {
+    public static void handleStudentMenu() {
         while (true) {
             try {
                 showMenu("Students", options);
@@ -236,7 +236,7 @@ public class MenuHandler {
         }
     }
 
-    public static boolean handleDatabase(DBValidator db) {
+    public static boolean handleDatabase() {
 
         // DB setup section
         String[] options = { "Wipe dummy data and recreate DB (recommended for first use)",
@@ -254,12 +254,11 @@ public class MenuHandler {
                         "⚠ WARNING: This will delete EVERYTHING. Type 'CONFIRM' to proceed: ");
                 String confirm = Input.getNormalInput();
                 if (confirm.equalsIgnoreCase("CONFIRM")) {
-                    if (!db.delDB()) {
+                    if (!DBValidator.delDB()) {
                         System.out.println("Unable to delete DB.");
                         break;
                     }
-                    DBmaker data = new DBmaker();
-                    data.createDB();
+                    new DBmaker().createDB();
                     System.out.println("Database wiped and recreated successfully.");
                 } else {
                     System.out.println("Cancelled wipe. Keeping existing data.");
@@ -267,10 +266,9 @@ public class MenuHandler {
                 break;
 
             case 2:
-                if (!db.DBvalidate()) {
+                if (!DBValidator.DBvalidate()) {
                     System.out.println("No valid database found. Creating a new one...");
-                    DBmaker data = new DBmaker();
-                    data.createDB();
+                    new DBmaker().createDB();
                 } else {
                     System.out.println("Using existing database.");
                 }
@@ -282,7 +280,7 @@ public class MenuHandler {
         return false;
     }
 
-public static boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO subject_dao, GradeDAO grade_dao) {
+public static boolean handleStudentGrades() {
         while (true) {
             System.out.print("Enter Student name: "); // get student
             String studentName = Input.getNormalInput();
@@ -291,90 +289,89 @@ public static boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO sub
                 return true;
             }
 
-            DBUtils.runInTransaction(conn -> {
-                if (!student_dao.studentExists(conn, studentName)) {
-                    System.out.println("Student does not exist.");
-                    return false;
+            // Use Service to check if student exists
+            Student stu = StudentService.getStudent(studentName);
+            if (stu == null || stu.getID() == null) {
+                System.out.println("Student does not exist.");
+                continue;
+            }
+
+            System.out.println("1. Add Obtained Marks of every Subject\n"
+                    + "2. Add Obtained marks of a Subject");
+
+            int choice = Input.validateMenuInput(2);
+
+            if (choice == 0) {
+                continue;
+            } else if (choice == 1) {
+                // get subjects for the student and prompt for obtained marks one by one
+                List<Subjects> subjects = stu.getSubjects();
+                if (subjects == null || subjects.isEmpty()) {
+                    System.out.println("No subjects found for this student.");
+                    continue;
                 }
-
-                System.out.println("1. Add Obtained Marks of every Subject\n"
-                        + "2. Add Obtained marks of a Subject");
-
-                int choice = Input.validateMenuInput(2);
-
-                Student stu = student_dao.fetchStudent(conn, studentName);
-
-                if (choice == 0) {
-                    return true;
-                } else if (choice == 1) {
-                    // get subjects for the student and prompt for obtained marks one by one
-                    List<Subjects> subjects = grade_dao.fetchStudentReport(conn, studentName);
-                    for (Subjects sub : subjects) {
-                        int total = (sub.getTotalMarks() != 0) ? sub.getTotalMarks() : 100;
-                        System.out.print("Enter Obtained marks for '" + sub.getName() + "' (Total " + total
-                                + ") [enter -1 to skip]: ");
-                        int obt;
-                        try {
-                            obt = Input.getIntInput();
-                        } catch (NumberFormatException e) {
-                            System.out.println("Invalid number, skipping.");
-                            continue;
-                        }
-                        if (obt == -1) {
-                            continue; // skip this subject
-                        }
-                        sub.setObtMarks(obt);
-                        if (!StudentService.insertOrUpdateMarks(stu.getName(), sub.getID(), obt)) {
-                            System.out.println("Failed to update marks for '" + sub.getName() + "'.");
-                        }
-                    }
-                } else if (choice == 2) { // Add Obtained marks of a Subject
-                    System.out.print("Enter Subject name: "); // get subject
-                    String subjectName = Input.getNormalInput();
-
-                    Subjects sub = subject_dao.fetchSubject(conn, subjectName); // check if subject exists
-
-                    if (sub == null) {
-                        System.out.println("Subject does not exist.");
-                        return false;
-                    } else if (subjectName.equals("0")) {
-                        return true;
-                    }
-
-                    int totalMarks = (sub.getTotalMarks() != 0) ? sub.getTotalMarks() : 100; // prefer subject total if
-                                                                                 // available
-
-                    System.out.print("Enter Obtained marks of " + subjectName + " (Total " + totalMarks
-                            + ") "); // get obt marks
-                    int ObtMarks;
+                for (Subjects sub : subjects) {
+                    int total = (sub.getTotalMarks() != 0) ? sub.getTotalMarks() : 100;
+                    System.out.print("Enter Obtained marks for '" + sub.getName() + "' (Total " + total
+                            + ") [enter -1 to skip]: ");
+                    int obt;
                     try {
-                        ObtMarks = Input.getIntInput();
+                        obt = Input.getIntInput();
                     } catch (NumberFormatException e) {
-                        System.out.println("Invalid number.");
-                        return true;
+                        System.out.println("Invalid number, skipping.");
+                        continue;
                     }
-                    if (ObtMarks == -1) {
-                        return true;
+                    if (obt == -1) {
+                        continue; // skip this subject
                     }
-
-                    sub.setObtMarks(ObtMarks);
-
-                    if (StudentService.insertOrUpdateMarks(stu.getName(), sub.getID(), ObtMarks)) {
-                        System.out.println(
-                                "Successfully updated marks for " + studentName + " in subject " + subjectName);
-                    } else {
-                        System.out.println("Failed to update marks for " + studentName + " in subject " + subjectName);
+                    sub.setObtMarks(obt);
+                    if (!StudentService.insertOrUpdateMarks(stu.getName(), sub.getID(), obt)) {
+                        System.out.println("Failed to update marks for '" + sub.getName() + "'.");
                     }
                 }
-                return false;
-            });
+            } else if (choice == 2) { // Add Obtained marks of a Subject
+                System.out.print("Enter Subject name: "); // get subject
+                String subjectName = Input.getNormalInput();
 
+                // Use Service to check if subject exists
+                Subjects sub = SubjectService.getSubject(subjectName);
+
+                if (sub.getID() == null || sub.getID() == 0) {
+                    System.out.println("Subject does not exist.");
+                    continue;
+                } else if (subjectName.equals("0")) {
+                    continue;
+                }
+
+                int totalMarks = (sub.getTotalMarks() != 0) ? sub.getTotalMarks() : 100;
+
+                System.out.print("Enter Obtained marks of " + subjectName + " (Total " + totalMarks + ") ");
+                int ObtMarks;
+                try {
+                    ObtMarks = Input.getIntInput();
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid number.");
+                    continue;
+                }
+                if (ObtMarks == -1) {
+                    continue;
+                }
+
+                sub.setObtMarks(ObtMarks);
+
+                if (StudentService.insertOrUpdateMarks(stu.getName(), sub.getID(), ObtMarks)) {
+                    System.out.println(
+                            "Successfully updated marks for " + studentName + " in subject " + subjectName);
+                } else {
+                    System.out.println("Failed to update marks for " + studentName + " in subject " + subjectName);
+                }
+            }
         }
 
     }
 
     // SchoolInfo Menu
-    public static void handleSchoolMenu(SchoolDAO school) {
+    public static void handleSchoolMenu() {
         while (true) {
             System.out.println("1. Show School Info\n2. Add School Info");
 
@@ -397,9 +394,7 @@ public static boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO sub
 
     // Run the main menu loop from MenuHandler so this class fully
     // manages showing menus, reading input and dispatching handlers.
-    public static void runMainLoop(DBValidator db,
-            ClassDAO room, SubjectDAO subject_dao, TeacherDAO teacher_dao,
-            StudentDAO student_dao, SchoolDAO school, GradeDAO grade_dao) {
+    public static void runMainLoop() {
 
         boolean run = true;
         while (run) {
@@ -410,14 +405,14 @@ public static boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO sub
                     System.out.println("Exiting Program.");
                     run = false;
                 }
-                case 1 -> handleSchoolMenu(school);
-                case 2 -> handleClassMenu(room, db);
-                case 3 -> handleSubjectMenu(subject_dao, room, db);
-                case 4 -> handleTeacherMenu(teacher_dao, db);
-                case 5 -> handleStudentMenu(student_dao, db);
-                case 6 -> handleStudentGrades(student_dao, subject_dao, grade_dao);
+                case 1 -> handleSchoolMenu();
+                case 2 -> handleClassMenu();
+                case 3 -> handleSubjectMenu();
+                case 4 -> handleTeacherMenu();
+                case 5 -> handleStudentMenu();
+                case 6 -> handleStudentGrades();
                 case 7 -> {
-                    run = handleDatabase(db);
+                    run = handleDatabase();
                     System.out.println("Exiting Setup.");
                 }
                 default -> System.out.println("Invalid Choice.");

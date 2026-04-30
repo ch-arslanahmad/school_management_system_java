@@ -5,6 +5,7 @@ import java.util.List;
 import classroom.Subjects;
 import database.DBUtils;
 import database.DAO.StudentDAO;
+import database.DAO.GradeDAO;
 import people.Student;
 
 public class StudentService {
@@ -61,5 +62,9 @@ public class StudentService {
             subject.setObtMarks(obtainedMarks);
             return dao.insertOrUpdateMarks(conn, student, subject);
         });
+    }
+
+    public static List<Subjects> getStudentSubjects(String studentName) {
+        return DBUtils.runInTransaction(conn -> new GradeDAO().fetchStudentReport(conn, studentName));
     }
 }
