@@ -1,4 +1,4 @@
-package school.api;
+package school.service;
 
 import school.School;
 import database.DBUtils;

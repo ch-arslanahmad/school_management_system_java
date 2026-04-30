@@ -8,7 +8,7 @@ import classroom.ClassRoom;
 import classroom.Subjects;
 import people.Student;
 import school.School;
-import school.api.*;
+import school.service.*;
 
 // main class - implement of Display.java
 public class ConsoleDisplay {

@@ -19,7 +19,7 @@ import people.Teacher;
 import classroom.ClassRoom;
 import classroom.Subjects;
 import school.School;
-import school.api.*;
+import school.service.*;
 
 public final class PdfDisplay {
 

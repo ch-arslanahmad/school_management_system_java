@@ -6,7 +6,7 @@ import classroom.*;
 import database.*;
 import java.sql.Connection;
 import display.*;
-import school.api.*; 
+import school.service.*;
 import database.DAO.GradeDAO;
 
 import people.Student;

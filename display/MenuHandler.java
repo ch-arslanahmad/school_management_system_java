@@ -9,7 +9,7 @@ import database.*;
 import database.DAO.*;
 import people.Student;
 import school.Actions;
-import school.api.StudentService;
+import school.service.StudentService;
 
 public class MenuHandler {
 
