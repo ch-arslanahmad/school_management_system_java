@@ -15,11 +15,11 @@ public class SchoolService {
     // ===== WRITE =====
 
     public static boolean addSchool(School school) {
-        return DBUtils.runInTransaction(conn -> new SchoolDAO().insertSchool(school));
+        return DBUtils.runInTransaction(conn -> new SchoolDAO().insertSchool(conn, school));
     }
 
     public static boolean updateSchool(School school) {
-        return DBUtils.runInTransaction(conn -> new SchoolDAO().updateSchool(school));
+        return DBUtils.runInTransaction(conn -> new SchoolDAO().updateSchool(conn, school));
     }
 
     public static boolean deleteSchool() {
@@ -29,7 +29,7 @@ public class SchoolService {
             if (school == null || school.getId() == 0) {
                 return false;
             }
-            return dao.deleteSchool(school);
+            return dao.deleteSchool(conn, school);
         });
     }
 }

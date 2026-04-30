@@ -34,7 +34,7 @@ public class TeacherService {
     // ===== WRITE =====
 
     public static boolean addTeacher(Teacher teacher) {
-        return DBUtils.runInTransaction(conn -> new TeacherDAO().insertTeacher(teacher));
+        return DBUtils.runInTransaction(conn -> new TeacherDAO().insertTeacher(conn, teacher));
     }
 
     public static boolean addTeacher(String name, int subjectId) {
@@ -53,7 +53,7 @@ public class TeacherService {
                 return false;
             }
             existing.setName(newName);
-            return dao.updateTeacher(existing);
+            return dao.updateTeacher(conn, existing);
         });
     }
 
@@ -68,7 +68,7 @@ public class TeacherService {
             Subjects subject = new Subjects();
             subject.setID(subjectId);
             existing.setSubject(subject);
-            return dao.updateTeacher(existing);
+            return dao.updateTeacher(conn, existing);
         });
     }
 
@@ -82,7 +82,7 @@ public class TeacherService {
             Subjects subject = new Subjects();
             subject.setID(subjectId);
             existing.setSubject(subject);
-            return dao.updateTeacher(existing);
+            return dao.updateTeacher(conn, existing);
         });
     }
 
@@ -90,7 +90,7 @@ public class TeacherService {
         return DBUtils.runInTransaction(conn -> {
             TeacherDAO dao = new TeacherDAO();
             Teacher teacher = dao.fetchTeacher(conn, id);
-            return dao.deleteTeacher(teacher);
+            return dao.deleteTeacher(conn, teacher);
         });
     }
 }

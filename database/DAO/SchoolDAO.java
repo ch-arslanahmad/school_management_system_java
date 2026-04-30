@@ -4,7 +4,6 @@ package database.DAO;
 // package imports
 import display.LogHandler;
 import school.School;
-import database.DBUtils;
 
 // imports
 import java.sql.*;
@@ -61,8 +60,8 @@ public class SchoolDAO {
         return false;
     }
 
-    public boolean insertSchool(School school) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean insertSchool(Connection conn, School school) {
+        try {
             if (schoolExists(conn)) {
                 logger.warning("School already exists. Use update instead.");
                 return false;
@@ -78,21 +77,27 @@ public class SchoolDAO {
                 logger.info("Inserted School.");
                 return rs > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error inserting school", e);
+            return false;
+        }
     }
 
-    public boolean deleteSchool(School school) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean deleteSchool(Connection conn, School school) {
+        try {
             String deleteSchoolSQL = "DELETE FROM School WHERE id = 1";
             try (PreparedStatement rm = conn.prepareStatement(deleteSchoolSQL)) {
                 int rs = rm.executeUpdate();
                 return rs > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error deleting school", e);
+            return false;
+        }
     }
 
-    public boolean updateSchool(School school) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean updateSchool(Connection conn, School school) {
+        try {
             if (!schoolExists(conn)) {
                 logger.warning("School does not exist.");
                 return false;
@@ -126,9 +131,13 @@ public class SchoolDAO {
                 for (int i = 0; i < params.size(); i++) {
                     rm.setObject(i + 1, params.get(i));
                 }
-                return rm.executeUpdate() > 0;
+                int updated = rm.executeUpdate();
+                return updated > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error updating school", e);
+            return false;
+        }
     }
 
     public List<School> listSchool(Connection conn) {

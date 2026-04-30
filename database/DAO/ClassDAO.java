@@ -4,7 +4,7 @@ package database.DAO;
 // package imports
 import display.LogHandler;
 import classroom.*;
-import database.DBUtils;
+ 
 
 // imports
 import java.sql.*;
@@ -135,37 +135,19 @@ public class ClassDAO {
     }
 
     // to insert a class
-    public boolean insertClass(ClassRoom cls) {
-
-        return DBUtils.runInTransaction(conn -> {
+    public boolean insertClass(Connection conn, ClassRoom cls) {
+        try {
             if (ClassExists(conn, cls.getName())) {
                 logger.warning("Class already exists.");
                 return false;
             }
 
-            /**
-             * <p>
-             * preparedStatement(query, Statement.RETURN_GENERATED_KEYS) is used to execute
-             * parameterized SQL queries, which helps
-             * prevent SQL injection attacks and allows for efficient query execution.
-             * 
-             * Here ``Statement.RETURN_GENERATED_KEYS`` is used to indicate that we want to
-             * retrieve any auto-generated keys (like an auto-incremented ID) that result
-             * from executing the query. This is particularly useful when inserting new
-             * records into a database, as it allows us to easily obtain the unique
-             * identifier of the newly inserted record without needing to execute a separate
-             * query.
-             * 
-             */
-
             String classSQL = "INSERT INTO Class(ClassName, Tuition_Fee,Stationary_Fee,Paper_Fee) VALUES(?,?,?,?)";
-            try (PreparedStatement rm = conn.prepareStatement(classSQL, Statement.RETURN_GENERATED_KEYS);) {
-                // set values in the query
+            try (PreparedStatement rm = conn.prepareStatement(classSQL, Statement.RETURN_GENERATED_KEYS)) {
                 rm.setString(1, cls.getName());
                 rm.setObject(2, cls.getTuitionFee(), Types.INTEGER);
                 rm.setObject(3, cls.getStationaryFee(), Types.INTEGER);
                 rm.setObject(4, cls.getPaperFee(), Types.INTEGER);
-                // execute query
                 int rs = rm.executeUpdate();
 
                 ResultSet ID = rm.getGeneratedKeys();
@@ -176,30 +158,31 @@ public class ClassDAO {
                     cls.setID(genID);
                 }
 
-                return rs > 0; // return true if at least one row is affected, otherwise false
-            }
-        });
-    }
-
-    public boolean deleteClass(ClassRoom cls) {
-
-        return DBUtils.runInTransaction(conn -> {
-            String deleteClassSQL = "DELETE FROM Class WHERE ClassID = ?";
-            try (PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
-                // set values in the query
-                rm.setObject(1, cls.getID(), Types.INTEGER);
-
-                // execute query
-                int rs = rm.executeUpdate();
-
                 return rs > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error inserting class", e);
+            return false;
+        }
+    }
+
+    public boolean deleteClass(Connection conn, ClassRoom cls) {
+        try {
+            String deleteClassSQL = "DELETE FROM Class WHERE ClassID = ?";
+            try (PreparedStatement rm = conn.prepareStatement(deleteClassSQL)) {
+                rm.setObject(1, cls.getID(), Types.INTEGER);
+                int rs = rm.executeUpdate();
+                return rs > 0;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error deleting class", e);
+            return false;
+        }
     }
 
     // update class
-    public boolean updateClass(ClassRoom cls) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean updateClass(Connection conn, ClassRoom cls) {
+        try {
             if (cls.getID() == null || cls.getID() == 0) {
                 logger.warning("Class ID is required.");
                 return false;
@@ -235,7 +218,7 @@ public class ClassDAO {
                 return false;
             }
 
-            sql.setLength(sql.length() - 1); // removing trailing ','
+            sql.setLength(sql.length() - 1);
             sql.append(" WHERE ClassID = ?");
 
             try (PreparedStatement rm = conn.prepareStatement(sql.toString())) {
@@ -245,7 +228,10 @@ public class ClassDAO {
                 rm.setInt(params.size() + 1, cls.getID());
                 return rm.executeUpdate() > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error updating class", e);
+            return false;
+        }
     }
 
     // list All Classes

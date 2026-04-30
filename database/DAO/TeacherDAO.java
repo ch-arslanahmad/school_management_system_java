@@ -5,7 +5,6 @@ package database.DAO;
 import display.LogHandler;
 import people.Teacher;
 import classroom.Subjects;
-import database.DBUtils;
 
 // imports
 import java.sql.*;
@@ -127,8 +126,8 @@ public class TeacherDAO {
         return false;
     }
 
-    public boolean insertTeacher(Teacher teacher) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean insertTeacher(Connection conn, Teacher teacher) {
+        try {
             if (teacherExists(conn, teacher.getName())) {
                 logger.warning("Teacher already exists.");
                 return false;
@@ -152,14 +151,16 @@ public class TeacherDAO {
                     logger.info("Inserted Teacher with ID: " + genID);
                     teacher.setID(genID);
                 }
-
                 return rs > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error inserting teacher", e);
+            return false;
+        }
     }
 
-    public boolean deleteTeacher(Teacher teacher) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean deleteTeacher(Connection conn, Teacher teacher) {
+        try {
             String deleteTeacherSQL = "DELETE FROM Teacher WHERE TeacherID = ?";
             try (PreparedStatement rm = conn.prepareStatement(deleteTeacherSQL)) {
                 rm.setObject(1, teacher.getID(), Types.INTEGER);
@@ -167,11 +168,14 @@ public class TeacherDAO {
                 int rs = rm.executeUpdate();
                 return rs > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error deleting teacher", e);
+            return false;
+        }
     }
 
-    public boolean updateTeacher(Teacher teacher) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean updateTeacher(Connection conn, Teacher teacher) {
+        try {
             if (teacher.getID() == null || teacher.getID() == 0) {
                 logger.warning("Teacher ID is required for update.");
                 return false;
@@ -207,9 +211,13 @@ public class TeacherDAO {
                     rm.setObject(i + 1, params.get(i));
                 }
                 rm.setInt(params.size() + 1, teacher.getID());
-                return rm.executeUpdate() > 0;
+                int updated = rm.executeUpdate();
+                return updated > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error updating teacher", e);
+            return false;
+        }
     }
 
     public List<Teacher> listTeachers(Connection conn) {

@@ -5,7 +5,6 @@ package database.DAO;
 import display.LogHandler;
 import people.Student;
 import classroom.Subjects;
-import database.DBUtils;
 
 // imports
 import java.sql.*;
@@ -149,8 +148,8 @@ public class StudentDAO {
         return false;
     }
 
-    public boolean insertStudent(Student student) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean insertStudent(Connection conn, Student student) {
+        try {
             if (studentExists(conn, student.getName())) {
                 logger.warning("Student already exists.");
                 return false;
@@ -175,10 +174,12 @@ public class StudentDAO {
                     logger.info("Inserted Student with ID: " + genID);
                     student.setID(genID);
                 }
-
                 return rs > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error inserting student", e);
+            return false;
+        }
     }
 
     /*
@@ -187,13 +188,12 @@ public class StudentDAO {
      * MySQL uses ON DUPLICATE KEY UPDATE, SQL Server uses MERGE statement.
      */
 
-    public boolean insertOrUpdateMarks(Student student, Subjects subject) {
-
-        return DBUtils.runInTransaction(conn -> {
+    public boolean insertOrUpdateMarks(Connection conn, Student student, Subjects subject) {
+        try {
             String upsertSQL = "INSERT INTO StudentMarks (StudentID, SubjectID, ObtainedMarks) VALUES (?, ?, ?) "
                     + "ON CONFLICT(StudentID, SubjectID) DO UPDATE SET ObtainedMarks = excluded.ObtainedMarks";
 
-            Student fetched = fetchStudent(conn, student.getName()); // to ensure student ID is set
+            Student fetched = fetchStudent(conn, student.getName());
 
             if (fetched.getID() == null) {
                 logger.warning("Student Doesnt exist.");
@@ -219,11 +219,14 @@ public class StudentDAO {
                 int rs = rm.executeUpdate();
                 return rs > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error inserting or updating marks", e);
+            return false;
+        }
     }
 
-    public boolean deleteStudent(Student student) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean deleteStudent(Connection conn, Student student) {
+        try {
             String deleteStudentSQL = "DELETE FROM Student WHERE StudentID = ?";
             try (PreparedStatement rm = conn.prepareStatement(deleteStudentSQL)) {
                 rm.setObject(1, student.getID(), Types.INTEGER);
@@ -231,11 +234,14 @@ public class StudentDAO {
                 int rs = rm.executeUpdate();
                 return rs > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error deleting student", e);
+            return false;
+        }
     }
 
-    public boolean updateStudent(Student student) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean updateStudent(Connection conn, Student student) {
+        try {
             if (student.getID() == null || student.getID() == 0) {
                 logger.warning("Student ID is required.");
                 return false;
@@ -271,9 +277,13 @@ public class StudentDAO {
                     rm.setObject(i + 1, params.get(i));
                 }
                 rm.setInt(params.size() + 1, student.getID());
-                return rm.executeUpdate() > 0;
+                int updated = rm.executeUpdate();
+                return updated > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error updating student", e);
+            return false;
+        }
     }
 
     public List<Student> listStudents(Connection conn) {

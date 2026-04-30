@@ -9,6 +9,7 @@ import database.*;
 import database.DAO.*;
 import people.Student;
 import school.Actions;
+import school.api.StudentService;
 
 public class MenuHandler {
 
@@ -67,30 +68,30 @@ public class MenuHandler {
                     case 0: // stop the loop
                         return;
                     case 1: // insert class
-                        if (!Actions.inputClass(room)) {
+                        if (!Actions.inputClass()) {
                             System.out.println("Error inserting Class");
                             return;
                         }
                         break;
                     case 2: // delete class
-                        if (!Actions.deleteClass(room)) {
+                        if (!Actions.deleteClass()) {
                             System.out.println("Error deleting Class");
                             return;
                         }
                         break;
                     case 3: { // insert multiple
-                        Actions.inputClasses(room);
+                        Actions.inputClasses();
                         break;
                     }
                     case 4: // update class
-                        if (!Actions.updateClass(room)) {
+                        if (!Actions.updateClass()) {
                             System.out.println("Error updating Class");
                             return;
                         }
                         break;
 
                     case 5: // show classes
-                        Actions.showClasses(room);
+                        Actions.showClasses();
                         break;
                     default:
                         System.out.println("Invalid Choice.");
@@ -113,28 +114,28 @@ public class MenuHandler {
                     case 0: // stop the loop
                         return;
                     case 1: // insert
-                        if (!Actions.inputSubject(subject, room)) {
+                        if (!Actions.inputSubject()) {
                             System.out.println("Error inserting Subject");
                             return;
                         }
                         break;
                     case 2: // delete
-                        if (!Actions.deleteSubject(subject, room)) {
+                        if (!Actions.deleteSubject()) {
                             System.out.println("Error deleting Subject");
                             return;
                         }
                         break;
                     case 3: // insert MULTIPLE
-                        Actions.inputSubjects(subject, room);
+                        Actions.inputSubjects();
                         break;
                     case 4: // update
-                        if (!Actions.updateSubject(subject, room)) {
+                        if (!Actions.updateSubject()) {
                             System.out.println("Error updating Subject");
                             return;
                         }
                         break;
                     case 5: // show
-                        Actions.showSubjects(subject, room);
+                        Actions.showSubjects();
                         break;
                     default:
                         System.out.println("Invalid Choice.");
@@ -157,29 +158,29 @@ public class MenuHandler {
                     case 0: // stop the loop
                         return;
                     case 1: // insert
-                        if (!Actions.inputTeacher(teacher)) {
+                        if (!Actions.inputTeacher()) {
                             System.out.println("Error inserting Teacher");
                             return;
                         }
                         break;
                     case 2: // delete
-                        if (!Actions.deleteTeacher(teacher)) {
+                        if (!Actions.deleteTeacher()) {
                             System.out.println("Error deleting Teacher");
                             return;
                         }
                         break;
                     case 3: // insert MULTIPLE
-                        Actions.inputTeachers(teacher);
+                        Actions.inputTeachers();
                         break;
                     case 4: // update
-                        if (!Actions.updateTeacher(teacher)) {
+                        if (!Actions.updateTeacher()) {
                             System.out.println("Error updating Teacher");
                             return;
                         }
                         break;
 
                     case 5: // show
-                        Actions.showTeachers(teacher);
+                        Actions.showTeachers();
                         break;
                     default:
                         System.out.println("Invalid Choice.");
@@ -201,29 +202,29 @@ public class MenuHandler {
                     case 0:
                         return; // stop the loop
                     case 1: // insert
-                        if (!Actions.inputStudent(student)) {
+                        if (!Actions.inputStudent()) {
                             System.out.println("Error inserting Student.");
                             return;
                         }
                         break;
                     case 2: // delete
-                        if (!Actions.deleteStudent(student)) {
+                        if (!Actions.deleteStudent()) {
                             System.out.println("Error deleting Student.");
                             return;
                         }
                         break;
                     case 3: // insert MULTIPLE
-                        Actions.inputStudents(student);
+                        Actions.inputStudents();
                         break;
                     case 4: // update
-                        if (!Actions.updateStudent(student)) {
+                        if (!Actions.updateStudent()) {
                             System.out.println("Error updating Student.");
                             return;
                         }
                         break;
 
                     case 5: // show
-                        Actions.showStudents(student);
+                        Actions.showStudents();
                         break;
                     default:
                         System.out.println("Invalid Choice.");
@@ -323,7 +324,7 @@ public static boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO sub
                             continue; // skip this subject
                         }
                         sub.setObtMarks(obt);
-                        if (!student_dao.insertOrUpdateMarks(stu, sub)) {
+                        if (!StudentService.insertOrUpdateMarks(stu.getName(), sub.getID(), obt)) {
                             System.out.println("Failed to update marks for '" + sub.getName() + "'.");
                         }
                     }
@@ -358,7 +359,7 @@ public static boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO sub
 
                     sub.setObtMarks(ObtMarks);
 
-                    if (student_dao.insertOrUpdateMarks(stu, sub)) {
+                    if (StudentService.insertOrUpdateMarks(stu.getName(), sub.getID(), ObtMarks)) {
                         System.out.println(
                                 "Successfully updated marks for " + studentName + " in subject " + subjectName);
                     } else {
@@ -383,10 +384,10 @@ public static boolean handleStudentGrades(StudentDAO student_dao, SubjectDAO sub
                 case 0:
                     return;
                 case 1:
-                    Actions.showSchoolInfo(school);
+                    Actions.showSchoolInfo();
                     break;
                 case 2:
-                    Actions.addSchoolInfo(school);
+                    Actions.addSchoolInfo();
                     break;
                 default:
                     break;

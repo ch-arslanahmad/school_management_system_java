@@ -37,11 +37,11 @@ public class SubjectService {
     // ===== WRITE =====
 
     public static boolean addSubject(Subjects subject) {
-        return DBUtils.runInTransaction(conn -> new SubjectDAO().insertSubject(subject));
+        return DBUtils.runInTransaction(conn -> new SubjectDAO().insertSubject(conn, subject));
     }
 
     public static boolean addSubject(String className, String subjectName) {
-        return DBUtils.runInTransaction(conn -> new SubjectDAO().insertSubject(className, subjectName));
+        return DBUtils.runInTransaction(conn -> new SubjectDAO().insertSubject(conn, className, subjectName));
     }
 
     public static boolean updateSubject(int id, String newName) {
@@ -52,7 +52,7 @@ public class SubjectService {
                 return false;
             }
             existing.setName(newName);
-            return dao.updateSubject(existing);
+            return dao.updateSubject(conn, existing);
         });
     }
 
@@ -63,7 +63,7 @@ public class SubjectService {
             if (subj.getID() == null || subj.getID() == 0) {
                 return false;
             }
-            return dao.deleteSubject(subj);
+            return dao.deleteSubject(conn, subj);
         });
     }
 }

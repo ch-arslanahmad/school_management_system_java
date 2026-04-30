@@ -44,31 +44,31 @@ public class DBmaker {
 
     public DBmaker createSchoolInfo(SchoolDAO school) {
         System.out.println("Now School Info.");
-        Actions.addSchoolInfo(school);
+        Actions.addSchoolInfo();
         return this;
     }
 
     public DBmaker createClasses(ClassDAO room) {
         System.out.println("Now Classes.");
-        Actions.inputClasses(room);
+        Actions.inputClasses();
         return this;
     }
 
     public DBmaker createStudents(StudentDAO student) {
         System.out.println("Now Students");
-        Actions.inputStudents(student);
+        Actions.inputStudents();
         return this;
     }
 
     public DBmaker createSubjects(SubjectDAO subject, ClassDAO room) {
         System.out.println("Now Subjects");
-        Actions.inputSubjects(subject, room);
+        Actions.inputSubjects();
         return this;
     }
 
     public DBmaker createTeachers(TeacherDAO teacher) {
         System.out.println("Now Teachers");
-        Actions.inputTeachers(teacher);
+        Actions.inputTeachers();
         return this;
     }
 

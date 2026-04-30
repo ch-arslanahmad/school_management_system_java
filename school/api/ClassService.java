@@ -25,7 +25,7 @@ public class ClassService {
     // ===== WRITE =====
 
     public static boolean addClass(ClassRoom cls) {
-        return DBUtils.runInTransaction(conn -> new ClassDAO().insertClass(cls));
+        return DBUtils.runInTransaction(conn -> new ClassDAO().insertClass(conn, cls));
     }
 
     public static boolean updateClass(int id, String name) {
@@ -36,7 +36,7 @@ public class ClassService {
                 return false;
             }
             existing.setName(name);
-            return dao.updateClass(existing);
+            return dao.updateClass(conn, existing);
         });
     }
 
@@ -50,7 +50,7 @@ public class ClassService {
             existing.setTuitionFee(tuitionFee);
             existing.setStationaryFee(stationaryFee);
             existing.setPaperFee(paperFee);
-            return dao.updateClass(existing);
+            return dao.updateClass(conn, existing);
         });
     }
 
@@ -61,7 +61,7 @@ public class ClassService {
             if (cls.isEmpty()) {
                 return false;
             }
-            return dao.deleteClass(cls);
+            return dao.deleteClass(conn, cls);
         });
     }
 }

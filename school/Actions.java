@@ -4,8 +4,10 @@ import java.util.logging.*;
 import java.util.List;
 import classroom.*;
 import database.*;
-import database.DAO.*;
+import java.sql.Connection;
 import display.*;
+import school.api.*; 
+import database.DAO.GradeDAO;
 
 import people.Student;
 import people.Teacher;
@@ -20,50 +22,39 @@ public class Actions {
     }
 
     // ADD SCHOOL INFO
-    public static Boolean addSchoolInfo(SchoolDAO school_dao) {
-
-        return DBUtils.runInTransaction(conn -> {
-            while (true) {
-                // SCHOOL
-                System.out.print("Enter Updated School name: ");
-                String schoolName = Input.getNormalInput();
-                if (schoolName.equals("0")) {
-                    return null;
-                }
-
-                School school = new School(schoolName);
-
-                System.out.print("Enter Updated School Principle name: ");
-                String principleName = Input.getNormalInput();
-                System.out.print("Enter Updated School Location: ");
-                String location = Input.getNormalInput();
-
-                School newSchool = new School(schoolName, principleName, location);
-                // if School-info is not inserted
-                if (!school_dao.updateSchool(newSchool)) {
-                    String error = "Database Creation Abort : School-Info";
-                    logger.warning(error);
-                } else {
-                    return true;
-                }
+    public static Boolean addSchoolInfo() {
+        while (true) {
+            System.out.print("Enter Updated School name: ");
+            String schoolName = Input.getNormalInput();
+            if (schoolName.equals("0")) {
+                return null;
             }
-        });
+
+            System.out.print("Enter Updated School Principle name: ");
+            String principleName = Input.getNormalInput();
+            System.out.print("Enter Updated School Location: ");
+            String location = Input.getNormalInput();
+
+            School newSchool = new School(schoolName, principleName, location);
+            if (!SchoolService.updateSchool(newSchool)) {
+                String error = "Database Creation Abort : School-Info";
+                logger.warning(error);
+            } else {
+                return true;
+            }
+        }
     }
 
-    public static void showSchoolInfo(SchoolDAO school_dao) {
-        DBUtils.runInTransaction(conn -> {
-            School school = school_dao.fetchSchool(conn);
-            if (school.getName() == null) {
-                System.out.println("No school info found. Please add school info first.");
-                return false;
-            }
-            ConsoleDisplay.displaySchoolInfo(school_dao);
-            return true;
-        });
+    public static void showSchoolInfo() {
+        School school = SchoolService.getSchool();
+        if (school.getName() == null) {
+            System.out.println("No school info found. Please add school info first.");
+            return;
+        }
+        ConsoleDisplay.displaySchoolInfo(school);
     }
 
-    public static boolean inputClass(ClassDAO room) {
-
+    public static boolean inputClass() {
         System.out.println("1. Add ClassName without Fees\n2. Add Class with Fees");
         int choice = Input.validateMenuInput(2);
 
@@ -74,16 +65,76 @@ public class Actions {
         System.out.print("Enter ClassName: ");
         String className = Input.getNormalInput();
 
+        ClassRoom existing = ClassService.getClass(className);
+        if (!existing.isEmpty()) {
+            System.out.println("Class Already exists.");
+            return true;
+        }
+
         ClassRoom cls = new ClassRoom(className);
-        return DBUtils.runInTransaction(conn -> {
 
-            if (room.ClassExists(conn, cls.getName())) {
-                System.out.println("Class Already exists.");
-                return true;
+        if (choice == 2) {
+            System.out.print("Enter Tuition Fee: ");
+            int tuition = Input.getIntInput();
+            System.out.print("Enter Stationary Fee: ");
+            int stationary = Input.getIntInput();
+            System.out.print("Enter Exam/Paper Fee: ");
+            int exam = Input.getIntInput();
+
+            cls.setTuitionFee(tuition);
+            cls.setStationaryFee(stationary);
+            cls.setPaperFee(exam);
+        }
+
+        return ClassService.addClass(cls);
+    }
+
+    public static void inputClasses() {
+        while (true) {
+            Boolean run = inputClass();
+
+            if (!run) {
+                break;
             }
-            // for checking if class has students when deleting class
+        }
+    }
 
-            if (choice == 2) {
+    public static boolean deleteClass() {
+        System.out.print("Enter your ClassName (0 to exit): ");
+        String className = Input.getNormalInput();
+        if (className.equals("0")) {
+            return true;
+        }
+
+        ClassRoom cls = ClassService.getClass(className);
+        if (cls.isEmpty()) {
+            System.out.println("Class not found.");
+            return false;
+        }
+
+        return ClassService.deleteClass(cls.getID());
+    }
+
+    public static boolean updateClass() {
+        while (true) {
+            System.out.println(
+                    "1. Update ClassName Only\n2. Update Class with Fees\n3. Only Fees of Class");
+            int choice = Input.validateMenuInput(3);
+
+            System.out.print("Enter previous ClassName: ");
+            String className = Input.getNormalInput();
+
+            ClassRoom cls = ClassService.getClass(className);
+            if (cls.isEmpty()) {
+                System.out.println("Class does not exist.");
+                return false;
+            }
+
+            System.out.print("Enter updated ClassName: ");
+            String updateClassName = Input.getNormalInput();
+            cls.setName(updateClassName);
+
+            if (choice == 2 || choice == 3) {
                 System.out.print("Enter Tuition Fee: ");
                 int tuition = Input.getIntInput();
                 System.out.print("Enter Stationary Fee: ");
@@ -94,138 +145,70 @@ public class Actions {
                 cls.setTuitionFee(tuition);
                 cls.setStationaryFee(stationary);
                 cls.setPaperFee(exam);
-
             }
-            return room.insertClass(cls);
-        });
 
-    }
-
-    public static void inputClasses(ClassDAO room) {
-        while (true) { // ... infinite until '0' input
-            Boolean run = inputClass(room);
-
-            if (!run) {
-                break;
-            }
+            return ClassService.updateClass(cls.getID(), updateClassName);
         }
     }
 
-    public static boolean deleteClass(ClassDAO room) {
-        System.out.print("Enter your ClassName (0 to exit): ");
-        String className = Input.getNormalInput();
-        if (className.equals("0")) {
+public static boolean showClasses() {
+        List<ClassRoom> classroom = ClassService.getClasses();
+        if (classroom.isEmpty()) {
+            System.out.println("Classroom List is empty");
+            return false;
+        }
+
+        System.out.println("1. Console\n2. PDF\n");
+        int choice = Input.validateMenuInput(2);
+
+        if (choice == 1) {
+            ConsoleDisplay.displayf("ClassName");
+            for (ClassRoom room : classroom) {
+                ConsoleDisplay.displayf(room.getName());
+            }
             return true;
         }
 
-        ClassRoom cls = new ClassRoom(className);
-
-        return room.deleteClass(cls);
-    }
-
-    public static boolean updateClass(ClassDAO room) {
-        while (true) {
-            System.out.println(
-                    "1. Update ClassName Only\n2. Update Class with Fees\n3. Only Fees of Class");
-            int choice = Input.validateMenuInput(3);
-
-            return DBUtils.runInTransaction(conn -> {
-                System.out.print("Enter previous ClassName: ");
-                String className = Input.getNormalInput();
-
-                ClassRoom cls = room.fetchClass(conn, className);
-                if (cls.isEmpty()) {
-                    System.out.println("Class does not exist.");
-                    return false;
-                }
-
-                System.out.print("Enter updated ClassName: ");
-                String updateClassName = Input.getNormalInput();
-                cls.setName(updateClassName);
-
-                if (choice == 2 || choice == 3) {
-                    System.out.print("Enter Tuition Fee: ");
-                    int tuition = Input.getIntInput();
-                    System.out.print("Enter Stationary Fee: ");
-                    int stationary = Input.getIntInput();
-                    System.out.print("Enter Exam/Paper Fee: ");
-                    int exam = Input.getIntInput();
-
-                    cls.setTuitionFee(tuition);
-                    cls.setStationaryFee(stationary);
-                    cls.setPaperFee(exam);
-                }
-
-                return room.updateClass(cls);
-            });
+        if (choice == 2) {
+            PdfDisplay.displayClasses(classroom);
+            return true;
         }
-    }
-
-public static boolean showClasses(ClassDAO class_dao) {
-
-        return DBUtils.runInTransaction(conn -> {
-            List<ClassRoom> classroom = class_dao.listClass(conn);
-            if (classroom.isEmpty()) {
-                System.out.println("Classroom List is empty");
-                return false;
-            }
-
-            System.out.println("1. Console\n2. PDF\n");
-            int choice = Input.validateMenuInput(2);
-
-            if (choice == 1) {
-                ConsoleDisplay.displayf("ClassName");
-                for (ClassRoom room : classroom) {
-                    ConsoleDisplay.displayf(room.getName());
-                }
-                return true;
-            }
-
-            PdfDisplay pdf = new PdfDisplay();
-
-            if (choice == 2) {
-                pdf.displayClasses(classroom);
-                return true;
-            }
-            return false;
-        });
+        return false;
     }
 
     // SUBJECT
-    public static Boolean inputSubject(SubjectDAO subject, ClassDAO room) {
-        return DBUtils.runInTransaction(conn -> {
-            while (true) {
-                System.out.print("Enter the Class: ");
-                String className = Input.getNormalInput();
+    public static Boolean inputSubject() {
+        while (true) {
+            System.out.print("Enter the Class: ");
+            String className = Input.getNormalInput();
 
-                if (!room.ClassExists(conn, className)) {
-                    System.out.println("Class does not exist.");
-                    return false;
-                } else if (className.equals("0")) {
-                    return null;
-                }
-                System.out.print("Enter the Subject: ");
-                String subjectName = Input.getNormalInput();
-                if (subject.subjectExists(conn, subjectName)) {
-                    System.out.println("Subject already exist.");
-                    return false;
-                } else if (subjectName.equals("0")) {
-                    return null;
-                }
-
-                if (subject.insertSubject(className, subjectName)) {
-                    return true;
-                }
+            ClassRoom cls = ClassService.getClass(className);
+            if (cls.isEmpty()) {
+                System.out.println("Class does not exist.");
+                return false;
+            } else if (className.equals("0")) {
+                return null;
             }
-            // unreachable but required for compilation
-            // return false as default
-            // return false;
-        });
+            System.out.print("Enter the Subject: ");
+            String subjectName = Input.getNormalInput();
+
+            Subjects existing = SubjectService.getSubject(subjectName);
+            if (existing.getID() != null && existing.getID() != 0) {
+                System.out.println("Subject already exist.");
+                return false;
+            } else if (subjectName.equals("0")) {
+                return null;
+            }
+
+            if (SubjectService.addSubject(className, subjectName)) {
+                return true;
+            }
+        }
     }
 
-    public static void inputSubjects(SubjectDAO subject, ClassDAO room) {
-        while (true) { // ... infinite until '0' input
-            Boolean run = inputSubject(subject, room);
+    public static void inputSubjects() {
+        while (true) {
+            Boolean run = inputSubject();
 
             if (run == null) {
                 break;
@@ -233,114 +216,102 @@ public static boolean showClasses(ClassDAO class_dao) {
         }
     }
 
-    public static boolean deleteSubject(SubjectDAO subject, ClassDAO room) {
-        return DBUtils.runInTransaction(conn -> {
-            System.out.print("Enter the Class: ");
-            String className = Input.getNormalInput();
-            if (!room.ClassExists(conn, className)) { // stop if class doesnt exist
-                System.out.println("Class does not exist.");
-                return false;
-            }
-            System.out.print("Enter the Subject: ");
-            String subjectName = Input.getNormalInput();
-            if (!subject.subjectExists(conn, subjectName)) { // * stop if subject doesn't exist
-                System.out.println("Subject does not exist.");
-                return false;
-            }
-            if (subject.deleteSubject(className, subjectName)) {
-                return true;
-            }
+    public static boolean deleteSubject() {
+        System.out.print("Enter the Class: ");
+        String className = Input.getNormalInput();
+        ClassRoom cls = ClassService.getClass(className);
+        if (cls.isEmpty()) {
+            System.out.println("Class does not exist.");
             return false;
-        });
+        }
+        System.out.print("Enter the Subject: ");
+        String subjectName = Input.getNormalInput();
+
+        Subjects subj = SubjectService.getSubject(subjectName);
+        if (subj.getID() == null || subj.getID() == 0) {
+            System.out.println("Subject does not exist.");
+            return false;
+        }
+        return SubjectService.deleteSubject(subj.getID());
     }
 
-    public static boolean updateSubject(SubjectDAO subject, ClassDAO room) {
-        return DBUtils.runInTransaction(conn -> {
-            System.out.print("Enter the Class: ");
-            String className = Input.getNormalInput();
-            if (!room.ClassExists(conn, className)) {
-                System.out.println("Class does not exist.");
-                return false;
-            }
-            System.out.print("Enter the SubjectName: ");
-            String subjectName = Input.getNormalInput();
-            if (!subject.subjectExists(conn, subjectName)) {
-                System.out.println("Subject does not exist.");
-                return false;
-            }
-            System.out.print("Enter the Updated Name: ");
-            String uptName = Input.getNormalInput();
+    public static boolean updateSubject() {
+        System.out.print("Enter the Class: ");
+        String className = Input.getNormalInput();
+        ClassRoom cls = ClassService.getClass(className);
+        if (cls.isEmpty()) {
+            System.out.println("Class does not exist.");
+            return false;
+        }
+        System.out.print("Enter the SubjectName: ");
+        String subjectName = Input.getNormalInput();
 
-            Subjects existing = subject.fetchSubject(conn, subjectName);
-            existing.setName(uptName);
-            return subject.updateSubject(existing);
-        });
+        Subjects existing = SubjectService.getSubject(subjectName);
+        if (existing.getID() == null || existing.getID() == 0) {
+            System.out.println("Subject does not exist.");
+            return false;
+        }
+
+        System.out.print("Enter the Updated Name: ");
+        String uptName = Input.getNormalInput();
+
+        return SubjectService.updateSubject(existing.getID(), uptName);
     }
 
-    public static boolean showSubjects(SubjectDAO subject, ClassDAO room) {
-        return DBUtils.runInTransaction(conn -> {
-            List<Subjects> subjects = subject.listSubjects(conn);
-            if (subjects.isEmpty()) { // check if list is empty
-                System.out.println("Subjects List is empty");
-                return false;
+    public static boolean showSubjects() {
+        List<Subjects> subjects = SubjectService.getSubjects();
+        if (subjects.isEmpty()) {
+            System.out.println("Subjects List is empty");
+            return false;
+        }
+
+        System.out.println("1. Console\n2. PDF\n");
+        int choice = Input.validateMenuInput(2);
+
+        if (choice == 1) {
+            ConsoleDisplay.displayf("Subjects", "ClassName");
+            for (Subjects s : subjects) {
+                ConsoleDisplay.displayf(s.getName(), s.getClassName());
             }
+        }
 
-            System.out.println("1. Console\n2. PDF\n");
-            int choice;
-            // VALIDATING INPUT
-            choice = Input.validateMenuInput(2);
-            // now divide if to print in PDF / Console
+        if (choice == 2) {
+            PdfDisplay.displaySubject(subjects);
+        }
 
-            // print on CONSOLE
-            if (choice == 1) {
-                // this prints one column on console
-                ConsoleDisplay.displayf("Subjects", "ClassName");
-                for (Subjects s : subjects) {
-                    ConsoleDisplay.displayf(s.getName(), s.getClassName());
-                }
-            }
-
-            // print on PDF
-
-            PdfDisplay pdf = new PdfDisplay(); // PDF object
-
-            if (choice == 2) {
-                pdf.displaySubject(subjects); // create Subjects PDF
-            }
-
-            return true;
-        });
+        return true;
     }
 
-    public static boolean inputTeacher(TeacherDAO teacher) {
-        return DBUtils.runInTransaction(conn -> {
-            System.out.print("Enter the Subject of Teacher: ");
-            SubjectDAO subject = new SubjectDAO();
-            String subjectName = Input.getNormalInput();
-            if (!subject.subjectExists(conn, subjectName)) {
-                System.out.println("Subject does not exist.");
-                return false;
-            } else if (subjectName.equals("0")) {
-                return false;
-            }
-            System.out.print("Enter the Teacher: ");
-            String name = Input.getNormalInput();
-            if (teacher.teacherExists(conn, name)) {
-                System.out.println("Teacher already exists.");
-                return false;
-            } else if (name.equals("0")) {
-                return false;
-            }
+    public static boolean inputTeacher() {
+        System.out.print("Enter the Subject of Teacher: ");
+        String subjectName = Input.getNormalInput();
 
-            Teacher teach = new Teacher(name, new Subjects(subjectName));
+        Subjects subj = SubjectService.getSubject(subjectName);
+        if (subj.getID() == null || subj.getID() == 0) {
+            System.out.println("Subject does not exist.");
+            return false;
+        } else if (subjectName.equals("0")) {
+            return false;
+        }
 
-            return teacher.insertTeacher(teach);
-        });
+        System.out.print("Enter the Teacher: ");
+        String name = Input.getNormalInput();
+
+        Teacher existing = TeacherService.getTeacher(name);
+        if (existing.getID() != null && existing.getID() != 0) {
+            System.out.println("Teacher already exists.");
+            return false;
+        } else if (name.equals("0")) {
+            return false;
+        }
+
+        Teacher teach = new Teacher(name, new Subjects(subjectName));
+        return TeacherService.addTeacher(teach);
     }
 
-    public static void inputTeachers(TeacherDAO teacher) {
-        while (true) { // ... infinite until '0' input
-            boolean run = inputTeacher(teacher);
+    public static void inputTeachers() {
+        while (true) {
+            boolean run = inputTeacher();
 
             if (run == false) {
                 break;
@@ -348,13 +319,18 @@ public static boolean showClasses(ClassDAO class_dao) {
         }
     }
 
-    public static boolean deleteTeacher(TeacherDAO teacher) {
+    public static boolean deleteTeacher() {
         System.out.print("Enter the TeacherName: ");
         String name = Input.getNormalInput();
-        return teacher.deleteTeacher(new Teacher(name));
+        Teacher t = TeacherService.getTeacher(name);
+        if (t.getID() == null || t.getID() == 0) {
+            System.out.println("Teacher not found.");
+            return false;
+        }
+        return TeacherService.deleteTeacher(t.getID());
     }
 
-    public static boolean updateTeacher(TeacherDAO teacher) {
+    public static boolean updateTeacher() {
         System.out.println("1. Update TeacherName\n2. Update Teacher (with Subject)");
         int choice = Input.getIntInput();
 
@@ -370,88 +346,79 @@ public static boolean showClasses(ClassDAO class_dao) {
         System.out.print("Enter the Updated Name: ");
         String uptName = Input.getNormalInput();
 
-        return DBUtils.runInTransaction(conn -> {
-            Teacher existing = teacher.fetchTeacher(conn, name);
-            if (existing.getID() == null || existing.getID() == 0) {
+        Teacher existing = TeacherService.getTeacher(name);
+        if (existing.getID() == null || existing.getID() == 0) {
+            System.out.println("Teacher not found.");
+            return false;
+        }
+
+        if (choice == 1) {
+            return TeacherService.updateTeacher(existing.getID(), uptName);
+        } else if (choice == 2) {
+            System.out.print("Enter the Updated SubjectName: ");
+            String updateSubject = Input.getNormalInput();
+            // Need to get subject ID
+            Subjects subj = SubjectService.getSubject(updateSubject);
+            if (subj.getID() == null || subj.getID() == 0) {
+                System.out.println("Subject not found.");
                 return false;
             }
-
-            existing.setName(uptName);
-            if (choice == 2) {
-                System.out.print("Enter the Updated SubjectName: ");
-                String updateSubject = Input.getNormalInput();
-                Subjects subject = new Subjects(updateSubject);
-                existing.setSubject(subject);
-            }
-
-            return teacher.updateTeacher(existing);
-        });
+            return TeacherService.updateTeacher(existing.getID(), uptName, subj.getID());
+        }
+        return false;
     }
 
-    public static boolean showTeachers(TeacherDAO teacher) {
-        return DBUtils.runInTransaction(conn -> {
-            List<Teacher> teachers = teacher.listTeachers(conn);
-            if (teachers.isEmpty()) { // check if list is empty
-                System.out.println("Teacher List is empty.");
+    public static boolean showTeachers() {
+        List<Teacher> teachers = TeacherService.getTeachers();
+        if (teachers.isEmpty()) {
+            System.out.println("Teacher List is empty.");
+            return false;
+        }
+        System.out.println("1. Console\n2. PDF\n");
+
+        int choice = Input.validateMenuInput(2);
+
+        if (choice == 1) {
+            ConsoleDisplay.displayf("Teachers", "Subjects");
+            for (Teacher t : teachers) {
+                ConsoleDisplay.displayf(t.getName(), t.getSubjectName());
+            }
+        }
+
+        if (choice == 2) {
+            PdfDisplay.displayTeacher(teachers);
+            return true;
+        }
+        return true;
+    }
+
+    public static Boolean inputStudent() {
+        while (true) {
+            System.out.print("Enter the Class of Student: ");
+            String className = Input.getNormalInput();
+
+            ClassRoom cls = ClassService.getClass(className);
+            if (cls.isEmpty()) {
+                System.out.println("Class does not exist.");
                 return false;
+            } else if (className.equals("0")) {
+                return null;
             }
-            System.out.println("1. Console\n2. PDF\n");
-
-            int choice;
-            // VALIDATING INPUT
-            choice = Input.validateMenuInput(2);
-            // now divide if to print in PDF / Console
-
-            // print on CONSOLE
-            if (choice == 1) {
-                // this prints one column on console
-                ConsoleDisplay.displayf("Teachers", "Subjects");
-                for (Teacher t : teachers) {
-                    ConsoleDisplay.displayf(t.getName(), t.getSubjectName());
-                }
+            System.out.print("Enter the StudentName: ");
+            String name = Input.getNormalInput();
+            if (name.equals("0")) {
+                return null;
             }
-
-            // print on PDF
-
-            PdfDisplay pdf = new PdfDisplay(); // PDF object
-
-            if (choice == 2) {
-                pdf.displayTeacher(teachers); // create Teachers PDF
+            Student stu = new Student(name, new ClassRoom(className));
+            if (StudentService.addStudent(stu)) {
                 return true;
             }
-            return true;
-
-        });
+        }
     }
 
-    public static Boolean inputStudent(StudentDAO student) {
-        return DBUtils.runInTransaction(conn -> {
-            while (true) {
-                System.out.print("Enter the Class of Student: ");
-                String className = Input.getNormalInput();
-                ClassDAO room = new ClassDAO();
-                if (!room.ClassExists(conn, className)) {
-                    System.out.println("Class does not exist.");
-                    return false;
-                } else if (className.equals("0")) {
-                    return null;
-                }
-                System.out.print("Enter the StudentName: ");
-                String name = Input.getNormalInput();
-                if (name.equals("0")) {
-                    return null;
-                }
-                Student stu = new Student(name, new ClassRoom(className));
-                if (student.insertStudent(stu)) {
-                    return true;
-                }
-            }
-        });
-    }
-
-    public static void inputStudents(StudentDAO student) {
-        while (true) { // ... infinite until '0' input
-            Boolean run = inputStudent(student);
+    public static void inputStudents() {
+        while (true) {
+            Boolean run = inputStudent();
 
             if (run == null) {
                 break;
@@ -459,59 +426,60 @@ public static boolean showClasses(ClassDAO class_dao) {
         }
     }
 
-    public static boolean deleteStudent(StudentDAO student) {
-        return DBUtils.runInTransaction(conn -> {
-
-            System.out.print("Enter the StudentName: ");
-            String name = Input.getNormalInput();
-            if (!student.studentExists(conn, name)) {
-                System.out.println("Student does not exist.");
-                return false;
-            }
-            if (student.deleteStudent(new Student(name))) {
-                return true;
-            }
+    public static boolean deleteStudent() {
+        System.out.print("Enter the StudentName: ");
+        String name = Input.getNormalInput();
+        Student stu = StudentService.getStudent(name);
+        if (stu.getID() == null || stu.getID() == 0) {
+            System.out.println("Student does not exist.");
             return false;
-        });
+        }
+        return StudentService.deleteStudent(stu.getID());
     }
 
-    public static boolean updateStudent(StudentDAO student) {
-        return DBUtils.runInTransaction(conn -> {
-            System.out.print("Enter the StudentName: ");
-            String name = Input.getNormalInput();
-            if (!student.studentExists(conn, name)) {
-                System.out.println("Student does not exist.");
-                return false;
-            }
-            System.out.print("Enter the Updated Name: ");
-            String uptName = Input.getNormalInput();
-
-            Student existing = student.fetchStudent(conn, name);
-            existing.setName(uptName);
-            return student.updateStudent(existing);
-        });
+    public static boolean updateStudent() {
+        System.out.print("Enter the StudentName: ");
+        String name = Input.getNormalInput();
+        Student existing = StudentService.getStudent(name);
+        if (existing.getID() == null || existing.getID() == 0) {
+            System.out.println("Student does not exist.");
+            return false;
+        }
+        System.out.print("Enter the Updated Name: ");
+        String uptName = Input.getNormalInput();
+        return StudentService.updateStudent(existing.getID(), uptName);
     }
 
-    static void stuPrintPDF(PdfDisplay pdf, List<Student> students, int choice) {
+    static void stuPrintPDF(List<Student> students, int choice) {
         if (choice == 1) {
             // Student list in 'PDF'
-            pdf.displayStudent(students); // create Students PDF
+            PdfDisplay.displayStudent(students);
         }
         // print Student report
         else if (choice == 2) {
             System.out.print("Enter StudentName: ");
             String studentName = Input.getNormalInput();
-            pdf.handleStudentReport(studentName);
+            Student student = StudentService.getStudent(studentName);
+            if (student != null && student.getID() != null) {
+                PdfDisplay.handleStudentReport(student);
+            } else {
+                System.out.println("Student not found.");
+            }
         }
         // print Student report
         else if (choice == 3) {
             System.out.print("Enter StudentName: ");
             String studentName = Input.getNormalInput();
-            pdf.handleFeeReciept(studentName);
+            Student student = StudentService.getStudent(studentName);
+            if (student != null && student.getID() != null) {
+                PdfDisplay.handleFeeReciept(student);
+            } else {
+                System.out.println("Student not found.");
+            }
         }
     }
 
-    public static void ManageDisplayStu(List<Student> students, PdfDisplay pdf, int choice) {
+    public static void ManageDisplayStu(List<Student> students, int choice) {
         System.out.println("1. Console\n2. PDF");
         int ch = Input.validateMenuInput(2);
 
@@ -536,29 +504,23 @@ public static boolean showClasses(ClassDAO class_dao) {
         }
         // print PDF on ALL CHOICES
         if (ch == 2)
-            stuPrintPDF(pdf, students, choice /* choice on what to print */);
+            stuPrintPDF(students, choice);
 
     }
 
-    public static boolean showStudents(StudentDAO student) {
-
+    public static boolean showStudents() {
         System.out.print("1. Student List\n2. Individual Student Report\n3. Fee Receipt\n");
 
-        int choice;
-        choice = Input.validateMenuInput(3);
-
-        PdfDisplay pdf = new PdfDisplay();
+        int choice = Input.validateMenuInput(3);
 
         if (choice == 1) {
-            return DBUtils.runInTransaction(conn -> {
-                List<Student> students = student.listStudents(conn);
-                if (students.isEmpty()) {
-                    System.out.println("Student List is empty.");
-                    return false;
-                }
-                ManageDisplayStu(students, pdf, choice);
-                return true;
-            });
+            List<Student> students = StudentService.getStudents();
+            if (students.isEmpty()) {
+                System.out.println("Student List is empty.");
+                return false;
+            }
+            ManageDisplayStu(students, choice);
+            return true;
         }
 
         if (choice == 2) {
@@ -578,7 +540,7 @@ public static boolean showClasses(ClassDAO class_dao) {
         return false;
     }
 
-    public static boolean updateOrInsert(Student student, StudentDAO student_dao) {
+    public static boolean updateOrInsert(Student student) {
 
         return DBUtils.runInTransaction(conn -> {
 
@@ -600,7 +562,7 @@ public static boolean showClasses(ClassDAO class_dao) {
                         continue;
                     }
                     s.setObtMarks(marks);
-                    student_dao.insertOrUpdateMarks(student, s);
+                    StudentService.insertOrUpdateMarks(student.getName(), s.getID(), marks);
                     break;
                 }
             }
@@ -609,10 +571,7 @@ public static boolean showClasses(ClassDAO class_dao) {
     }
 
     public static List<Student> getStudents() {
-        return DBUtils.runInTransaction(conn -> {
-            StudentDAO studentDAO = new StudentDAO();
-            return studentDAO.listStudents(conn);
-        });
+        return StudentService.getStudents();
     }
 
 
@@ -620,10 +579,7 @@ public static boolean showClasses(ClassDAO class_dao) {
      * object if not found.
      */
     public static Student getStudent(String name) {
-        return DBUtils.runInTransaction(conn -> {
-            StudentDAO studentDAO = new StudentDAO();
-            return studentDAO.fetchStudentWithMarks(conn, name);
-        });
+        return StudentService.getStudent(name);
     }
 
 

@@ -18,10 +18,10 @@ import people.Student;
 import people.Teacher;
 import classroom.ClassRoom;
 import classroom.Subjects;
-import database.DAO.*;
 import school.School;
+import school.api.*;
 
-public class PdfDisplay {
+public final class PdfDisplay {
 
     // variables for LOGGing
     private static final Logger logger = Logger.getLogger(PdfDisplay.class.getName());
@@ -41,10 +41,10 @@ public class PdfDisplay {
     static final Font BoldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.BLACK);
 
     // PDF document objects
-    Paragraph heading;
+    static Paragraph heading;
 
     // display one column of 'classNames' Only - previously classTable
-    public void displayClasses(List<ClassRoom> classes) {
+    public static void displayClasses(List<ClassRoom> classes) {
         Document document = null;
         try {
             document = createPDF("Classes-ONLY.pdf");
@@ -67,7 +67,7 @@ public class PdfDisplay {
     }
 
     // display 2 columns of 'subjects'
-    public void displaySubject(List<Subjects> subjects) {
+    public static void displaySubject(List<Subjects> subjects) {
         Document document = null;
         try {
             document = createPDF("Subjects.pdf");
@@ -92,7 +92,7 @@ public class PdfDisplay {
         }
     }
 
-    public void displayTeacher(List<Teacher> teachers) {
+    public static void displayTeacher(List<Teacher> teachers) {
         Document document = null;
         try {
             document = createPDF("Teachers.pdf");
@@ -123,7 +123,7 @@ public class PdfDisplay {
     }
 
     // display student with classes
-    public void displayStudent(List<Student> students) {
+    public static void displayStudent(List<Student> students) {
         Document document = null;
         try {
             document = createPDF("Students.pdf");
@@ -147,7 +147,7 @@ public class PdfDisplay {
         }
     }
 
-    private Document createPDF(String path) throws DocumentException, IOException {
+    private static Document createPDF(String path) throws DocumentException, IOException {
         Document document = new Document();
         try {
             PdfWriter.getInstance(document, new FileOutputStream(path));
@@ -160,7 +160,7 @@ public class PdfDisplay {
     }
 
     // (PDF) - Heading Styles
-    private void setHeading(String text, Document document) {
+    private static void setHeading(String text, Document document) {
         try {
             Font Headline = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 25);
             heading = new Paragraph(text, Headline);
@@ -174,13 +174,13 @@ public class PdfDisplay {
     }
 
     // make cell bold
-    public Font bold() {
+    public static Font bold() {
         Font bold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
         return bold;
     }
 
     // (headcell) - basic style
-    private PdfPCell headCell(String text) {
+    private static PdfPCell headCell(String text) {
         PdfPCell head = null;
         try {
             head = new PdfPCell(new Phrase(text, bold()));
@@ -196,7 +196,7 @@ public class PdfDisplay {
     }
 
     // (cell) - basic style
-    private PdfPCell styleCell(String text) {
+    private static PdfPCell styleCell(String text) {
         PdfPCell cell = null;
         try {
             cell = new PdfPCell(new Phrase(text));
@@ -211,7 +211,7 @@ public class PdfDisplay {
     }
 
     // create Table with n number of columns
-    private PdfPTable Table(int NofColumn) {
+    private static PdfPTable Table(int NofColumn) {
         PdfPTable table = null;
         try {
             table = new PdfPTable(NofColumn); // n columns
@@ -227,36 +227,33 @@ public class PdfDisplay {
     }
 
     // --- School Name ---
-    public void addInstitutionHeader(String title, Document document) {
-        // "PARKLAND HIGH SCHOOL"
-        // STUDENT REPORT CARD
-        try (Connection conn = database.Database.getConnection()) {
-            try {
-                SchoolDAO method = new SchoolDAO();
-                School school = method.fetchSchool(conn);
+    public static void addInstitutionHeader(String title, Document document) {
+        try {
+            School school = SchoolService.getSchool();
+            if (school != null && school.getName() != null) {
                 Paragraph schoolName = new Paragraph(school.getName(), titleFont);
                 schoolName.setAlignment(Element.ALIGN_CENTER);
                 document.add(schoolName);
-
-                Paragraph reportTitle = new Paragraph(title, subTitleFont);
-                reportTitle.setAlignment(Element.ALIGN_CENTER);
-                reportTitle.setSpacingAfter(15f);
-                document.add(reportTitle);
-            } catch (DocumentException e) {
-                logger.log(Level.WARNING, "Error adding Institute Header (DocumentException): ", e);
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Error adding Institute Header: ", e);
+            } else {
+                Paragraph schoolName = new Paragraph("School Name Not Available", titleFont);
+                schoolName.setAlignment(Element.ALIGN_CENTER);
+                document.add(schoolName);
             }
-        } catch (SQLException e) {
-            logger.log(Level.WARNING, "Error adding Institute Header (SQL): ", e);
+
+            Paragraph reportTitle = new Paragraph(title, subTitleFont);
+            reportTitle.setAlignment(Element.ALIGN_CENTER);
+            reportTitle.setSpacingAfter(15f);
+            document.add(reportTitle);
+        } catch (DocumentException e) {
+            logger.log(Level.WARNING, "Error adding Institute Header (DocumentException): ", e);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error adding Institute Header: ", e);
         }
     }
 
-    public void addInstitutionHeader(String title, Document document, java.sql.Connection conn) {
+    public static void addInstitutionHeader(String title, Document document, School school) {
         try {
-            SchoolDAO method = new SchoolDAO();
-            School school = method.fetchSchool(conn);
-            if (school != null) {
+            if (school != null && school.getName() != null) {
                 Paragraph schoolName = new Paragraph(school.getName(), titleFont);
                 schoolName.setAlignment(Element.ALIGN_CENTER);
                 document.add(schoolName);
@@ -318,17 +315,17 @@ public class PdfDisplay {
     }
 
     // --- Student Info ---
-    private void studentInfoReport(String name, String className, int ID, Document document) {
+    private static void studentInfoReport(Student student, Document document) {
         try {
             PdfPTable table = new PdfPTable(2);
             table.setWidthPercentage(90);
             table.setWidths(new float[] { 2, 1.5f }); // controls spacing
             // Name Row
-            addStudentRow(table, "Name", name, "Class", className, BoldFont, normalFont);
+            addStudentRow(table, "Name", student.getName(), "Class", student.getClassName(), BoldFont, normalFont);
 
             String currentYear = String.valueOf(Year.now().getValue());
 
-            addStudentRow(table, "ID", String.valueOf(ID), "Year", currentYear, BoldFont, normalFont);
+            addStudentRow(table, "ID", String.valueOf(student.getID()), "Year", currentYear, BoldFont, normalFont);
 
             document.add(table);
 
@@ -341,7 +338,7 @@ public class PdfDisplay {
     }
 
     // --- ReportCard Table Header ---
-    void tableReport(List<Subjects> data, Document document) {
+    static void tableReport(List<Subjects> data, Document document) {
         try {
             PdfPTable marksTable = new PdfPTable(5);
             marksTable.setWidthPercentage(90);
@@ -419,7 +416,7 @@ public class PdfDisplay {
     }
 
     // --- Totals of Report---
-    private void totalsTable(int totalmarks, int totalObtmarks, double percentage, String Grade, Document document) {
+    private static void totalsTable(int totalmarks, int totalObtmarks, double percentage, String Grade, Document document) {
         try {
             // marks
             Phrase mark = new Phrase();
@@ -456,10 +453,8 @@ public class PdfDisplay {
     }
 
     // --- Footer - Signatories ---
-    private void sign(Connection conn, Document document) {
+    private static void sign(School school, Document document) {
         try {
-            SchoolDAO method = new SchoolDAO();
-            School school = method.fetchSchool(conn);
 
             PdfPTable signTable = new PdfPTable(1);
             signTable.setWidthPercentage(95);
@@ -485,24 +480,28 @@ public class PdfDisplay {
     }
 
     // handle the FULL creation of whole Student Report
-    public void handleStudentReport(String StudentName) {
+    public static void handleStudentReport(Student student) {
         Document document = null;
-        try (java.sql.Connection conn = database.Database.getConnection()) {
+        try {
             document = createPDF("studentReport.pdf");
             setHeading("Student Report", document);
 
-            StudentDAO student = new StudentDAO();
+            // Get student with marks using Service
+            Student studentWithMarks = StudentService.getStudent(student.getName());
+            
+            if (studentWithMarks == null || studentWithMarks.getID() == null) {
+                System.out.println("Student not found.");
+                return;
+            }
 
-            Student std = student.fetchStudent(conn, StudentName);
+            // Get subjects with marks
+            List<Subjects> data = studentWithMarks.getSubjects();
 
-            GradeDAO grade_dao = new GradeDAO();
+            School school = SchoolService.getSchool();
+            addInstitutionHeader("STUDENT REPORT", document, school);
 
-            List<Subjects> data = grade_dao.fetchStudentReport(conn, StudentName);
-
-            addInstitutionHeader("STUDENT REPORT", document, conn);
-
-            studentInfoReport(StudentName, std.getClassName(),
-                    std.getID(), document);
+            // Pass whole Student object
+            studentInfoReport(studentWithMarks, document);
 
             int totalMarks = 0;
             int ObtMarks = 0;
@@ -522,7 +521,7 @@ public class PdfDisplay {
             totalsTable(totalMarks, ObtMarks, totalPercentage, finalGrade, document);
 
             lineBreak(document);
-            sign(conn, document);
+            sign(school, document);
 
         } catch (Exception e) {
             System.err.println("Error generating Student Report PDF.");
@@ -533,7 +532,7 @@ public class PdfDisplay {
     }
 
     // ! create Table - TESTING
-    public void createTeTable() {
+    public static void createTeTable() {
 
         Document document = null;
 
@@ -564,7 +563,7 @@ public class PdfDisplay {
         }
     }
 
-    public void lineBreak(Document document) {
+    public static void lineBreak(Document document) {
         try {
             document.add(new Paragraph(" "));
         } catch (Exception e) {
@@ -573,7 +572,7 @@ public class PdfDisplay {
     }
 
     // (PDF) close PDF writer & 'Doc'
-    public void closeDoc(Document document) {
+    public static void closeDoc(Document document) {
         try {
             if (document != null && document.isOpen()) {
                 document.close();
@@ -588,7 +587,7 @@ public class PdfDisplay {
     // ***********
 
     // creating info cell
-    private PdfPCell createInfoCell(String placeholder, String val) {
+    private static PdfPCell createInfoCell(String placeholder, String val) {
         Phrase infoPhrase = new Phrase(); // creating a phrase
 
         Chunk label = new Chunk(placeholder + ": ", FontFactory.getFont(FontFactory.COURIER_BOLD, 11));
@@ -606,7 +605,7 @@ public class PdfDisplay {
     }
 
     // Rs - phrase
-    private Phrase createPhrase(String label, int value) {
+    private static Phrase createPhrase(String label, int value) {
         // Combine label + value into one chunk
         Chunk labelChunk = new Chunk(label + ": ", FontFactory.getFont(FontFactory.COURIER_BOLD, 12));
         Chunk valueChunk = new Chunk(String.valueOf(value) + "Rs", new Font(Font.HELVETICA, 11));
@@ -619,7 +618,7 @@ public class PdfDisplay {
         return phrase;
     }
 
-    private com.lowagie.text.List printPolicies() {
+    private static com.lowagie.text.List printPolicies() {
         com.lowagie.text.List list = new com.lowagie.text.List(com.lowagie.text.List.UNORDERED);
         // First item
         Phrase policy1 = new Phrase();
@@ -645,28 +644,18 @@ public class PdfDisplay {
         return list;
     }
 
-    public void handleFeeReciept(String studentName) {
+    public static void handleFeeReciept(Student student) {
         Document document = null;
-        try (Connection conn = database.Database.getConnection()) {
-            studentName = studentName.trim();
-            StudentDAO student = new StudentDAO();
-            if (!student.studentExists(conn, studentName)) {
+        try {
+            Student std = StudentService.getStudent(student.getName());
+            if (std == null || std.getID() == null) {
                 System.out.println("Student does not exist.");
                 return;
             }
 
-            Student std = student.fetchStudent(conn, studentName);
-            SchoolDAO school = new SchoolDAO();
-            School info = school.fetchSchool(conn);
-
-            try {
-                document = createPDF(studentName + "_Fee.pdf");
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Error creating PDF for Fee Receipt: ", e);
-            }
-            String imagePath = "storage/img/logo.jpeg"; // logo img path
-
-            try {
+            School school = SchoolService.getSchool();
+            document = createPDF(student.getName() + "_Fee.pdf");
+            String imagePath = "storage/img/logo.jpeg";
                 // BASIC RECIEPT HEADER
                 // *************
 
@@ -708,8 +697,8 @@ public class PdfDisplay {
 
                 PdfPCell Schoolname = new PdfPCell();
                 try {
-                    Paragraph p = new Paragraph(info.getName(), Header);
-                    Paragraph loc = new Paragraph(info.getlocation(), FontFactory.getFont(FontFactory.HELVETICA, 9));
+                    Paragraph p = new Paragraph(school.getName(), Header);
+                    Paragraph loc = new Paragraph(school.getlocation(), FontFactory.getFont(FontFactory.HELVETICA, 9));
                     Paragraph n = new Paragraph("Payment Voucher", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10));
 
                     Schoolname.addElement(p);
@@ -739,7 +728,7 @@ public class PdfDisplay {
                     infoTable.addCell(createInfoCell("Name", std.getName()));
                     infoTable.addCell(createInfoCell("ID", String.valueOf(std.getID())));
                     infoTable.addCell(createInfoCell("Class", std.getClassName()));
-                    infoTable.addCell(createInfoCell("Session", info.getTime()));
+                    infoTable.addCell(createInfoCell("Session", school.getTime() != null ? school.getTime() : ""));
                     document.add(infoTable);
                 } catch (DocumentException e) {
                     logger.log(Level.WARNING, "Error adding infoTable to document: ", e);
@@ -777,8 +766,7 @@ public class PdfDisplay {
                 // PAYMENTS SECTION
                 // ********************
                 try {
-                    ClassDAO fee = new ClassDAO();
-                    ClassRoom room = fee.getClassFees(conn, std.getClassName());
+                    ClassRoom room = ClassService.getClass(std.getClassName());
 
                     Paragraph line = new Paragraph("________________");
                     line.setAlignment(Element.ALIGN_RIGHT);
@@ -841,14 +829,10 @@ public class PdfDisplay {
                     logger.log(Level.WARNING, "Error adding policies list to document: ", e);
                 }
             } catch (Exception e) {
-                logger.log(Level.WARNING, "Unexpected error in handleFeeReciept: ", e);
+                logger.log(Level.WARNING, "Error in handleFeeReciept: ", e);
+            } finally {
+                closeDoc(document);
             }
-
-        } catch (SQLException e) {
-            logger.log(Level.WARNING, "DB Connection Error generating Student Report PDF: ", e);
-        } finally {
-            closeDoc(document);
-        }
     }
 
 }

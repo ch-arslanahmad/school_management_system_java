@@ -4,7 +4,6 @@ package database.DAO;
 // package imports
 import display.LogHandler;
 import classroom.*;
-import database.DBUtils;
 
 // imports
 import java.sql.*;
@@ -146,8 +145,8 @@ public class SubjectDAO {
         return -1;
     }
 
-    public boolean insertSubject(Subjects subj) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean insertSubject(Connection conn, Subjects subj) {
+        try {
             if (subjectExists(conn, subj.getName())) {
                 logger.warning("Subject already exists.");
                 return false;
@@ -170,14 +169,16 @@ public class SubjectDAO {
                     logger.info("Inserted Subject with ID: " + genID);
                     subj.setID(genID);
                 }
-
                 return rs > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error inserting subject", e);
+            return false;
+        }
     }
 
-    public boolean insertSubject(String className, String subjectName) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean insertSubject(Connection conn, String className, String subjectName) {
+        try {
             if (subjectExists(conn, subjectName)) {
                 logger.warning("Subject already exists.");
                 return false;
@@ -198,11 +199,14 @@ public class SubjectDAO {
                 int rs = rm.executeUpdate();
                 return rs > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error inserting subject", e);
+            return false;
+        }
     }
 
-    public boolean deleteSubject(Subjects subj) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean deleteSubject(Connection conn, Subjects subj) {
+        try {
             String deleteSubjectSQL = "DELETE FROM Subjects WHERE SubjectID = ?";
             try (PreparedStatement rm = conn.prepareStatement(deleteSubjectSQL)) {
                 rm.setObject(1, subj.getID(), Types.INTEGER);
@@ -210,11 +214,14 @@ public class SubjectDAO {
                 int rs = rm.executeUpdate();
                 return rs > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error deleting subject", e);
+            return false;
+        }
     }
 
-    public boolean deleteSubject(String className, String subjectName) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean deleteSubject(Connection conn, String className, String subjectName) {
+        try {
             ClassDAO classDAO = new ClassDAO();
             ClassRoom cls = classDAO.fetchClass(conn, className);
             if (cls.isEmpty()) {
@@ -230,11 +237,14 @@ public class SubjectDAO {
                 int rs = rm.executeUpdate();
                 return rs > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error deleting subject", e);
+            return false;
+        }
     }
 
-    public boolean updateSubject(Subjects subj) {
-        return DBUtils.runInTransaction(conn -> {
+    public boolean updateSubject(Connection conn, Subjects subj) {
+        try {
             if (subj.getID() == null || subj.getID() == 0) {
                 logger.warning("Subject ID is required.");
                 return false;
@@ -270,9 +280,13 @@ public class SubjectDAO {
                     rm.setObject(i + 1, params.get(i));
                 }
                 rm.setInt(params.size() + 1, subj.getID());
-                return rm.executeUpdate() > 0;
+                int updated = rm.executeUpdate();
+                return updated > 0;
             }
-        });
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error updating subject", e);
+            return false;
+        }
     }
 
     public List<Subjects> listSubjects(Connection conn) {

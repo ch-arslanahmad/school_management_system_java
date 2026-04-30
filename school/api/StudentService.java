@@ -30,7 +30,7 @@ public class StudentService {
     // ===== WRITE =====
 
     public static boolean addStudent(Student student) {
-        return DBUtils.runInTransaction(conn -> new StudentDAO().insertStudent(student));
+        return DBUtils.runInTransaction(conn -> new StudentDAO().insertStudent(conn, student));
     }
 
     public static boolean updateStudent(int id, String newName) {
@@ -41,7 +41,7 @@ public class StudentService {
                 return false;
             }
             existing.setName(newName);
-            return dao.updateStudent(existing);
+            return dao.updateStudent(conn, existing);
         });
     }
 
@@ -49,7 +49,7 @@ public class StudentService {
         return DBUtils.runInTransaction(conn -> {
             StudentDAO dao = new StudentDAO();
             Student student = dao.fetchStudent(conn, id);
-            return dao.deleteStudent(student);
+            return dao.deleteStudent(conn, student);
         });
     }
 
@@ -59,7 +59,7 @@ public class StudentService {
             Student student = dao.fetchStudentWithMarks(conn, studentName);
             Subjects subject = new Subjects(subjectId);
             subject.setObtMarks(obtainedMarks);
-            return dao.insertOrUpdateMarks(student, subject);
+            return dao.insertOrUpdateMarks(conn, student, subject);
         });
     }
 }
