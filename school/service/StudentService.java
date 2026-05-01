@@ -1,5 +1,6 @@
 package school.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import classroom.Subjects;
@@ -34,14 +35,17 @@ public class StudentService {
         return DBUtils.runInTransaction(conn -> new StudentDAO().insertStudent(conn, student));
     }
 
-    public static boolean updateStudent(int id, String newName) {
+    public static boolean updateStudent(int id, Student student) {
         return DBUtils.runInTransaction(conn -> {
             StudentDAO dao = new StudentDAO();
             Student existing = dao.fetchStudent(conn, id);
             if (existing.getID() == null || existing.getID() == 0) {
                 return false;
             }
-            existing.setName(newName);
+            // Apply updates from the request body
+            if (student.getClassID() != null && student.getClassID() != 0) {
+                existing.setClassID(student.getClassID());
+            }
             return dao.updateStudent(conn, existing);
         });
     }
@@ -65,6 +69,19 @@ public class StudentService {
     }
 
     public static List<Subjects> getStudentSubjects(String studentName) {
-        return DBUtils.runInTransaction(conn -> new GradeDAO().fetchStudentReport(conn, studentName));
+        Student student = DBUtils.runInTransaction(conn -> new StudentDAO().fetchStudentWithMarks(conn, studentName));
+        return student.getSubjects();
+    }
+
+    public static List<Subjects> getStudentSubjects(int studentId) {
+        return DBUtils.runInTransaction(conn -> {
+            StudentDAO dao = new StudentDAO();
+            Student student = dao.fetchStudent(conn, studentId);
+            if (student.getID() == null || student.getID() == 0) {
+                return new ArrayList<>();
+            }
+            Student studentWithMarks = dao.fetchStudentWithMarks(conn, student.getName());
+            return studentWithMarks.getSubjects();
+        });
     }
 }

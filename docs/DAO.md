@@ -11,3 +11,10 @@ When working with JDBC, the DAO layer typically uses PreparedStatements to execu
 - `executeUpdate()` statements that modify the database (like `INSERT`, `UPDATE`, `DELETE`). It returns the `int` of rows affected by the operation. 
 - `executeQuery()` statements that retrieve data from the database (like `SELECT`). It returns a ResultSet object that contains the data retrieved by the query.
 
+## DTO (Data Transfer Object)
+
+It is a design pattern used to transfer data between software application subsystems.
+
+DTOs are mostly used to encapsulate the data that is being transferred between the DAO and the rest of the application.
+
+In Java, you use `Record` classes as DTOs, as they automatically generate constructors, accessors, equals(), hashCode(), and toString() methods, making them ideal for use as DTOs in the DAO layer.
