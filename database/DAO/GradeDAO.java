@@ -15,67 +15,61 @@ public class GradeDAO {
         LogHandler.createLog(logger, "GradeDAO");
     }
 
-    public List<Subjects> fetchStudentReport(Connection conn, String studentID) {
+    // Fetch student report by numeric student ID
+    public List<Subjects> fetchStudentReport(Connection conn, int studentId) {
         List<Subjects> subjects = new ArrayList<>();
-        // The getGrades view in the DB exposes: StudentID, StudentName, SubjectID,
-        // SubjectName, ObtainedMarks, Grade, ClassID, ClassName
-        // callers may pass a StudentName or StudentID; detect numeric input and
-        // filter accordingly.
-        boolean isNumeric = false;
-        int sid = -1;
-        try {
-            sid = Integer.parseInt(studentID);
-            isNumeric = true;
-        } catch (NumberFormatException nfe) {
-            isNumeric = false;
-        }
-
-        String sqlById = "SELECT * FROM getGrades WHERE StudentID = ?";
-        String sqlByName = "SELECT * FROM getGrades WHERE StudentName = ?";
-
-        String sql = isNumeric ? sqlById : sqlByName;
-
+        String sql = "SELECT * FROM getGrades WHERE StudentID = ?";
         try (PreparedStatement rm = conn.prepareStatement(sql)) {
-            if (isNumeric) {
-                rm.setInt(1, sid);
-            } else {
-                rm.setString(1, studentID);
-            }
-
+            rm.setInt(1, studentId);
             try (ResultSet rs = rm.executeQuery()) {
                 while (rs.next()) {
                     Subjects subject = new Subjects();
-                    // populate subject fields according to view
-                    try {
-                        subject.setID(rs.getInt("SubjectID"));
-                    } catch (SQLException ignore) {
-                    }
+                    try { subject.setID(rs.getInt("SubjectID")); } catch (SQLException ignore) {}
                     subject.setName(rs.getString("SubjectName"));
-                    // ObtainedMarks may be null in some cases
                     try {
                         int om = rs.getInt("ObtainedMarks");
-                        if (!rs.wasNull()) {
-                            subject.setObtMarks(om);
-                        }
-                    } catch (SQLException ignore) {
-                    }
-                    try {
-                        subject.setClassID(rs.getInt("ClassID"));
-                    } catch (SQLException ignore) {
-                    }
+                        if (!rs.wasNull()) { subject.setObtMarks(om); }
+                    } catch (SQLException ignore) {}
+                    try { subject.setClassID(rs.getInt("ClassID")); } catch (SQLException ignore) {}
                     subject.setClassName(rs.getString("ClassName"));
                     subjects.add(subject);
                 }
             }
         } catch (SQLException e) {
-            logger.log(Level.WARNING, "Error while fetching student report", e);
+            logger.log(Level.WARNING, "Error while fetching student report by ID", e);
+        }
+        return subjects;
+    }
+
+    // Fetch student report by student name
+    public List<Subjects> fetchStudentReport(Connection conn, String studentName) {
+        List<Subjects> subjects = new ArrayList<>();
+        String sql = "SELECT * FROM getGrades WHERE StudentName = ?";
+        try (PreparedStatement rm = conn.prepareStatement(sql)) {
+            rm.setString(1, studentName);
+            try (ResultSet rs = rm.executeQuery()) {
+                while (rs.next()) {
+                    Subjects subject = new Subjects();
+                    try { subject.setID(rs.getInt("SubjectID")); } catch (SQLException ignore) {}
+                    subject.setName(rs.getString("SubjectName"));
+                    try {
+                        int om = rs.getInt("ObtainedMarks");
+                        if (!rs.wasNull()) { subject.setObtMarks(om); }
+                    } catch (SQLException ignore) {}
+                    try { subject.setClassID(rs.getInt("ClassID")); } catch (SQLException ignore) {}
+                    subject.setClassName(rs.getString("ClassName"));
+                    subjects.add(subject);
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error while fetching student report by name", e);
         }
         return subjects;
     }
 
     public List<Subjects> fetchAllStudentReports(Connection conn) {
         List<Subjects> subjects = new ArrayList<>();
-        String sql = "SELECT * FROM getGrades"; // no WHERE clause
+        String sql = "SELECT * FROM getGrades";
 
         try (PreparedStatement rm = conn.prepareStatement(sql);
                 ResultSet rs = rm.executeQuery()) {
@@ -91,7 +85,6 @@ public class GradeDAO {
                 } catch (SQLException ignore) {
                 }
                 subject.setClassName(rs.getString("ClassName"));
-                // Note: view also exposes StudentName/StudentID if callers need them
                 subjects.add(subject);
             }
         } catch (SQLException e) {
@@ -100,4 +93,31 @@ public class GradeDAO {
         return subjects;
     }
 
+    public List<Subjects> fetchClassGrades(Connection conn, int classId) {
+        List<Subjects> subjects = new ArrayList<>();
+        String sql = "SELECT * FROM getGrades WHERE ClassID = ?";
+
+        try (PreparedStatement rm = conn.prepareStatement(sql)) {
+            rm.setInt(1, classId);
+            try (ResultSet rs = rm.executeQuery()) {
+                while (rs.next()) {
+                    Subjects subject = new Subjects();
+                    subject.setID(rs.getInt("SubjectID"));
+                    subject.setName(rs.getString("SubjectName"));
+                    try {
+                        int om = rs.getInt("ObtainedMarks");
+                        if (!rs.wasNull()) {
+                            subject.setObtMarks(om);
+                        }
+                    } catch (SQLException ignore) {
+                    }
+                    subject.setClassName(rs.getString("ClassName"));
+                    subjects.add(subject);
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Error while fetching class grades", e);
+        }
+        return subjects;
+    }
 }

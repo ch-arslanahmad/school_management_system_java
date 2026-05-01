@@ -446,7 +446,9 @@ public static boolean showClasses() {
         }
         System.out.print("Enter the Updated Name: ");
         String uptName = Input.getNormalInput();
-        return StudentService.updateStudent(existing.getID(), uptName);
+        Student updated = new Student(uptName);
+        updated.setID(existing.getID());
+        return StudentService.updateStudent(existing.getID(), updated);
     }
 
     static void stuPrintPDF(List<Student> students, int choice) {
